@@ -44,18 +44,15 @@ export const findingsTr = {
   "finding.disk_full.info.description":
     "Şu an kritik değil ama büyük güncellemeler/oyunlar için alan sıkışıyor. Geri kalan: {freeFormatted}.",
 
-  // === Sprint 7: drivers === (review M3: driverVersion+driverDate fingerprint kaldırıldı)
-  "finding.driver.unsigned.title": "İmzasız sürücü: {deviceName}",
-  "finding.driver.unsigned.description": "Üretici: {manufacturer}. Sınıf: {driverClass}.",
-  "finding.driver.unsigned.action": "OEM sitesini aç",
-  "finding.driver.outdated_critical.title": "Eski sürücü: {deviceName} ({years} yıl)",
-  "finding.driver.outdated_critical.description":
-    "Üretici: {manufacturer}. Sınıf: {driverClass}.",
-  "finding.driver.outdated_critical.action": "OEM sitesini aç",
-  "finding.driver.outdated_warning.title": "Eski sürücü: {deviceName} ({years} yıl)",
-  "finding.driver.outdated_warning.description":
-    "Üretici: {manufacturer}. Sınıf: {driverClass}.",
-  "finding.driver.outdated_warning.action": "OEM sitesini aç",
+  // === drivers === (Faz 2 kalibrasyon: per-driver gürültüsü kaldırıldı, toplu)
+  "finding.driver.unsigned_summary.title": "{count} imzasız sürücü",
+  "finding.driver.unsigned_summary.description":
+    "Bu sürücülerin dijital imzası doğrulanamadı. Güvenilir sürümleri Windows Update üzerinden kontrol edin.",
+  "finding.driver.unsigned_summary.action": "Windows Update'i aç",
+  "finding.driver.outdated_summary.title": "{count} sürücü uzun süredir güncellenmemiş",
+  "finding.driver.outdated_summary.description":
+    "3+ yıldır güncellenmemiş sürücüler. Genelde sorun değildir; Windows Update'te yeni sürüm olup olmadığına bakabilirsiniz.",
+  "finding.driver.outdated_summary.action": "Windows Update'i aç",
 
   // === Sprint 7: defender ===
   "finding.defender.active_threats.title": "Defender'da {threatCount} aktif tehdit",

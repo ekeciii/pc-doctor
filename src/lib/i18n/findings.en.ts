@@ -40,18 +40,15 @@ export const findingsEn: Record<FindingCode, string> = {
   "finding.disk_full.info.description":
     "Not critical yet, but space is tight for large updates/games. Remaining: {freeFormatted}.",
 
-  // === drivers === (Sprint 7 review M3: version+date fingerprint removed)
-  "finding.driver.unsigned.title": "Unsigned driver: {deviceName}",
-  "finding.driver.unsigned.description": "Manufacturer: {manufacturer}. Class: {driverClass}.",
-  "finding.driver.unsigned.action": "Open OEM site",
-  "finding.driver.outdated_critical.title": "Outdated driver: {deviceName} ({years} years)",
-  "finding.driver.outdated_critical.description":
-    "Manufacturer: {manufacturer}. Class: {driverClass}.",
-  "finding.driver.outdated_critical.action": "Open OEM site",
-  "finding.driver.outdated_warning.title": "Outdated driver: {deviceName} ({years} years)",
-  "finding.driver.outdated_warning.description":
-    "Manufacturer: {manufacturer}. Class: {driverClass}.",
-  "finding.driver.outdated_warning.action": "Open OEM site",
+  // === drivers === (Phase 2 calibration: aggregated, no per-driver noise)
+  "finding.driver.unsigned_summary.title": "{count} unsigned drivers",
+  "finding.driver.unsigned_summary.description":
+    "These drivers' digital signature could not be verified. Check for trusted versions via Windows Update.",
+  "finding.driver.unsigned_summary.action": "Open Windows Update",
+  "finding.driver.outdated_summary.title": "{count} drivers not updated in a long time",
+  "finding.driver.outdated_summary.description":
+    "Drivers untouched for 3+ years. Usually harmless; you can check Windows Update for newer versions.",
+  "finding.driver.outdated_summary.action": "Open Windows Update",
 
   // === defender ===
   "finding.defender.active_threats.title":

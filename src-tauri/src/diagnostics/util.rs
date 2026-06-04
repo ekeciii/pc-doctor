@@ -80,7 +80,7 @@ pub fn sanitize_params(category: &str, params: &Value) -> Value {
     // Allow whitelist — kategori başına. Bilinmeyen kategoride yalnızca union döner.
     let allow: &[&str] = match category {
         "Disk" => &["mount", "freePercent", "freeFormatted"],
-        "Sürücü" => &["deviceName", "manufacturer", "driverClass", "years"],
+        "Sürücü" => &["count", "deviceName", "manufacturer", "driverClass", "years"],
         "Virüs" => &["threatCount", "ageDays"],
         "Disk sağlığı" => &[
             "diskName",
