@@ -516,6 +516,57 @@ pub struct CleanupResult {
     pub restore_point_skipped_reason: Option<String>,
 }
 
+// === Faz 1 — "Hepsini Düzelt" orkestrasyonu ===
+
+/// Frontend'in `run_fix_all`'a gönderdiği tek bir düzeltme isteği.
+/// Faz 1: yalnız `Cleanup`. Faz 2'de yeni varyantlar eklenir
+/// (DisableStartupItem, EnableFirewall, SetPagefileManaged, …) ve orkestratör
+/// otomatik kapsar.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "camelCase")]
+pub enum FixSpec {
+    Cleanup { target_ids: Vec<String> },
+}
+
+impl FixSpec {
+    /// Bu fix'in kararlı kimliği (sonuçlarda + reboot grubunda kullanılır).
+    pub fn id(&self) -> &'static str {
+        match self {
+            FixSpec::Cleanup { .. } => "cleanup",
+        }
+    }
+    /// Bu fix uygulandıktan sonra yeniden başlatma gerekiyor mu? (Faz 2: pagefile → true.)
+    pub fn requires_reboot(&self) -> bool {
+        match self {
+            FixSpec::Cleanup { .. } => false,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FixItemResult {
+    pub id: String,
+    pub ok: bool,
+    /// Başarı/hata özeti için i18n kodu (opsiyonel).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub message_code: Option<String>,
+    pub reboot_required: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FixAllOutcome {
+    pub restore_point_created: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub restore_point_skipped_reason: Option<String>,
+    pub applied: u32,
+    pub failed: u32,
+    pub items: Vec<FixItemResult>,
+    /// Yeniden başlatma isteyen fix id'leri (frontend ayrı grup gösterir, sessiz reboot YOK).
+    pub reboot_required: Vec<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CleanupTargetResult {
