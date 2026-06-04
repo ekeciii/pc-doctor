@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "PC Doctor",
+  "version": "0.1.0",
+  "identifier": "com.egeyu.pcdoctor",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://127.0.0.1:1420",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "PC Doctor",
+        "width": 1100,
+        "height": 760,
+        "minWidth": 900,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self' http://127.0.0.1:1420 ws://127.0.0.1:1421 ipc: http://ipc.localhost; img-src 'self' data: http://127.0.0.1:1420; style-src 'self' 'unsafe-inline' http://127.0.0.1:1420; script-src 'self' http://127.0.0.1:1420; connect-src 'self' http://127.0.0.1:1420 ws://127.0.0.1:1421 ipc: http://ipc.localhost https://github.com https://*.githubusercontent.com"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["msi", "nsis"],
+    "icon": [
+      "icons/icon.ico"
+    ],
+    "publisher": "egeyu",
+    "copyright": "Copyright © 2026 egeyu",
+    "category": "Utility",
+    "homepage": "https://pc-doctor.example.com",
+    "shortDescription": "Tek tıkla PC tanı ve onarım",
+    "longDescription": "PC Doctor; Windows için disk sağlığı, doluluk, başlangıç performansı, Event Log özetleme, virüs/Defender durumu, sürücü kontrolü ve güvenli temizlik akışlarını tek tıkla sunan tanı/onarım aracıdır.",
+    "windows": {
+      "webviewInstallMode": { "type": "embedBootstrapper" },
+      "nsis": {
+        "displayLanguageSelector": false,
+        "installerIcon": "icons/icon.ico",
+        "installMode": "perMachine",
+        "languages": ["Turkish", "English"]
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://github.com/ekeciii/pc-doctor/releases/latest/download/latest.json"
+      ],
+      "dialog": false,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDhDQzgxRDkzMUVEMjEyOApSV1FvSWUweDJZSE1DTlNZOGJlNGNhTDZSMHlOaXd4M1V6V3ljS25BRkJ0aWYwYndNSndwbjZDSQo="
+    }
+  }
+}

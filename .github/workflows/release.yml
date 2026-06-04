@@ -1,0 +1,131 @@
+name: Release
+
+# Tag push'unda (v0.1.0 vb.) tetiklenir. Manuel tetik için workflow_dispatch da var.
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify required secrets
+        shell: pwsh
+        run: |
+          if ('${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}' -eq '') {
+            Write-Error "TAURI_SIGNING_PRIVATE_KEY repo secret is empty. The updater pubkey embedded in src-tauri/tauri.conf.json requires signed releases — unsigned builds would produce a latest.json that the updater rejects. Set the secret per docs/RELEASING.md."
+            exit 1
+          }
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Rust (stable + msvc)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry + target
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "src-tauri -> target"
+
+      - name: Install npm deps
+        run: npm ci --no-audit --no-fund
+
+      - name: Build + bundle MSI/NSIS
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # === Code-signing (opsiyonel, sertifika alındığında doldur) ===
+          # WINDOWS_CERTIFICATE: base64-encoded .pfx içeriği
+          # WINDOWS_CERTIFICATE_PASSWORD: pfx parolası
+          # Sertifika yoksa imzasız MSI/NSIS üretilir (SmartScreen uyarısı çıkar).
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: npm run tauri build
+
+      - name: Locate artifacts (fail-fast if missing)
+        id: artifacts
+        shell: pwsh
+        run: |
+          $bundleDir = "src-tauri/target/release/bundle"
+          # NSIS dosya adı "PC Doctor_0.1.0_x64-setup.exe" pattern'i — uninstaller'ı dışla.
+          $nsis = Get-ChildItem -Path "$bundleDir/nsis" -Filter "*-setup.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          $msi = Get-ChildItem -Path "$bundleDir/msi" -Filter "*.msi" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $nsis) {
+            Write-Error "NSIS installer bulunamadı ($bundleDir/nsis altında *-setup.exe). tauri build sessizce başarısız olmuş olabilir."
+            exit 1
+          }
+          if (-not $msi) {
+            Write-Error "MSI installer bulunamadı ($bundleDir/msi altında *.msi)."
+            exit 1
+          }
+          # Updater için NSIS imzası şart (latest.json sadece NSIS'i referans alır)
+          $sigPath = "$($nsis.FullName).sig"
+          if (-not (Test-Path $sigPath)) {
+            Write-Error "NSIS .sig dosyası yok: $sigPath. TAURI_SIGNING_PRIVATE_KEY geçersiz veya bundler sign etmedi."
+            exit 1
+          }
+          "msi=$($msi.FullName)"   | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "nsis=$($nsis.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "sig=$sigPath"           | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Write-Host "MSI:  $($msi.FullName)"
+          Write-Host "NSIS: $($nsis.FullName)"
+          Write-Host "SIG:  $sigPath"
+
+      - name: Build latest.json (Tauri updater manifest)
+        shell: pwsh
+        run: |
+          # Tag pattern: vX.Y.Z (semver). workflow_dispatch'ten 'main' gibi ref'leri reddet.
+          if ('${{ github.ref_name }}' -match '^v(\d+\.\d+\.\d+([-+].+)?)$') {
+            $version = $matches[1]
+          } else {
+            Write-Error "Ref name '${{ github.ref_name }}' vX.Y.Z formatında bir tag değil; updater manifest üretmeyi reddediyorum."
+            exit 1
+          }
+          $nsis = "${{ steps.artifacts.outputs.nsis }}"
+          $sigPath = "${{ steps.artifacts.outputs.sig }}"
+          $sig = (Get-Content $sigPath -Raw).Trim()
+          if ([string]::IsNullOrWhiteSpace($sig)) {
+            Write-Error "Signature file boş: $sigPath"
+            exit 1
+          }
+          $repo = "${{ github.repository }}"
+          $url = "https://github.com/$repo/releases/download/${{ github.ref_name }}/" + (Split-Path -Leaf $nsis)
+          $pubDate = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+          $manifest = @{
+            version = $version
+            notes = "PC Doctor v$version yayınlandı."
+            pub_date = $pubDate
+            platforms = @{
+              "windows-x86_64" = @{
+                signature = $sig
+                url = $url
+              }
+            }
+          } | ConvertTo-Json -Depth 5
+          $manifest | Out-File -FilePath latest.json -Encoding utf8
+          Get-Content latest.json
+
+      - name: Create / update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: PC Doctor ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            ${{ steps.artifacts.outputs.msi }}
+            ${{ steps.artifacts.outputs.nsis }}
+            latest.json
