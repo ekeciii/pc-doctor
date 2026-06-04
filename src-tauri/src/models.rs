@@ -181,6 +181,8 @@ pub enum FindingAction {
     /// Frontend: chkdsk /scan dialog'unu açar (Sprint 6)
     RunChkdskScan { volume: String },
     /// Sprint 8 — chkdsk /f (non-system live veya system scheduled reboot)
+    /// `rename_all`: enum-level camelCase struct-variant alanlarını çevirmez → `isSystem` için gerekli.
+    #[serde(rename_all = "camelCase")]
     RunChkdskFix { volume: String, is_system: bool },
     /// Frontend: SystemPropertiesPerformance.exe launcher (Sprint 6 — pagefile)
     OpenSystemPropertiesPerformance,
@@ -537,6 +539,9 @@ pub struct CleanupResult {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum FixSpec {
+    // NB: serde enum-level rename_all variant adlarını çevirir ama struct-variant ALANLARINI
+    // çevirmez — frontend `targetIds` gönderir, o yüzden variant'a ayrıca rename_all gerekli.
+    #[serde(rename_all = "camelCase")]
     Cleanup { target_ids: Vec<String> },
     /// Faz 2 — kapalı Windows Güvenlik Duvarı profillerini aç.
     EnableFirewall,

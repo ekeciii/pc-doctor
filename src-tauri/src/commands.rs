@@ -690,6 +690,33 @@ mod tests {
         assert_eq!(out.restore_point_skipped_reason.as_deref(), Some("VSS kapalı"));
     }
 
+    // Regression: frontend `targetIds` (camelCase) gönd_erir; enum-level rename_all
+    // struct-variant alanını çevirmediği için Cleanup variant'ına ayrıca rename_all eklendi.
+    #[test]
+    fn fixspec_cleanup_deserializes_camelcase_target_ids() {
+        let json = r#"{"type":"cleanup","targetIds":["x","y"]}"#;
+        let spec: crate::models::FixSpec = serde_json::from_str(json).expect("camelCase deserialize");
+        match spec {
+            crate::models::FixSpec::Cleanup { target_ids } => {
+                assert_eq!(target_ids, vec!["x".to_string(), "y".to_string()]);
+            }
+            _ => panic!("yanlış variant"),
+        }
+    }
+
+    #[test]
+    fn fixspec_unit_variants_deserialize() {
+        for (json, ok) in [
+            (r#"{"type":"enableFirewall"}"#, "enableFirewall"),
+            (r#"{"type":"enableUac"}"#, "enableUac"),
+            (r#"{"type":"setPagefileManaged"}"#, "setPagefileManaged"),
+        ] {
+            let spec: crate::models::FixSpec =
+                serde_json::from_str(json).expect("unit variant deserialize");
+            assert_eq!(spec.id(), ok);
+        }
+    }
+
     #[test]
     fn allow_known_ms_settings() {
         assert!(is_allowed_url("ms-settings:windowsupdate"));
