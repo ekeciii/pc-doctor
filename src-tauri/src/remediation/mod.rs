@@ -5,4 +5,5 @@ pub mod cleanup;
 pub mod defender_scan;
 pub mod reboot;
 pub mod system_file_check;
+pub mod system_tweaks;
 pub mod volume;

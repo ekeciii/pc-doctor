@@ -248,4 +248,9 @@ export const en: Record<TKey, string> = {
   hudStandby: "Standby",
   scanRadarLabel: "Scanning system",
   scanRadarHint: "Analyzing {count} categories",
+  // Phase 2 — Fix Everything line labels
+  fixLineCleanup: "Disk cleanup — {count} item(s) ({size})",
+  fixLineEnableFirewall: "Turn on Windows Firewall",
+  fixLineEnableUac: "Turn on UAC (restart required)",
+  fixLineSetPagefileManaged: "Set virtual memory to system-managed (restart required)",
 };

@@ -8,11 +8,11 @@ export const findingsEn: Record<FindingCode, string> = {
   "finding.pagefile.undersized.title": "Virtual memory (pagefile) is undersized",
   "finding.pagefile.undersized.description":
     "Manually configured pagefile ({configuredMb} MB) is below the recommended 1.5×RAM ({ramMb} MB) threshold of at least {recommendedMb} MB. Large applications may report 'out of memory'.",
-  "finding.pagefile.undersized.action": "Open Virtual Memory Settings",
+  "finding.pagefile.undersized.action": "Set system-managed",
   "finding.pagefile.consider_managed.title": "Let the system manage virtual memory",
   "finding.pagefile.consider_managed.description":
     "You have {ramGb} GB of RAM and the pagefile is set manually. At this RAM size, leaving it to the system is more practical for both performance and disk usage.",
-  "finding.pagefile.consider_managed.action": "Open Virtual Memory Settings",
+  "finding.pagefile.consider_managed.action": "Set system-managed",
   "finding.pagefile.high_usage.title": "Pagefile at high usage ({usagePercent}%)",
   "finding.pagefile.high_usage.description":
     "Pagefile peak usage reached {usagePercent}% of allocated space ({peakMb} MB / {allocatedMb} MB). This may indicate constant swapping — consider more RAM or a larger pagefile.",
@@ -120,10 +120,11 @@ export const findingsEn: Record<FindingCode, string> = {
   "finding.security.firewall_off.title": "Windows Firewall is off ({profiles})",
   "finding.security.firewall_off.description":
     "At least one Windows Defender Firewall profile is off and no active third-party firewall was detected. A network attack defense layer is missing.",
-  "finding.security.firewall_off.action": "Open Firewall settings",
+  "finding.security.firewall_off.action": "Turn on firewall",
   "finding.security.uac_off.title": "User Account Control (UAC) is OFF",
   "finding.security.uac_off.description":
     "UAC is disabled. Malware can run administrative actions without prompting.",
+  "finding.security.uac_off.action": "Turn on UAC",
   "finding.security.uac_no_prompt.title": "UAC never prompts administrators",
   "finding.security.uac_no_prompt.description":
     "ConsentPromptBehaviorAdmin=0 — administrator accounts never see a prompt when elevating. UAC is on but not effective.",

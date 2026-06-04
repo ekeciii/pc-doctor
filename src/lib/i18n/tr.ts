@@ -247,6 +247,11 @@ export const tr = {
   hudStandby: "Beklemede",
   scanRadarLabel: "Sistem taranıyor",
   scanRadarHint: "{count} kategori analiz ediliyor",
+  // Faz 2 — Hepsini Düzelt fix etiketleri
+  fixLineCleanup: "Disk temizliği — {count} öğe ({size})",
+  fixLineEnableFirewall: "Windows Güvenlik Duvarı'nı aç",
+  fixLineEnableUac: "UAC'yi aç (yeniden başlatma gerekir)",
+  fixLineSetPagefileManaged: "Sanal belleği sistem-yönetimli yap (yeniden başlatma gerekir)",
 } as const;
 
 export type TKey = keyof typeof tr;

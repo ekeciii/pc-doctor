@@ -16,7 +16,7 @@ use crate::models::{
 };
 use crate::remediation::{
     chkdsk as chkdsk_remediation, chkdsk_boot_result, chkntfs, cleanup, defender_scan, reboot,
-    system_file_check, volume as vol_util,
+    system_file_check, system_tweaks, volume as vol_util,
 };
 use crate::safety::{pending_state, restore_point};
 use chrono::Utc;
@@ -265,13 +265,24 @@ fn run_one_fix(spec: &FixSpec) -> FixItemResult {
         FixSpec::Cleanup { target_ids } => {
             let per = cleanup::execute(target_ids);
             let any_err = per.iter().any(|r| r.error.is_some());
-            FixItemResult {
-                id,
-                ok: !any_err,
-                message_code: None,
-                reboot_required,
-            }
+            fix_item(id, !any_err, reboot_required)
         }
+        FixSpec::EnableFirewall => {
+            fix_item(id, system_tweaks::enable_firewall().is_ok(), reboot_required)
+        }
+        FixSpec::EnableUac => fix_item(id, system_tweaks::enable_uac().is_ok(), reboot_required),
+        FixSpec::SetPagefileManaged => {
+            fix_item(id, system_tweaks::set_pagefile_managed().is_ok(), reboot_required)
+        }
+    }
+}
+
+fn fix_item(id: String, ok: bool, reboot_required: bool) -> FixItemResult {
+    FixItemResult {
+        id,
+        ok,
+        message_code: None,
+        reboot_required,
     }
 }
 

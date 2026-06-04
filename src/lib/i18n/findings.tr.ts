@@ -8,12 +8,12 @@ export const findingsTr = {
   "finding.pagefile.undersized.title": "Sanal bellek (pagefile) yetersiz",
   "finding.pagefile.undersized.description":
     "Manuel olarak ayarlanmış pagefile boyutu ({configuredMb} MB) RAM'iniz ({ramMb} MB) için tavsiye edilen 1.5×RAM eşiğinin (en az {recommendedMb} MB) altında. Büyük programlarda 'yetersiz bellek' hataları görebilirsiniz.",
-  "finding.pagefile.undersized.action": "Sanal Bellek Ayarlarını Aç",
+  "finding.pagefile.undersized.action": "Sistem-yönetimli yap",
 
   "finding.pagefile.consider_managed.title": "Sanal belleği sistem yönetebilir",
   "finding.pagefile.consider_managed.description":
     "{ramGb} GB RAM'iniz var ve pagefile manuel ayarlı. Bu boyutta RAM için sistem yönetimine bırakmak hem performans hem disk kullanımı açısından daha pratik.",
-  "finding.pagefile.consider_managed.action": "Sanal Bellek Ayarlarını Aç",
+  "finding.pagefile.consider_managed.action": "Sistem-yönetimli yap",
 
   "finding.pagefile.high_usage.title": "Pagefile yoğun kullanımda (%{usagePercent})",
   "finding.pagefile.high_usage.description":
@@ -121,10 +121,11 @@ export const findingsTr = {
   "finding.security.firewall_off.title": "Windows Güvenlik Duvarı kapalı ({profiles})",
   "finding.security.firewall_off.description":
     "Windows Defender Firewall'un en az bir profili kapalı ve aktif bir 3. taraf firewall tespit edilmedi. Ağ saldırılarına karşı savunma katmanı eksik.",
-  "finding.security.firewall_off.action": "Güvenlik Duvarı ayarlarını aç",
+  "finding.security.firewall_off.action": "Güvenlik duvarını aç",
   "finding.security.uac_off.title": "Kullanıcı Hesabı Denetimi (UAC) KAPALI",
   "finding.security.uac_off.description":
     "UAC devre dışı bırakılmış. Kötü amaçlı yazılım yönetici işlemlerini sormadan çalıştırabilir.",
+  "finding.security.uac_off.action": "UAC'yi aç",
   "finding.security.uac_no_prompt.title": "UAC yöneticilere hiç sormuyor",
   "finding.security.uac_no_prompt.description":
     "ConsentPromptBehaviorAdmin=0 — yönetici hesaplar yetki yükseltirken hiç prompt görmüyor. UAC açık ama efektif değil.",

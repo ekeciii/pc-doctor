@@ -40,7 +40,7 @@ import {
   VolumeLockedError,
 } from "./lib/api";
 import { getSettings } from "./lib/settings";
-import type { CleanupResult, FixAllOutcome, Finding, ScanReport } from "./lib/types";
+import type { CleanupResult, FixAllOutcome, FixSpec, Finding, ScanReport } from "./lib/types";
 import { resolveFinding, useByteFmt, useI18n, useT } from "./lib/i18n";
 
 export default function App() {
@@ -114,11 +114,15 @@ export default function App() {
   const [historyEnabled, setHistoryEnabled] = useState(true);
   // Faz 1 M4 — Guided (Rehberli) bulgu için açık drawer.
   const [guidedFinding, setGuidedFinding] = useState<Finding | null>(null);
-  // Faz 1 M5 — "Hepsini Düzelt" (run_fix_all) akışı
-  const [fixAllConfirmOpen, setFixAllConfirmOpen] = useState(false);
+  // Faz 1 M5 + Faz 2 — "Hepsini Düzelt" / tek-fix (run_fix_all) akışı.
+  // pendingFixSpecs: onay bekleyen fix listesi (null = kapalı).
+  const [pendingFixSpecs, setPendingFixSpecs] = useState<FixSpec[] | null>(null);
   const [fixingAll, setFixingAll] = useState(false);
   const [fixAllOutcome, setFixAllOutcome] = useState<FixAllOutcome | null>(null);
-  const [fixAllRestoreError, setFixAllRestoreError] = useState<string | null>(null);
+  const [fixAllRestoreError, setFixAllRestoreError] = useState<{
+    specs: FixSpec[];
+    message: string;
+  } | null>(null);
   const updateChecked = useRef(false);
 
   useEffect(() => {
@@ -256,25 +260,59 @@ export default function App() {
     [elevated]
   );
 
-  // Faz 1 M5 — "Hepsini Düzelt": dedicated run_fix_all akışı.
-  // Faz 1'de batch'lenebilir tek Auto fix = disk temizliği; Faz 2 fix'leri FixSpec'e eklenince
-  // bu akış otomatik kapsar (tek restore point + tek elevation + per-item özet).
+  // Faz 2 — bir bulgunun aksiyonunu otomatik FixSpec'e çevirir (Auto olmayan → null).
+  const actionToFixSpec = useCallback((finding: Finding): FixSpec | null => {
+    switch (finding.action?.type) {
+      case "enableFirewall":
+        return { type: "enableFirewall" };
+      case "enableUac":
+        return { type: "enableUac" };
+      case "setPagefileManaged":
+        return { type: "setPagefileManaged" };
+      default:
+        return null;
+    }
+  }, []);
+
+  // "Hepsini Düzelt": tüm güvenli otomatik fix'ler (disk temizliği + sistem fix'leri),
+  // tek restore point + tek elevation + per-item özet (run_fix_all).
   const handleFixAll = useCallback(() => {
-    if (!report || report.cleanupTargets.length === 0) return;
+    if (!report) return;
     if (!requireElevated(t("elevationRequired"))) return;
-    setFixAllConfirmOpen(true);
-  }, [report, requireElevated, t]);
+    const specs: FixSpec[] = [];
+    if (report.cleanupTargets.length > 0) {
+      specs.push({ type: "cleanup", targetIds: report.cleanupTargets.map((x) => x.id) });
+    }
+    const seen = new Set<string>();
+    for (const f of report.findings) {
+      const s = actionToFixSpec(f);
+      if (s && !seen.has(s.type)) {
+        seen.add(s.type);
+        specs.push(s);
+      }
+    }
+    if (specs.length === 0) return;
+    setPendingFixSpecs(specs);
+  }, [report, requireElevated, t, actionToFixSpec]);
+
+  // Tek bulguda "Düzelt": yalnız o fix.
+  const handleApplyFix = useCallback(
+    (finding: Finding) => {
+      if (!requireElevated(t("elevationRequired"))) return;
+      const s = actionToFixSpec(finding);
+      if (s) setPendingFixSpecs([s]);
+    },
+    [requireElevated, t, actionToFixSpec]
+  );
 
   const doFixAll = useCallback(
-    async (force: boolean) => {
-      if (!report) return;
-      const ids = report.cleanupTargets.map((target) => target.id);
-      if (ids.length === 0) return;
+    async (specs: FixSpec[], force: boolean) => {
+      if (specs.length === 0) return;
       setFixingAll(true);
       setFixAllRestoreError(null);
       try {
-        const outcome = await runFixAll([{ type: "cleanup", targetIds: ids }], force);
-        setFixAllConfirmOpen(false);
+        const outcome = await runFixAll(specs, force);
+        setPendingFixSpecs(null);
         setFixAllOutcome(outcome);
         // Skoru gerçekten tazele (sahte değil).
         const fresh = await scan();
@@ -283,22 +321,40 @@ export default function App() {
           recordScan(fresh).catch((err) => console.warn("[history] record failed:", err));
         }
       } catch (e) {
+        setPendingFixSpecs(null);
         if (e instanceof NeedsElevationError) {
-          setFixAllConfirmOpen(false);
           setForceElevationBanner(e.message);
         } else if (e instanceof RestoreFailedError) {
-          setFixAllConfirmOpen(false);
-          setFixAllRestoreError(e.message);
+          setFixAllRestoreError({ specs, message: e.message });
         } else {
-          setFixAllConfirmOpen(false);
           setError(String(e));
         }
       } finally {
         setFixingAll(false);
       }
     },
-    [report, historyEnabled]
+    [historyEnabled]
   );
+
+  // Onay modalı için fix listesi etiketleri.
+  const fixSpecLines = useMemo(() => {
+    if (!pendingFixSpecs) return [];
+    return pendingFixSpecs.map((s) => {
+      switch (s.type) {
+        case "cleanup":
+          return t("fixLineCleanup", {
+            count: report?.cleanupTargets.length ?? s.targetIds.length,
+            size: fmtBytes(report?.totalReclaimableBytes ?? 0),
+          });
+        case "enableFirewall":
+          return t("fixLineEnableFirewall");
+        case "enableUac":
+          return t("fixLineEnableUac");
+        case "setPagefileManaged":
+          return t("fixLineSetPagefileManaged");
+      }
+    });
+  }, [pendingFixSpecs, report, t, fmtBytes]);
 
   const handleSystemFileCheck = useCallback((finding: Finding) => setPendingSfc(finding), []);
   const confirmSfc = useCallback(() => {
@@ -602,7 +658,7 @@ export default function App() {
                   {t("technicalDetail")}
                 </summary>
                 <pre className="mt-2 p-2 rounded bg-muted/40 font-mono text-[11px] whitespace-pre-wrap break-words">
-                  {fixAllRestoreError}
+                  {fixAllRestoreError.message}
                 </pre>
               </details>
             </div>
@@ -611,8 +667,9 @@ export default function App() {
                 variant="warning"
                 size="default"
                 onClick={() => {
+                  const specs = fixAllRestoreError.specs;
                   setFixAllRestoreError(null);
-                  void doFixAll(true);
+                  void doFixAll(specs, true);
                 }}
               >
                 {t("proceedWithoutRestore")}
@@ -684,6 +741,7 @@ export default function App() {
                       onChkdskScan={handleChkdskScan}
                       onChkdskFix={handleChkdskFix}
                       onGuided={setGuidedFinding}
+                      onApplyFix={handleApplyFix}
                     />
                   ))}
                 </div>
@@ -800,12 +858,13 @@ export default function App() {
         />
 
         <FixAllConfirmDialog
-          open={fixAllConfirmOpen}
-          targets={report?.cleanupTargets ?? []}
-          totalBytes={report?.totalReclaimableBytes ?? 0}
+          open={pendingFixSpecs !== null}
+          lines={fixSpecLines}
           busy={fixingAll}
-          onConfirm={() => void doFixAll(false)}
-          onCancel={() => setFixAllConfirmOpen(false)}
+          onConfirm={() => {
+            if (pendingFixSpecs) void doFixAll(pendingFixSpecs, false);
+          }}
+          onCancel={() => setPendingFixSpecs(null)}
         />
 
         <FixAllSummaryDialog

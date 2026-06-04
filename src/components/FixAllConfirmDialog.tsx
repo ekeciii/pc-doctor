@@ -1,6 +1,5 @@
 import { ShieldCheck, Sparkles, Wand2 } from "lucide-react";
-import type { CleanupTarget } from "@/lib/types";
-import { useByteFmt, useT } from "@/lib/i18n";
+import { useT } from "@/lib/i18n";
 import {
   Dialog,
   DialogBody,
@@ -14,23 +13,15 @@ import { Button } from "./ui/Button";
 
 interface Props {
   open: boolean;
-  targets: CleanupTarget[];
-  totalBytes: number;
+  /** Uygulanacak fix'lerin okunabilir etiketleri. */
+  lines: string[];
   busy: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-export function FixAllConfirmDialog({
-  open,
-  targets,
-  totalBytes,
-  busy,
-  onConfirm,
-  onCancel,
-}: Props) {
+export function FixAllConfirmDialog({ open, lines, busy, onConfirm, onCancel }: Props) {
   const t = useT();
-  const fmtBytes = useByteFmt();
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onCancel()}>
@@ -46,25 +37,11 @@ export function FixAllConfirmDialog({
         </DialogHeader>
 
         <DialogBody className="space-y-4">
-          <div className="flex items-baseline justify-between rounded-lg bg-muted/50 border border-border px-4 py-3">
-            <span className="text-sm text-muted-foreground">
-              {t("fixAllConfirmTargets", { count: targets.length })}
-            </span>
-            <span className="font-mono font-semibold tabular-nums text-success-strong">
-              {fmtBytes(totalBytes)}
-            </span>
-          </div>
-
-          <ul className="text-sm space-y-1.5 max-h-44 overflow-auto">
-            {targets.map((tg) => (
-              <li key={tg.id} className="flex items-center justify-between gap-3">
-                <span className="flex items-center gap-2 min-w-0">
-                  <span className="text-primary shrink-0">›</span>
-                  <span className="truncate text-foreground/90">{tg.label}</span>
-                </span>
-                <span className="font-mono text-xs tabular-nums text-muted-foreground shrink-0">
-                  {fmtBytes(tg.sizeBytes)}
-                </span>
+          <ul className="text-sm space-y-1.5 rounded-md bg-muted/50 p-3.5 border border-border max-h-52 overflow-auto">
+            {lines.map((line, i) => (
+              <li key={i} className="text-foreground/90 flex gap-2">
+                <span className="text-primary shrink-0">›</span>
+                <span>{line}</span>
               </li>
             ))}
           </ul>

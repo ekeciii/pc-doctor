@@ -52,7 +52,10 @@ impl FixTier {
             Some(FindingAction::RunSystemFileCheck)
             | Some(FindingAction::RunDefenderQuickScan)
             | Some(FindingAction::RunChkdskScan { .. })
-            | Some(FindingAction::RunChkdskFix { .. }) => FixTier::Auto,
+            | Some(FindingAction::RunChkdskFix { .. })
+            | Some(FindingAction::EnableFirewall)
+            | Some(FindingAction::EnableUac)
+            | Some(FindingAction::SetPagefileManaged) => FixTier::Auto,
             Some(FindingAction::OpenSystemPropertiesPerformance)
             | Some(FindingAction::OpenUrl { .. }) => FixTier::Guided,
             None => FixTier::Advisory,
@@ -183,6 +186,12 @@ pub enum FindingAction {
     OpenSystemPropertiesPerformance,
     /// Frontend: "OEM sitesine git" / "Settings'i aç" → tarayıcı veya Settings URI
     OpenUrl { url: String },
+    /// Faz 2 — tek tık otomatik fix: Windows Güvenlik Duvarı'nı aç (onay + restore point).
+    EnableFirewall,
+    /// Faz 2 — tek tık otomatik fix: UAC'yi aç (reboot gerektirir).
+    EnableUac,
+    /// Faz 2 — tek tık otomatik fix: pagefile'ı sistem-yönetimli yap (reboot gerektirir).
+    SetPagefileManaged,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -529,6 +538,12 @@ pub struct CleanupResult {
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum FixSpec {
     Cleanup { target_ids: Vec<String> },
+    /// Faz 2 — kapalı Windows Güvenlik Duvarı profillerini aç.
+    EnableFirewall,
+    /// Faz 2 — UAC'yi (EnableLUA=1) aç. Reboot gerektirir.
+    EnableUac,
+    /// Faz 2 — pagefile'ı sistem-yönetimli yap. Reboot gerektirir.
+    SetPagefileManaged,
 }
 
 impl FixSpec {
@@ -536,12 +551,16 @@ impl FixSpec {
     pub fn id(&self) -> &'static str {
         match self {
             FixSpec::Cleanup { .. } => "cleanup",
+            FixSpec::EnableFirewall => "enableFirewall",
+            FixSpec::EnableUac => "enableUac",
+            FixSpec::SetPagefileManaged => "setPagefileManaged",
         }
     }
-    /// Bu fix uygulandıktan sonra yeniden başlatma gerekiyor mu? (Faz 2: pagefile → true.)
+    /// Bu fix uygulandıktan sonra yeniden başlatma gerekiyor mu?
     pub fn requires_reboot(&self) -> bool {
         match self {
-            FixSpec::Cleanup { .. } => false,
+            FixSpec::Cleanup { .. } | FixSpec::EnableFirewall => false,
+            FixSpec::EnableUac | FixSpec::SetPagefileManaged => true,
         }
     }
 }

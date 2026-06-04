@@ -72,6 +72,8 @@ interface Props {
   onChkdskFix?: (finding: Finding, volume: string, isSystem: boolean) => void;
   /** Guided (Rehberli) bulgular için "Nasıl?" → GuidedFixDrawer açar. */
   onGuided?: (finding: Finding) => void;
+  /** Faz 2 — tek tık otomatik sistem fix'i (firewall/UAC/pagefile) → onay + run_fix_all. */
+  onApplyFix?: (finding: Finding) => void;
   index?: number;
 }
 
@@ -88,6 +90,7 @@ export function FindingCard({
   onChkdskScan,
   onChkdskFix,
   onGuided,
+  onApplyFix,
   index = 0,
 }: Props) {
   const t = useT();
@@ -185,6 +188,14 @@ export function FindingCard({
               <Button size="sm" variant="outline" onClick={() => onGuided?.(finding)}>
                 <Compass className="w-4 h-4" />
                 {t("guidedCta")}
+              </Button>
+            )}
+            {(action.type === "enableFirewall" ||
+              action.type === "enableUac" ||
+              action.type === "setPagefileManaged") && (
+              <Button size="sm" onClick={() => onApplyFix?.(finding)}>
+                <Wrench className="w-4 h-4" />
+                {resolved.actionLabel ?? t("fix")}
               </Button>
             )}
           </div>

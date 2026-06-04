@@ -29,7 +29,10 @@ export type FindingAction =
   | { type: "runChkdskScan"; volume: string }
   | { type: "runChkdskFix"; volume: string; isSystem: boolean }
   | { type: "openSystemPropertiesPerformance" }
-  | { type: "openUrl"; url: string };
+  | { type: "openUrl"; url: string }
+  | { type: "enableFirewall" }
+  | { type: "enableUac" }
+  | { type: "setPagefileManaged" };
 
 export interface VolumeInfo {
   mountPoint: string;
@@ -97,7 +100,11 @@ export interface ScanReport {
 
 // === Faz 1 — "Hepsini Düzelt" orkestrasyonu ===
 
-export type FixSpec = { type: "cleanup"; targetIds: string[] };
+export type FixSpec =
+  | { type: "cleanup"; targetIds: string[] }
+  | { type: "enableFirewall" }
+  | { type: "enableUac" }
+  | { type: "setPagefileManaged" };
 
 export interface FixItemResult {
   id: string;
