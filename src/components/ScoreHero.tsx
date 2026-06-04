@@ -5,6 +5,7 @@ import type { TKey } from "@/lib/i18n";
 import { Button } from "./ui/Button";
 import { ScanButton } from "./ScanButton";
 import { HealthScoreRing } from "./HealthScoreRing";
+import { ScanningReactor } from "./ScanningReactor";
 import { ScoreBreakdown } from "./ScoreBreakdown";
 import { cn } from "@/lib/utils";
 
@@ -60,6 +61,19 @@ function HudPanel({
 
 export function ScoreHero({ report, scanning, fixing, onScan, onFixAll }: Props) {
   const t = useT();
+
+  // Tarama sırasında — radar göstergesi (ilk tarama veya yeniden tarama).
+  if (scanning) {
+    return (
+      <section className="flex flex-col items-center pt-12 pb-10">
+        <HudPanel glow="var(--color-primary)" statusKey="hudStatusLabel">
+          <div className="my-4">
+            <ScanningReactor />
+          </div>
+        </HudPanel>
+      </section>
+    );
+  }
 
   if (!report) {
     return (

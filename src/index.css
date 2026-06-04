@@ -94,6 +94,8 @@
   --animate-spin-rev: spin-rev 34s linear infinite;
   --animate-pulse-glow: pulse-glow 2.4s ease-in-out infinite;
   --animate-flicker: flicker 4s steps(1) infinite;
+  --animate-radar: radar 2.6s linear infinite;
+  --animate-ping-ring: ping-ring 2.6s ease-out infinite;
 
   @keyframes fade-in {
     from { opacity: 0; }
@@ -119,6 +121,12 @@
   @keyframes flicker {
     0%, 100% { opacity: 1; } 41% { opacity: 1; } 42% { opacity: 0.82; }
     43% { opacity: 1; } 70% { opacity: 1; } 71% { opacity: 0.9; } 72% { opacity: 1; }
+  }
+  @keyframes radar { to { transform: rotate(360deg); } }
+  @keyframes ping-ring {
+    0%   { transform: scale(0.55); opacity: 0.7; }
+    80%  { opacity: 0; }
+    100% { transform: scale(1.35); opacity: 0; }
   }
 }
 

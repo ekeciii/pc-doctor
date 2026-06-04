@@ -19,6 +19,9 @@ interface SeverityMeta {
   iconWrap: string;
   icon: JSX.Element;
   accent: string;
+  border: string;
+  /** durum LED'i + parlama rengi (CSS var) */
+  glow: string;
   badge:
     | "destructive-soft"
     | "warning-soft"
@@ -31,24 +34,32 @@ const meta: Record<Severity, SeverityMeta> = {
     iconWrap: "bg-destructive-soft text-destructive",
     icon: <AlertOctagon className="w-5 h-5" />,
     accent: "before:bg-destructive",
+    border: "border-destructive/35",
+    glow: "var(--color-destructive)",
     badge: "destructive-soft",
   },
   warning: {
     iconWrap: "bg-warning-soft text-warning-strong",
     icon: <AlertTriangle className="w-5 h-5" />,
     accent: "before:bg-warning",
+    border: "border-warning/35",
+    glow: "var(--color-warning)",
     badge: "warning-soft",
   },
   info: {
     iconWrap: "bg-info-soft text-info",
     icon: <Info className="w-5 h-5" />,
     accent: "before:bg-info",
+    border: "border-info/30",
+    glow: "var(--color-info)",
     badge: "info-soft",
   },
   good: {
     iconWrap: "bg-success-soft text-success",
     icon: <CheckCircle2 className="w-5 h-5" />,
     accent: "before:bg-success",
+    border: "border-success/30",
+    glow: "var(--color-success)",
     badge: "success-soft",
   },
 };
@@ -90,15 +101,19 @@ export function FindingCard({
     <Card
       variant="default"
       className={cn(
-        "relative overflow-hidden animate-rise-in",
-        "transition-[box-shadow,transform] duration-300 hover:shadow-md hover:-translate-y-0.5",
-        "before:content-[''] before:absolute before:inset-y-0 before:left-0 before:w-1",
+        "relative overflow-hidden animate-rise-in bg-card/60 backdrop-blur-sm",
+        s.border,
+        "transition-[box-shadow,transform] duration-300 hover:shadow-lg hover:-translate-y-0.5",
+        "before:content-[''] before:absolute before:inset-y-0 before:left-0 before:w-[3px]",
         s.accent
       )}
       style={{ animationDelay: `${index * 60}ms` }}
     >
       <div className="flex gap-4 p-5 pl-6">
-        <div className={cn("shrink-0 w-10 h-10 rounded-md flex items-center justify-center", s.iconWrap)}>
+        <div
+          className={cn("shrink-0 w-10 h-10 rounded-md flex items-center justify-center", s.iconWrap)}
+          style={{ boxShadow: `0 0 14px -4px ${s.glow}` }}
+        >
           {s.icon}
         </div>
         <div className="flex-1 min-w-0">
@@ -111,7 +126,7 @@ export function FindingCard({
             </Badge>
             <span
               className={cn(
-                "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide",
+                "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold uppercase tracking-wider",
                 tierChip.cls
               )}
             >

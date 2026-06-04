@@ -246,4 +246,6 @@ export const en: Record<TKey, string> = {
   // Phase 1 — HUD status bar
   hudStatusLabel: "System Diagnostics",
   hudStandby: "Standby",
+  scanRadarLabel: "Scanning system",
+  scanRadarHint: "Analyzing {count} categories",
 };

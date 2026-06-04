@@ -245,6 +245,8 @@ export const tr = {
   // Faz 1 — HUD durum çubuğu
   hudStatusLabel: "Sistem Tanısı",
   hudStandby: "Beklemede",
+  scanRadarLabel: "Sistem taranıyor",
+  scanRadarHint: "{count} kategori analiz ediliyor",
 } as const;
 
 export type TKey = keyof typeof tr;
