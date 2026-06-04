@@ -88,6 +88,12 @@
   --animate-fade-in: fade-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   --animate-rise-in: rise-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-breathe: breathe 4.5s ease-in-out infinite;
+  /* HUD — sci-fi komuta merkezi */
+  --animate-scan-sweep: scan-sweep 7s linear infinite;
+  --animate-spin-slow: spin-slow 26s linear infinite;
+  --animate-spin-rev: spin-rev 34s linear infinite;
+  --animate-pulse-glow: pulse-glow 2.4s ease-in-out infinite;
+  --animate-flicker: flicker 4s steps(1) infinite;
 
   @keyframes fade-in {
     from { opacity: 0; }
@@ -101,6 +107,41 @@
     0%, 100% { transform: scale(1); filter: brightness(1); }
     50%      { transform: scale(1.012); filter: brightness(1.04); }
   }
+  @keyframes scan-sweep {
+    0%   { transform: translateY(-10vh); opacity: 0; }
+    10%  { opacity: 0.9; }
+    90%  { opacity: 0.9; }
+    100% { transform: translateY(110vh); opacity: 0; }
+  }
+  @keyframes spin-slow { to { transform: rotate(360deg); } }
+  @keyframes spin-rev  { to { transform: rotate(-360deg); } }
+  @keyframes pulse-glow { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+  @keyframes flicker {
+    0%, 100% { opacity: 1; } 41% { opacity: 1; } 42% { opacity: 0.82; }
+    43% { opacity: 1; } 70% { opacity: 1; } 71% { opacity: 0.9; } 72% { opacity: 1; }
+  }
+}
+
+@layer components {
+  /* İnce teknik ızgara — backdrop katmanı opacity'i kendi ayarlar. */
+  .hud-grid {
+    background-image:
+      linear-gradient(to right, color-mix(in oklch, var(--color-primary) 60%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklch, var(--color-primary) 60%, transparent) 1px, transparent 1px);
+    background-size: 46px 46px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 35%, transparent 80%);
+  }
+  /* HUD köşe parantezleri — cam panel kenarlarına teknik aksan. */
+  .hud-corners::before,
+  .hud-corners::after {
+    content: "";
+    position: absolute;
+    width: 18px; height: 18px;
+    border-color: color-mix(in oklch, var(--color-primary) 75%, transparent);
+    pointer-events: none;
+  }
+  .hud-corners::before { top: 10px; left: 10px; border-top: 1.5px solid; border-left: 1.5px solid; }
+  .hud-corners::after  { bottom: 10px; right: 10px; border-bottom: 1.5px solid; border-right: 1.5px solid; }
 }
 
 /* Dark theme override */

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, ShieldAlert } from "lucide-react";
 import { Header } from "./components/Header";
+import { HudBackdrop } from "./components/HudBackdrop";
 import { ScoreHero } from "./components/ScoreHero";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { checkForUpdate, installUpdate, type AvailableUpdate } from "./lib/updater";
@@ -432,7 +433,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen">
-      <div className="px-6 py-6 max-w-5xl mx-auto">
+      <HudBackdrop band={report?.health.band} />
+      <div className="relative z-10 px-6 py-6 max-w-5xl mx-auto">
         <Header
           elevated={elevated}
           onOpenSettings={() => setSettingsOpen(true)}

@@ -242,6 +242,9 @@ export const tr = {
   fixAllSummaryFailed: "{count} düzeltme başarısız oldu",
   fixAllSummaryReboot: "{count} düzeltme yeniden başlatma istiyor",
   fixAllSummaryRestore: "Geri yükleme noktası oluşturuldu",
+  // Faz 1 — HUD durum çubuğu
+  hudStatusLabel: "Sistem Tanısı",
+  hudStandby: "Beklemede",
 } as const;
 
 export type TKey = keyof typeof tr;

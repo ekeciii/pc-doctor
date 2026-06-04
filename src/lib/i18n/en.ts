@@ -243,4 +243,7 @@ export const en: Record<TKey, string> = {
   fixAllSummaryFailed: "{count} fix(es) failed",
   fixAllSummaryReboot: "{count} fix(es) need a restart",
   fixAllSummaryRestore: "Restore point created",
+  // Phase 1 — HUD status bar
+  hudStatusLabel: "System Diagnostics",
+  hudStandby: "Standby",
 };
