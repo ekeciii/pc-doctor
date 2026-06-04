@@ -2,9 +2,11 @@
 name = "pc-doctor"
 version = "0.1.0"
 description = "Windows tanı ve onarım yardımcısı"
-authors = ["egeyu"]
+authors = ["Ege Yücel"]
 edition = "2021"
 rust-version = "1.77"
+license-file = "../LICENSE"
+publish = false
 
 [lib]
 name = "pc_doctor_lib"
