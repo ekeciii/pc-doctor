@@ -234,4 +234,13 @@ export const en: Record<TKey, string> = {
   guidedStepApply: "Apply the recommended change on the screen that opens, then re-scan.",
   guidedOpenSetting: "Open setting",
   guidedClose: "Close",
+  // Phase 1 M5 — Fix Everything flow
+  fixAllConfirmIntro: "The following safe fixes will be applied in one pass.",
+  fixAllConfirmTargets: "{count} cleanup target(s)",
+  fixAllConfirmRestoreNote: "A System Restore point will be created first.",
+  fixAllSummaryTitle: "Fixes complete",
+  fixAllSummaryApplied: "{count} fix(es) applied",
+  fixAllSummaryFailed: "{count} fix(es) failed",
+  fixAllSummaryReboot: "{count} fix(es) need a restart",
+  fixAllSummaryRestore: "Restore point created",
 };

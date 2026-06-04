@@ -18,6 +18,8 @@ import { ChkdskPendingBanner } from "./components/ChkdskPendingBanner";
 import { ChkdskBootResultBanner } from "./components/ChkdskBootResultBanner";
 import { CategoryGrid } from "./components/CategoryGrid";
 import { GuidedFixDrawer } from "./components/GuidedFixDrawer";
+import { FixAllConfirmDialog } from "./components/FixAllConfirmDialog";
+import { FixAllSummaryDialog } from "./components/FixAllSummaryDialog";
 import { SettingsDialog, applyTheme } from "./components/SettingsDialog";
 import { HistoryDialog } from "./components/HistoryDialog";
 import { Alert, AlertDescription, AlertTitle } from "./components/ui/Alert";
@@ -32,11 +34,12 @@ import {
   recordScan,
   RestoreFailedError,
   runChkdskFix,
+  runFixAll,
   scan,
   VolumeLockedError,
 } from "./lib/api";
 import { getSettings } from "./lib/settings";
-import type { CleanupResult, Finding, ScanReport } from "./lib/types";
+import type { CleanupResult, FixAllOutcome, Finding, ScanReport } from "./lib/types";
 import { resolveFinding, useByteFmt, useI18n, useT } from "./lib/i18n";
 
 export default function App() {
@@ -110,6 +113,11 @@ export default function App() {
   const [historyEnabled, setHistoryEnabled] = useState(true);
   // Faz 1 M4 — Guided (Rehberli) bulgu için açık drawer.
   const [guidedFinding, setGuidedFinding] = useState<Finding | null>(null);
+  // Faz 1 M5 — "Hepsini Düzelt" (run_fix_all) akışı
+  const [fixAllConfirmOpen, setFixAllConfirmOpen] = useState(false);
+  const [fixingAll, setFixingAll] = useState(false);
+  const [fixAllOutcome, setFixAllOutcome] = useState<FixAllOutcome | null>(null);
+  const [fixAllRestoreError, setFixAllRestoreError] = useState<string | null>(null);
   const updateChecked = useRef(false);
 
   useEffect(() => {
@@ -247,14 +255,49 @@ export default function App() {
     [elevated]
   );
 
-  // Faz 1 — "Hepsini Düzelt": şu an batch'lenebilir tek Auto fix = disk temizliği.
-  // Mevcut onay + restore point + cleanup akışını tüm hedeflerle tetikler.
-  // (M5'te dedicated run_fix_all + ilerleme/özet dialog'una geçecek.)
+  // Faz 1 M5 — "Hepsini Düzelt": dedicated run_fix_all akışı.
+  // Faz 1'de batch'lenebilir tek Auto fix = disk temizliği; Faz 2 fix'leri FixSpec'e eklenince
+  // bu akış otomatik kapsar (tek restore point + tek elevation + per-item özet).
   const handleFixAll = useCallback(() => {
     if (!report || report.cleanupTargets.length === 0) return;
     if (!requireElevated(t("elevationRequired"))) return;
-    setPendingCleanupIds(report.cleanupTargets.map((target) => target.id));
+    setFixAllConfirmOpen(true);
   }, [report, requireElevated, t]);
+
+  const doFixAll = useCallback(
+    async (force: boolean) => {
+      if (!report) return;
+      const ids = report.cleanupTargets.map((target) => target.id);
+      if (ids.length === 0) return;
+      setFixingAll(true);
+      setFixAllRestoreError(null);
+      try {
+        const outcome = await runFixAll([{ type: "cleanup", targetIds: ids }], force);
+        setFixAllConfirmOpen(false);
+        setFixAllOutcome(outcome);
+        // Skoru gerçekten tazele (sahte değil).
+        const fresh = await scan();
+        setReport(fresh);
+        if (historyEnabled) {
+          recordScan(fresh).catch((err) => console.warn("[history] record failed:", err));
+        }
+      } catch (e) {
+        if (e instanceof NeedsElevationError) {
+          setFixAllConfirmOpen(false);
+          setForceElevationBanner(e.message);
+        } else if (e instanceof RestoreFailedError) {
+          setFixAllConfirmOpen(false);
+          setFixAllRestoreError(e.message);
+        } else {
+          setFixAllConfirmOpen(false);
+          setError(String(e));
+        }
+      } finally {
+        setFixingAll(false);
+      }
+    },
+    [report, historyEnabled]
+  );
 
   const handleSystemFileCheck = useCallback((finding: Finding) => setPendingSfc(finding), []);
   const confirmSfc = useCallback(() => {
@@ -399,7 +442,7 @@ export default function App() {
         <ScoreHero
           report={report}
           scanning={scanning}
-          fixing={cleaning}
+          fixing={fixingAll}
           onScan={runScan}
           onFixAll={handleFixAll}
         />
@@ -539,6 +582,40 @@ export default function App() {
                 size="sm"
                 onClick={() => setRestoreErrorChkdsk(null)}
               >
+                {t("cancel")}
+              </Button>
+            </div>
+          </Alert>
+        )}
+
+        {/* Faz 1 M5: "Hepsini Düzelt" Restore Point fail recovery */}
+        {fixAllRestoreError && (
+          <Alert variant="warning" className="mb-5 items-start animate-fade-in">
+            <ShieldAlert />
+            <div className="flex-1 min-w-0">
+              <AlertTitle>{t("restoreErrorTitle")}</AlertTitle>
+              <AlertDescription className="mt-1">{t("restoreErrorExplain")}</AlertDescription>
+              <details className="mt-2 text-xs">
+                <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                  {t("technicalDetail")}
+                </summary>
+                <pre className="mt-2 p-2 rounded bg-muted/40 font-mono text-[11px] whitespace-pre-wrap break-words">
+                  {fixAllRestoreError}
+                </pre>
+              </details>
+            </div>
+            <div className="flex flex-col gap-2 shrink-0">
+              <Button
+                variant="warning"
+                size="default"
+                onClick={() => {
+                  setFixAllRestoreError(null);
+                  void doFixAll(true);
+                }}
+              >
+                {t("proceedWithoutRestore")}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setFixAllRestoreError(null)}>
                 {t("cancel")}
               </Button>
             </div>
@@ -718,6 +795,20 @@ export default function App() {
           finding={guidedFinding}
           onOpenTarget={handleGuidedOpenTarget}
           onClose={() => setGuidedFinding(null)}
+        />
+
+        <FixAllConfirmDialog
+          open={fixAllConfirmOpen}
+          targets={report?.cleanupTargets ?? []}
+          totalBytes={report?.totalReclaimableBytes ?? 0}
+          busy={fixingAll}
+          onConfirm={() => void doFixAll(false)}
+          onCancel={() => setFixAllConfirmOpen(false)}
+        />
+
+        <FixAllSummaryDialog
+          outcome={fixAllOutcome}
+          onClose={() => setFixAllOutcome(null)}
         />
       </div>
     </div>

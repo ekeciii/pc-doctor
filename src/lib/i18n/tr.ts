@@ -233,6 +233,15 @@ export const tr = {
   guidedStepApply: "Açılan ekranda önerilen değişikliği uygulayın, sonra yeniden tarayın.",
   guidedOpenSetting: "Ayarı aç",
   guidedClose: "Kapat",
+  // Faz 1 M5 — Hepsini Düzelt akışı
+  fixAllConfirmIntro: "Aşağıdaki güvenli düzeltmeler tek seferde uygulanacak.",
+  fixAllConfirmTargets: "{count} temizlik hedefi",
+  fixAllConfirmRestoreNote: "Önce bir Sistem Geri Yükleme noktası oluşturulacak.",
+  fixAllSummaryTitle: "Düzeltmeler tamamlandı",
+  fixAllSummaryApplied: "{count} düzeltme uygulandı",
+  fixAllSummaryFailed: "{count} düzeltme başarısız oldu",
+  fixAllSummaryReboot: "{count} düzeltme yeniden başlatma istiyor",
+  fixAllSummaryRestore: "Geri yükleme noktası oluşturuldu",
 } as const;
 
 export type TKey = keyof typeof tr;
