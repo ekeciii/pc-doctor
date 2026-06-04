@@ -30,7 +30,7 @@ pub fn evaluate(snap: &PagefileSnapshot) -> Vec<Finding> {
                 )
                 .with_metric(format!("{} MB / {} MB", max_total, recommended_min))
                 .with_metric_code(MetricCode::Bytes { value: max_total.saturating_mul(1024 * 1024) })
-                .with_action(FindingAction::OpenSystemPropertiesPerformance)
+                .with_action(FindingAction::SetPagefileManaged)
                 .with_action_code("finding.pagefile.undersized.action")
                 .with_params(json!({
                     "configuredMb": max_total,
@@ -53,7 +53,7 @@ pub fn evaluate(snap: &PagefileSnapshot) -> Vec<Finding> {
             )
             .with_metric(format!("{} GB RAM", ram_mb / 1024))
             .with_metric_code(MetricCode::Bytes { value: ram_mb.saturating_mul(1024 * 1024) })
-            .with_action(FindingAction::OpenSystemPropertiesPerformance)
+            .with_action(FindingAction::SetPagefileManaged)
             .with_action_code("finding.pagefile.consider_managed.action")
             .with_params(json!({ "ramGb": ram_mb / 1024 })),
         );

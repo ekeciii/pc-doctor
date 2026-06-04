@@ -1,12 +1,38 @@
 export type Severity = "critical" | "warning" | "info" | "good";
 
+/** Faz 1 — bir bulgunun düzeltme katmanı (backend `FixTier` aynası). */
+export type FixTier = "auto" | "guided" | "advisory";
+
+/** Sağlık skoru bandı (renk + verdict). */
+export type ScoreBand = "excellent" | "good" | "warning" | "critical";
+
+export interface CategoryPenalty {
+  category: string;
+  penalty: number;
+}
+
+export interface HealthScore {
+  score: number;
+  band: ScoreBand;
+  /** i18n verdict kodu; frontend band + sayımlarla yerelleştirir. */
+  verdictCode: string;
+  criticalCount: number;
+  warningCount: number;
+  infoCount: number;
+  /** Kategori başına götürülen puan, azalan sırada. */
+  breakdown: CategoryPenalty[];
+}
+
 export type FindingAction =
   | { type: "runSystemFileCheck" }
   | { type: "runDefenderQuickScan" }
   | { type: "runChkdskScan"; volume: string }
   | { type: "runChkdskFix"; volume: string; isSystem: boolean }
   | { type: "openSystemPropertiesPerformance" }
-  | { type: "openUrl"; url: string };
+  | { type: "openUrl"; url: string }
+  | { type: "enableFirewall" }
+  | { type: "enableUac" }
+  | { type: "setPagefileManaged" };
 
 export interface VolumeInfo {
   mountPoint: string;
@@ -47,6 +73,9 @@ export interface Finding {
   params?: Record<string, string | number> | null;
   /** Sprint 12 K-ext pilot — opsiyonel locale-bağımsız metric kodu */
   metricCode?: MetricCode | null;
+  /** Faz 1 — düzeltme katmanı (kartta aksiyonu belirler). Scan her zaman gönderir;
+   *  sentetik (history detay) bulgularda olmayabilir → kart `advisory` varsayar. */
+  fixTier?: FixTier;
 }
 
 export interface CleanupTarget {
@@ -65,6 +94,32 @@ export interface ScanReport {
   findings: Finding[];
   cleanupTargets: CleanupTarget[];
   totalReclaimableBytes: number;
+  /** Faz 1 — backend'den gelen sağlık skoru. */
+  health: HealthScore;
+}
+
+// === Faz 1 — "Hepsini Düzelt" orkestrasyonu ===
+
+export type FixSpec =
+  | { type: "cleanup"; targetIds: string[] }
+  | { type: "enableFirewall" }
+  | { type: "enableUac" }
+  | { type: "setPagefileManaged" };
+
+export interface FixItemResult {
+  id: string;
+  ok: boolean;
+  messageCode?: string;
+  rebootRequired: boolean;
+}
+
+export interface FixAllOutcome {
+  restorePointCreated: boolean;
+  restorePointSkippedReason?: string | null;
+  applied: number;
+  failed: number;
+  items: FixItemResult[];
+  rebootRequired: string[];
 }
 
 export interface CleanupTargetResult {

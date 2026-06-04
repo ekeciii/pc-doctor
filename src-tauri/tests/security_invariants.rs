@@ -250,3 +250,23 @@ fn invariant_8_shutdown_clamp_constants_match() {
         "Invariant #8: MAX_SECONDS=600 sabiti bulunamadı"
     );
 }
+
+#[test]
+fn invariant_23_system_tweaks_only_strengthen_security() {
+    // Faz 2: otomatik sistem fix'leri YALNIZ güvenliği artırır — asla zayıflatmaz.
+    // Firewall sadece açılır, UAC sadece 1 yapılır, pagefile sadece sistem-yönetimliye alınır.
+    for needle in [
+        "-Enabled False",
+        "-Enabled $false",
+        "EnableLUA' -Value 0",
+        "EnableLUA -Value 0",
+        "AutomaticManagedPagefile = $false",
+        "AutomaticManagedPagefile=$false",
+    ] {
+        let hits = find_substring(needle);
+        assert!(
+            hits.is_empty(),
+            "Invariant #23: güvenliği zayıflatan desen bulundu '{needle}': {hits:?}"
+        );
+    }
+}

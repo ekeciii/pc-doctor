@@ -2,6 +2,7 @@ mod admin;
 mod collectors;
 mod commands;
 mod diagnostics;
+mod health;
 mod history;
 mod models;
 mod remediation;
@@ -49,6 +50,7 @@ pub fn run() {
             commands::create_restore_point,
             commands::is_system_restore_enabled,
             commands::execute_cleanup,
+            commands::run_fix_all,
             commands::is_elevated,
             commands::relaunch_as_admin,
             commands::run_system_file_check,

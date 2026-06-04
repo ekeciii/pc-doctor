@@ -11,11 +11,12 @@ use crate::diagnostics::{
 };
 use crate::models::{
     ChkdskBootResult, ChkdskCancelOutcome, ChkdskFixResult, ChkdskResult, CleanupResult,
-    CleanupTarget, DefenderScanResult, PendingChkdsk, ScanReport, SfcDismSummary,
+    CleanupTarget, DefenderScanResult, FixAllOutcome, FixItemResult, FixSpec, PendingChkdsk,
+    ScanReport, SfcDismSummary,
 };
 use crate::remediation::{
     chkdsk as chkdsk_remediation, chkdsk_boot_result, chkntfs, cleanup, defender_scan, reboot,
-    system_file_check, volume as vol_util,
+    system_file_check, system_tweaks, volume as vol_util,
 };
 use crate::safety::{pending_state, restore_point};
 use chrono::Utc;
@@ -112,6 +113,12 @@ fn scan_blocking() -> ScanReport {
         findings.extend(chkdsk_diag::evaluate(&chkdsk_vols));
         findings.sort_by_key(|f| severity_order(&f.severity));
 
+        // Faz 1: her bulgunun düzeltme katmanını aksiyonundan merkezi türet.
+        for f in &mut findings {
+            f.fix_tier = crate::models::FixTier::from_action(f.action.as_ref());
+        }
+
+        let health = crate::health::compute_health(&findings);
         let total_reclaimable_bytes = cleanup_targets.iter().map(|t| t.size_bytes).sum();
         ScanReport {
             generated_at: Utc::now().to_rfc3339(),
@@ -119,6 +126,7 @@ fn scan_blocking() -> ScanReport {
             findings,
             cleanup_targets,
             total_reclaimable_bytes,
+            health,
         }
     })
 }
@@ -202,6 +210,103 @@ pub fn execute_cleanup(
         restore_point_created,
         restore_point_skipped_reason,
     })
+}
+
+/// Faz 1 — "Hepsini Düzelt" orkestratörü.
+///
+/// Bir `FixSpec` listesini **tek** elevation kontrolü + **tek** System Restore noktası
+/// altında sırayla uygular. Tekil komutların (her biri kendi restore point'ini oluşturur)
+/// aksine batch için tek nokta açar. Bir fix patlarsa diğerleri devam eder (izolasyon);
+/// sonunda madde madde sonuç + reboot grubu döner.
+///
+/// Ağır streaming onarımlar (sfc/DISM, Defender, chkdsk) bilinçli olarak burada DEĞİL —
+/// kendi butonları + ilerleme dialoglarıyla ayrı çalışır. Faz 2 config fix'leri
+/// (başlangıç, pagefile, firewall/UAC, güncelleme) `FixSpec`'e eklenince otomatik kapsanır.
+#[tauri::command]
+pub fn run_fix_all(
+    fixes: Vec<FixSpec>,
+    force_without_restore: bool,
+) -> Result<FixAllOutcome, String> {
+    if !admin::is_elevated() {
+        return Err(format!(
+            "{}: Düzeltmeler için yönetici yetkisi gerek (System Restore + korumalı işlemler).",
+            NEEDS_ELEVATION
+        ));
+    }
+
+    // Tek restore point — batch'in tamamı için.
+    let mut restore_point_created = false;
+    let mut restore_point_skipped_reason: Option<String> = None;
+    match restore_point::create("PC Doctor: Hepsini Düzelt öncesi") {
+        Ok(_) => restore_point_created = true,
+        Err(e) => {
+            restore_point_skipped_reason = Some(e.to_string());
+            if !force_without_restore {
+                return Err(format!("{RESTORE_FAILED}: {}", e));
+            }
+        }
+    }
+
+    let items: Vec<FixItemResult> = fixes.iter().map(run_one_fix).collect();
+    Ok(summarize_fix_all(
+        items,
+        restore_point_created,
+        restore_point_skipped_reason,
+    ))
+}
+
+/// Tek bir fix'i uygular (izole — panik/hata batch'i durdurmaz). Tekil remediation
+/// fonksiyonlarını doğrudan çağırır (komut sarmalayıcılarını değil) ki restore point
+/// tekrarlanmasın.
+fn run_one_fix(spec: &FixSpec) -> FixItemResult {
+    let id = spec.id().to_string();
+    let reboot_required = spec.requires_reboot();
+    match spec {
+        FixSpec::Cleanup { target_ids } => {
+            let per = cleanup::execute(target_ids);
+            let any_err = per.iter().any(|r| r.error.is_some());
+            fix_item(id, !any_err, reboot_required)
+        }
+        FixSpec::EnableFirewall => {
+            fix_item(id, system_tweaks::enable_firewall().is_ok(), reboot_required)
+        }
+        FixSpec::EnableUac => fix_item(id, system_tweaks::enable_uac().is_ok(), reboot_required),
+        FixSpec::SetPagefileManaged => {
+            fix_item(id, system_tweaks::set_pagefile_managed().is_ok(), reboot_required)
+        }
+    }
+}
+
+fn fix_item(id: String, ok: bool, reboot_required: bool) -> FixItemResult {
+    FixItemResult {
+        id,
+        ok,
+        message_code: None,
+        reboot_required,
+    }
+}
+
+/// Per-item sonuçlardan batch özetini üretir (saf — test edilebilir).
+fn summarize_fix_all(
+    items: Vec<FixItemResult>,
+    restore_point_created: bool,
+    restore_point_skipped_reason: Option<String>,
+) -> FixAllOutcome {
+    let applied = items.iter().filter(|i| i.ok).count() as u32;
+    let failed = items.iter().filter(|i| !i.ok).count() as u32;
+    let reboot_required = items
+        .iter()
+        .filter(|i| i.reboot_required && i.ok)
+        .map(|i| i.id.clone())
+        .collect();
+    FixAllOutcome {
+        restore_point_created,
+        restore_point_skipped_reason,
+        applied,
+        failed,
+        items,
+        reboot_required,
+    }
 }
 
 #[tauri::command]
@@ -542,7 +647,48 @@ fn is_allowed_url(url: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::is_allowed_url;
+    use super::{is_allowed_url, summarize_fix_all};
+    use crate::models::FixItemResult;
+
+    fn item(id: &str, ok: bool, reboot: bool) -> FixItemResult {
+        FixItemResult {
+            id: id.into(),
+            ok,
+            message_code: None,
+            reboot_required: reboot,
+        }
+    }
+
+    #[test]
+    fn summarize_counts_applied_and_failed() {
+        let out = summarize_fix_all(
+            vec![item("a", true, false), item("b", false, false), item("c", true, false)],
+            true,
+            None,
+        );
+        assert_eq!(out.applied, 2);
+        assert_eq!(out.failed, 1);
+        assert!(out.restore_point_created);
+        assert!(out.reboot_required.is_empty());
+    }
+
+    #[test]
+    fn summarize_reboot_group_only_includes_successful_reboot_fixes() {
+        // Başarılı + reboot → grupta; başarısız + reboot → grupta DEĞİL (uygulanmadı).
+        let out = summarize_fix_all(
+            vec![item("pagefile", true, true), item("chkdsk", false, true)],
+            true,
+            None,
+        );
+        assert_eq!(out.reboot_required, vec!["pagefile".to_string()]);
+    }
+
+    #[test]
+    fn summarize_carries_restore_skip_reason() {
+        let out = summarize_fix_all(vec![item("a", true, false)], false, Some("VSS kapalı".into()));
+        assert!(!out.restore_point_created);
+        assert_eq!(out.restore_point_skipped_reason.as_deref(), Some("VSS kapalı"));
+    }
 
     #[test]
     fn allow_known_ms_settings() {

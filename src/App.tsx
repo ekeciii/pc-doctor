@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, ShieldAlert } from "lucide-react";
 import { Header } from "./components/Header";
-import { ScanButton } from "./components/ScanButton";
+import { HudBackdrop } from "./components/HudBackdrop";
+import { ScoreHero } from "./components/ScoreHero";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { checkForUpdate, installUpdate, type AvailableUpdate } from "./lib/updater";
 import { FindingCard } from "./components/FindingCard";
@@ -16,7 +17,10 @@ import { ChkdskFixConfirmDialog } from "./components/ChkdskFixConfirmDialog";
 import { ChkdskRebootCountdownDialog } from "./components/ChkdskRebootCountdownDialog";
 import { ChkdskPendingBanner } from "./components/ChkdskPendingBanner";
 import { ChkdskBootResultBanner } from "./components/ChkdskBootResultBanner";
-import { ScanSummary } from "./components/ScanSummary";
+import { CategoryGrid } from "./components/CategoryGrid";
+import { GuidedFixDrawer } from "./components/GuidedFixDrawer";
+import { FixAllConfirmDialog } from "./components/FixAllConfirmDialog";
+import { FixAllSummaryDialog } from "./components/FixAllSummaryDialog";
 import { SettingsDialog, applyTheme } from "./components/SettingsDialog";
 import { HistoryDialog } from "./components/HistoryDialog";
 import { Alert, AlertDescription, AlertTitle } from "./components/ui/Alert";
@@ -31,11 +35,12 @@ import {
   recordScan,
   RestoreFailedError,
   runChkdskFix,
+  runFixAll,
   scan,
   VolumeLockedError,
 } from "./lib/api";
 import { getSettings } from "./lib/settings";
-import type { CleanupResult, Finding, ScanReport } from "./lib/types";
+import type { CleanupResult, FixAllOutcome, FixSpec, Finding, ScanReport } from "./lib/types";
 import { resolveFinding, useByteFmt, useI18n, useT } from "./lib/i18n";
 
 export default function App() {
@@ -107,6 +112,17 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyEnabled, setHistoryEnabled] = useState(true);
+  // Faz 1 M4 — Guided (Rehberli) bulgu için açık drawer.
+  const [guidedFinding, setGuidedFinding] = useState<Finding | null>(null);
+  // Faz 1 M5 + Faz 2 — "Hepsini Düzelt" / tek-fix (run_fix_all) akışı.
+  // pendingFixSpecs: onay bekleyen fix listesi (null = kapalı).
+  const [pendingFixSpecs, setPendingFixSpecs] = useState<FixSpec[] | null>(null);
+  const [fixingAll, setFixingAll] = useState(false);
+  const [fixAllOutcome, setFixAllOutcome] = useState<FixAllOutcome | null>(null);
+  const [fixAllRestoreError, setFixAllRestoreError] = useState<{
+    specs: FixSpec[];
+    message: string;
+  } | null>(null);
   const updateChecked = useRef(false);
 
   useEffect(() => {
@@ -244,6 +260,102 @@ export default function App() {
     [elevated]
   );
 
+  // Faz 2 — bir bulgunun aksiyonunu otomatik FixSpec'e çevirir (Auto olmayan → null).
+  const actionToFixSpec = useCallback((finding: Finding): FixSpec | null => {
+    switch (finding.action?.type) {
+      case "enableFirewall":
+        return { type: "enableFirewall" };
+      case "enableUac":
+        return { type: "enableUac" };
+      case "setPagefileManaged":
+        return { type: "setPagefileManaged" };
+      default:
+        return null;
+    }
+  }, []);
+
+  // "Hepsini Düzelt": tüm güvenli otomatik fix'ler (disk temizliği + sistem fix'leri),
+  // tek restore point + tek elevation + per-item özet (run_fix_all).
+  const handleFixAll = useCallback(() => {
+    if (!report) return;
+    if (!requireElevated(t("elevationRequired"))) return;
+    const specs: FixSpec[] = [];
+    if (report.cleanupTargets.length > 0) {
+      specs.push({ type: "cleanup", targetIds: report.cleanupTargets.map((x) => x.id) });
+    }
+    const seen = new Set<string>();
+    for (const f of report.findings) {
+      const s = actionToFixSpec(f);
+      if (s && !seen.has(s.type)) {
+        seen.add(s.type);
+        specs.push(s);
+      }
+    }
+    if (specs.length === 0) return;
+    setPendingFixSpecs(specs);
+  }, [report, requireElevated, t, actionToFixSpec]);
+
+  // Tek bulguda "Düzelt": yalnız o fix.
+  const handleApplyFix = useCallback(
+    (finding: Finding) => {
+      if (!requireElevated(t("elevationRequired"))) return;
+      const s = actionToFixSpec(finding);
+      if (s) setPendingFixSpecs([s]);
+    },
+    [requireElevated, t, actionToFixSpec]
+  );
+
+  const doFixAll = useCallback(
+    async (specs: FixSpec[], force: boolean) => {
+      if (specs.length === 0) return;
+      setFixingAll(true);
+      setFixAllRestoreError(null);
+      try {
+        const outcome = await runFixAll(specs, force);
+        setPendingFixSpecs(null);
+        setFixAllOutcome(outcome);
+        // Skoru gerçekten tazele (sahte değil).
+        const fresh = await scan();
+        setReport(fresh);
+        if (historyEnabled) {
+          recordScan(fresh).catch((err) => console.warn("[history] record failed:", err));
+        }
+      } catch (e) {
+        setPendingFixSpecs(null);
+        if (e instanceof NeedsElevationError) {
+          setForceElevationBanner(e.message);
+        } else if (e instanceof RestoreFailedError) {
+          setFixAllRestoreError({ specs, message: e.message });
+        } else {
+          setError(String(e));
+        }
+      } finally {
+        setFixingAll(false);
+      }
+    },
+    [historyEnabled]
+  );
+
+  // Onay modalı için fix listesi etiketleri.
+  const fixSpecLines = useMemo(() => {
+    if (!pendingFixSpecs) return [];
+    return pendingFixSpecs.map((s) => {
+      switch (s.type) {
+        case "cleanup":
+          return t("fixLineCleanup", {
+            count: report?.cleanupTargets.length ?? s.targetIds.length,
+            size: fmtBytes(report?.totalReclaimableBytes ?? 0),
+          });
+        case "enableFirewall":
+          return t("fixLineEnableFirewall");
+        case "enableUac":
+          return t("fixLineEnableUac");
+        case "setPagefileManaged":
+          return t("fixLineSetPagefileManaged");
+      }
+    });
+  }, [pendingFixSpecs, report, t, fmtBytes]);
+
   const handleSystemFileCheck = useCallback((finding: Finding) => setPendingSfc(finding), []);
   const confirmSfc = useCallback(() => {
     setPendingSfc(null);
@@ -330,6 +442,20 @@ export default function App() {
     }
   }, []);
 
+  // M4 — GuidedFixDrawer "Ayarı aç": bulgunun action'ına göre doğru hedefi açar.
+  const handleGuidedOpenTarget = useCallback(
+    async (finding: Finding) => {
+      const a = finding.action;
+      if (a?.type === "openUrl") {
+        await handleOpenUrl(a.url);
+      } else if (a?.type === "openSystemPropertiesPerformance") {
+        await handleOpenSystemPropertiesPerformance();
+      }
+      setGuidedFinding(null);
+    },
+    [handleOpenSystemPropertiesPerformance]
+  );
+
   const handleChkdskClose = useCallback(() => setChkdskVolume(null), []);
   const handleChkdskNeedsElevation = useCallback(
     (reason: string) => setForceElevationBanner(reason),
@@ -363,22 +489,21 @@ export default function App() {
 
   return (
     <div className="min-h-screen">
-      <div className="px-6 py-6 max-w-5xl mx-auto">
+      <HudBackdrop band={report?.health.band} />
+      <div className="relative z-10 px-6 py-6 max-w-5xl mx-auto">
         <Header
           elevated={elevated}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenHistory={() => setHistoryOpen(true)}
         />
 
-        <section className="flex flex-col items-center mt-12 mb-12">
-          <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground mb-4">
-            {t("appSubtitle")}
-          </p>
-          <ScanButton scanning={scanning} hasReport={!!report} onClick={runScan} />
-          {!report && !scanning && (
-            <p className="mt-5 text-sm text-muted-foreground">{t("noScanYet")}</p>
-          )}
-        </section>
+        <ScoreHero
+          report={report}
+          scanning={scanning}
+          fixing={fixingAll}
+          onScan={runScan}
+          onFixAll={handleFixAll}
+        />
 
         {availableUpdate && !updateDismissed && (
           <>
@@ -521,6 +646,41 @@ export default function App() {
           </Alert>
         )}
 
+        {/* Faz 1 M5: "Hepsini Düzelt" Restore Point fail recovery */}
+        {fixAllRestoreError && (
+          <Alert variant="warning" className="mb-5 items-start animate-fade-in">
+            <ShieldAlert />
+            <div className="flex-1 min-w-0">
+              <AlertTitle>{t("restoreErrorTitle")}</AlertTitle>
+              <AlertDescription className="mt-1">{t("restoreErrorExplain")}</AlertDescription>
+              <details className="mt-2 text-xs">
+                <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                  {t("technicalDetail")}
+                </summary>
+                <pre className="mt-2 p-2 rounded bg-muted/40 font-mono text-[11px] whitespace-pre-wrap break-words">
+                  {fixAllRestoreError.message}
+                </pre>
+              </details>
+            </div>
+            <div className="flex flex-col gap-2 shrink-0">
+              <Button
+                variant="warning"
+                size="default"
+                onClick={() => {
+                  const specs = fixAllRestoreError.specs;
+                  setFixAllRestoreError(null);
+                  void doFixAll(specs, true);
+                }}
+              >
+                {t("proceedWithoutRestore")}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setFixAllRestoreError(null)}>
+                {t("cancel")}
+              </Button>
+            </div>
+          </Alert>
+        )}
+
         {error && (
           <Alert variant="destructive" className="mb-4">
             <AlertDescription>{error}</AlertDescription>
@@ -543,14 +703,21 @@ export default function App() {
 
         {report && (
           <>
-            <ScanSummary report={report} />
+            <CategoryGrid
+              report={report}
+              onSelect={() =>
+                document
+                  .getElementById("issues")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" })
+              }
+            />
 
             <section className="mb-10">
               <SectionTitle index={1}>{t("drives")}</SectionTitle>
               <VolumeGrid volumes={report.volumes} />
             </section>
 
-            <section className="mb-10">
+            <section id="issues" className="mb-10 scroll-mt-4">
               <SectionTitle index={2}>{t("diagnoseSection")}</SectionTitle>
               {report.findings.length === 0 ? (
                 <Alert variant="success">
@@ -573,10 +740,8 @@ export default function App() {
                       onDefenderQuickScan={handleDefenderQuickScan}
                       onChkdskScan={handleChkdskScan}
                       onChkdskFix={handleChkdskFix}
-                      onOpenSystemPropertiesPerformance={
-                        handleOpenSystemPropertiesPerformance
-                      }
-                      onOpenUrl={handleOpenUrl}
+                      onGuided={setGuidedFinding}
+                      onApplyFix={handleApplyFix}
                     />
                   ))}
                 </div>
@@ -685,6 +850,27 @@ export default function App() {
         />
 
         <HistoryDialog open={historyOpen} onClose={() => setHistoryOpen(false)} />
+
+        <GuidedFixDrawer
+          finding={guidedFinding}
+          onOpenTarget={handleGuidedOpenTarget}
+          onClose={() => setGuidedFinding(null)}
+        />
+
+        <FixAllConfirmDialog
+          open={pendingFixSpecs !== null}
+          lines={fixSpecLines}
+          busy={fixingAll}
+          onConfirm={() => {
+            if (pendingFixSpecs) void doFixAll(pendingFixSpecs, false);
+          }}
+          onCancel={() => setPendingFixSpecs(null)}
+        />
+
+        <FixAllSummaryDialog
+          outcome={fixAllOutcome}
+          onClose={() => setFixAllOutcome(null)}
+        />
       </div>
     </div>
   );

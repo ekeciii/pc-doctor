@@ -83,9 +83,7 @@ pub fn evaluate(cfg: &SecurityConfig) -> Vec<Finding> {
                     )
                     .with_metric(disabled.len().to_string())
                     .with_metric_code(MetricCode::Count { value: disabled.len() as u64 })
-                    .with_action(FindingAction::OpenUrl {
-                        url: "windowsdefender://network".into(),
-                    })
+                    .with_action(FindingAction::EnableFirewall)
                     .with_action_code("finding.security.firewall_off.action")
                     .with_params(json!({
                         "profiles": names,
@@ -108,7 +106,9 @@ pub fn evaluate(cfg: &SecurityConfig) -> Vec<Finding> {
             "finding.security.uac_off.description",
         )
         .with_metric("!")
-        .with_metric_code(MetricCode::BareString { text: "!".into() });
+        .with_metric_code(MetricCode::BareString { text: "!".into() })
+        .with_action(FindingAction::EnableUac)
+        .with_action_code("finding.security.uac_off.action");
         f.recommended_action = Some(
             "Başlat menüsüne 'UAC' yaz ve 'Kullanıcı Hesabı Denetimi ayarlarını değiştir' sonucunu seç."
                 .into(),

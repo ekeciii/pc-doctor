@@ -26,6 +26,43 @@ pub enum Severity {
     Good,
 }
 
+/// Faz 1 — bir bulgunun nasıl düzeltileceğini ilan eder (sağlık-dashboard çatısı).
+/// - `Auto`: app onay + System Restore noktasıyla değişikliği kendisi uygular (geri alınabilir).
+/// - `Guided`: app doğru ayar yerini açar + adım adım anlatır; değişikliği kullanıcı yapar.
+/// - `Advisory`: yalnız bilgi (donanım/log), otomatik aksiyon yok.
+///
+/// Default `Advisory` — bilinçli olarak `Auto`/`Guided` işaretlenmeyen her bulgu güvenli
+/// tarafta (yalnız bilgi) kalır.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum FixTier {
+    Auto,
+    Guided,
+    #[default]
+    Advisory,
+}
+
+impl FixTier {
+    /// Bir bulgunun aksiyonundan varsayılan düzeltme katmanını türetir (Faz 1 merkezi atama).
+    /// App'in kendisinin uyguladığı aksiyonlar `Auto`; kullanıcıyı bir yere yönlendirenler
+    /// `Guided`; aksiyonsuz bulgular `Advisory`. Faz 2'de bulgular `with_fix_tier` ile bunu
+    /// açıkça geçersiz kılabilir (örn. firewall'u `Auto`'ya yükseltme).
+    pub fn from_action(action: Option<&FindingAction>) -> FixTier {
+        match action {
+            Some(FindingAction::RunSystemFileCheck)
+            | Some(FindingAction::RunDefenderQuickScan)
+            | Some(FindingAction::RunChkdskScan { .. })
+            | Some(FindingAction::RunChkdskFix { .. })
+            | Some(FindingAction::EnableFirewall)
+            | Some(FindingAction::EnableUac)
+            | Some(FindingAction::SetPagefileManaged) => FixTier::Auto,
+            Some(FindingAction::OpenSystemPropertiesPerformance)
+            | Some(FindingAction::OpenUrl { .. }) => FixTier::Guided,
+            None => FixTier::Advisory,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct VolumeInfo {
@@ -65,6 +102,10 @@ pub struct Finding {
     /// Frontend bunu metric String fallback'inden önce dener.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub metric_code: Option<MetricCode>,
+    /// Faz 1 — düzeltme katmanı. Frontend kartta katmana göre aksiyon gösterir
+    /// (Auto→Düzelt, Guided→Nasıl?, Advisory→Detay) ve `Auto` olanlar "Hepsini Düzelt"e girer.
+    #[serde(default)]
+    pub fix_tier: FixTier,
 }
 
 impl Finding {
@@ -90,11 +131,21 @@ impl Finding {
             action_code: None,
             params: None,
             metric_code: None,
+            fix_tier: FixTier::Advisory,
         }
     }
 
     pub fn with_metric(mut self, metric: impl Into<String>) -> Self {
         self.metric = Some(metric.into());
+        self
+    }
+
+    /// Faz 1 — düzeltme katmanını set et (Auto/Guided/Advisory).
+    /// Faz 2'de bulgular bunu açıkça çağıracak (örn. firewall'u Auto'ya yükseltme);
+    /// Faz 1'de katman `scan`'de merkezi türetildiği için henüz kullanılmıyor.
+    #[allow(dead_code)]
+    pub fn with_fix_tier(mut self, tier: FixTier) -> Self {
+        self.fix_tier = tier;
         self
     }
 
@@ -135,6 +186,12 @@ pub enum FindingAction {
     OpenSystemPropertiesPerformance,
     /// Frontend: "OEM sitesine git" / "Settings'i aç" → tarayıcı veya Settings URI
     OpenUrl { url: String },
+    /// Faz 2 — tek tık otomatik fix: Windows Güvenlik Duvarı'nı aç (onay + restore point).
+    EnableFirewall,
+    /// Faz 2 — tek tık otomatik fix: UAC'yi aç (reboot gerektirir).
+    EnableUac,
+    /// Faz 2 — tek tık otomatik fix: pagefile'ı sistem-yönetimli yap (reboot gerektirir).
+    SetPagefileManaged,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -456,6 +513,10 @@ pub struct ScanReport {
     pub findings: Vec<Finding>,
     pub cleanup_targets: Vec<CleanupTarget>,
     pub total_reclaimable_bytes: u64,
+    /// Faz 1 — bulgulardan hesaplanan 0-100 sağlık skoru (backend tek kaynak).
+    /// `#[serde(default)]`: eski/eksik raporlar `record_scan`'de hâlâ deserialize olur.
+    #[serde(default)]
+    pub health: crate::health::HealthScore,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -465,6 +526,67 @@ pub struct CleanupResult {
     pub per_target: Vec<CleanupTargetResult>,
     pub restore_point_created: bool,
     pub restore_point_skipped_reason: Option<String>,
+}
+
+// === Faz 1 — "Hepsini Düzelt" orkestrasyonu ===
+
+/// Frontend'in `run_fix_all`'a gönderdiği tek bir düzeltme isteği.
+/// Faz 1: yalnız `Cleanup`. Faz 2'de yeni varyantlar eklenir
+/// (DisableStartupItem, EnableFirewall, SetPagefileManaged, …) ve orkestratör
+/// otomatik kapsar.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "camelCase")]
+pub enum FixSpec {
+    Cleanup { target_ids: Vec<String> },
+    /// Faz 2 — kapalı Windows Güvenlik Duvarı profillerini aç.
+    EnableFirewall,
+    /// Faz 2 — UAC'yi (EnableLUA=1) aç. Reboot gerektirir.
+    EnableUac,
+    /// Faz 2 — pagefile'ı sistem-yönetimli yap. Reboot gerektirir.
+    SetPagefileManaged,
+}
+
+impl FixSpec {
+    /// Bu fix'in kararlı kimliği (sonuçlarda + reboot grubunda kullanılır).
+    pub fn id(&self) -> &'static str {
+        match self {
+            FixSpec::Cleanup { .. } => "cleanup",
+            FixSpec::EnableFirewall => "enableFirewall",
+            FixSpec::EnableUac => "enableUac",
+            FixSpec::SetPagefileManaged => "setPagefileManaged",
+        }
+    }
+    /// Bu fix uygulandıktan sonra yeniden başlatma gerekiyor mu?
+    pub fn requires_reboot(&self) -> bool {
+        match self {
+            FixSpec::Cleanup { .. } | FixSpec::EnableFirewall => false,
+            FixSpec::EnableUac | FixSpec::SetPagefileManaged => true,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FixItemResult {
+    pub id: String,
+    pub ok: bool,
+    /// Başarı/hata özeti için i18n kodu (opsiyonel).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub message_code: Option<String>,
+    pub reboot_required: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FixAllOutcome {
+    pub restore_point_created: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub restore_point_skipped_reason: Option<String>,
+    pub applied: u32,
+    pub failed: u32,
+    pub items: Vec<FixItemResult>,
+    /// Yeniden başlatma isteyen fix id'leri (frontend ayrı grup gösterir, sessiz reboot YOK).
+    pub reboot_required: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

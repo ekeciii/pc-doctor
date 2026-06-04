@@ -1,108 +1,95 @@
-//! Flagged sürücüleri Finding'e dönüştürür + OEM linki üretir.
-//! Sprint 7: code-only i18n migration; params PII-clean (vendor/model whitelist).
+//! Sürücüleri TOPLU (aggregate) Finding'e dönüştürür.
+//!
+//! Faz 2 kalibrasyon: eskiden her sürücü için ayrı bir Finding üretiliyordu (imzasız/eski →
+//! Kritik). Tipik bir makinede 100+ eski/imzasız sürücü olduğundan bu yüzlerce "kritik"
+//! gürültü yaratıyordu. Artık iki TOPLU bulgu: imzasız sayısı (Uyarı) + uzun süredir
+//! güncellenmemiş sayısı (Bilgi). Aksiyon: Windows Update (sürücü güncellemelerinin kanalı).
 
-use crate::diagnostics::util::safe_disk_name;
 use crate::models::{DriverInfo, Finding, FindingAction, MetricCode, Severity};
 use serde_json::json;
 
+const CATEGORY: &str = "Sürücü";
+/// "uzun süredir güncellenmemiş" eşiği (gün) — 3 yıl. Eski sürücü tek başına sorun değildir;
+/// yalnız toplu bir bilgi sinyali olarak gösterilir (kritik DEĞİL).
+const OLD_DRIVER_DAYS: i64 = 1095;
+
 pub fn evaluate(drivers: &[DriverInfo]) -> Vec<Finding> {
-    drivers.iter().filter_map(to_finding).collect()
+    let unsigned = drivers.iter().filter(|d| !d.is_signed).count() as u64;
+    let old = drivers
+        .iter()
+        .filter(|d| d.is_signed && d.age_days >= OLD_DRIVER_DAYS)
+        .count() as u64;
+
+    let mut out = Vec::new();
+    if unsigned > 0 {
+        out.push(summary("unsigned_summary", Severity::Warning, unsigned));
+    }
+    if old > 0 {
+        out.push(summary("outdated_summary", Severity::Info, old));
+    }
+    out
 }
 
-fn to_finding(d: &DriverInfo) -> Option<Finding> {
-    let years = d.age_days as f64 / 365.25;
-    let (severity, code_id) = if !d.is_signed {
-        (Severity::Critical, "unsigned")
-    } else if d.age_days >= 1095 {
-        (Severity::Critical, "outdated_critical")
-    } else if d.age_days >= 730 {
-        (Severity::Warning, "outdated_warning")
-    } else {
-        return None;
-    };
-
-    // Sprint 7 review M3: driverVersion + driverDate kombinasyonu cihaz fingerprint
-    // oluşturuyor (vendor catalog + date = unique device). DB'ye yazma; UI'ya da koyma.
-    // (bilinmiyor) → "—" locale-neutral em-dash (review H6).
-    let params = json!({
-        "deviceName": safe_disk_name(&d.device_name),
-        "years": format!("{:.1}", years),
-        "manufacturer": non_empty(&d.manufacturer, "—"),
-        "driverClass": non_empty(&d.class, "—"),
-    });
-
-    let url = oem_url(&d.manufacturer, &d.device_name, &d.class);
-    let action = url.map(|u| FindingAction::OpenUrl { url: u });
-    let action_code = if action.is_some() {
-        Some(format!("finding.driver.{code_id}.action"))
-    } else {
-        None
-    };
-
+fn summary(code_id: &str, severity: Severity, count: u64) -> Finding {
     let mut f = Finding::code_only(
-        format!("driver:{}", sanitize(&d.device_name)),
-        "Sürücü",
+        format!("driver:{code_id}"),
+        CATEGORY,
         severity,
         format!("finding.driver.{code_id}.title"),
         format!("finding.driver.{code_id}.description"),
     )
-    .with_metric(if d.is_signed {
-        format!("{:.1}y", years)
-    } else {
-        // Nötr — frontend kategori-spesifik render edebilir.
-        "!".to_string()
+    .with_metric(count.to_string())
+    .with_metric_code(MetricCode::Count { value: count })
+    .with_params(json!({ "count": count }))
+    .with_action(FindingAction::OpenUrl {
+        url: "ms-settings:windowsupdate".into(),
     })
-    .with_metric_code(if d.is_signed {
-        MetricCode::Days { value: d.age_days }
-    } else {
-        MetricCode::BareString { text: "!".into() }
-    })
-    .with_params(params);
-    if let Some(a) = action {
-        f = f.with_action(a);
-    }
-    if let Some(c) = action_code {
-        f = f.with_action_code(c);
-    }
-    f.recommended_action = Some("OEM sitesinden güncel sürücüyü indir ve manuel kur.".into());
-    Some(f)
+    .with_action_code(format!("finding.driver.{code_id}.action"));
+    f.recommended_action = Some(
+        "Windows Update > Gelişmiş seçenekler > İsteğe bağlı güncellemeler'den sürücüleri kontrol et."
+            .into(),
+    );
+    f
 }
 
-fn non_empty(s: &str, fallback: &str) -> String {
-    if s.is_empty() {
-        fallback.to_string()
-    } else {
-        s.to_string()
-    }
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-fn oem_url(manufacturer: &str, device_name: &str, class: &str) -> Option<String> {
-    let m = manufacturer.to_lowercase();
-    if m.contains("nvidia") {
-        Some("https://www.nvidia.com/Download/index.aspx".into())
-    } else if m.contains("amd") || m.contains("ati") || m.contains("advanced micro") {
-        Some("https://www.amd.com/en/support".into())
-    } else if m.contains("intel") {
-        Some("https://www.intel.com/content/www/us/en/support/detect.html".into())
-    } else if m.contains("realtek") {
-        Some("https://www.realtek.com/en/downloads".into())
-    } else if m.contains("microsoft") {
-        // Windows Update'un işi — link önermiyoruz
-        None
-    } else if !manufacturer.is_empty() {
-        let q = format!("{} {} {} driver download", manufacturer, device_name, class);
-        Some(format!(
-            "https://www.google.com/search?q={}",
-            urlencoding::encode(&q)
-        ))
-    } else {
-        None
+    fn drv(signed: bool, age_days: i64) -> DriverInfo {
+        DriverInfo {
+            device_name: "X".into(),
+            manufacturer: "Y".into(),
+            driver_version: "1".into(),
+            driver_date: "2020".into(),
+            is_signed: signed,
+            class: "Net".into(),
+            age_days,
+        }
     }
-}
 
-fn sanitize(s: &str) -> String {
-    s.chars()
-        .filter(|c| c.is_ascii_alphanumeric() || *c == '-' || *c == '_')
-        .take(40)
-        .collect()
+    #[test]
+    fn aggregates_unsigned_and_old_into_two_findings() {
+        let drivers = vec![
+            drv(false, 100),  // unsigned
+            drv(false, 5000), // unsigned (age yok sayılır — imzasız sayılır)
+            drv(true, 2000),  // old (>= 1095)
+            drv(true, 1200),  // old
+            drv(true, 200),   // taze — sayılmaz
+        ];
+        let f = evaluate(&drivers);
+        assert_eq!(f.len(), 2);
+        let unsigned = f.iter().find(|x| x.id == "driver:unsigned_summary").unwrap();
+        assert!(matches!(unsigned.severity, Severity::Warning));
+        assert_eq!(unsigned.params.as_ref().unwrap()["count"].as_u64(), Some(2));
+        let old = f.iter().find(|x| x.id == "driver:outdated_summary").unwrap();
+        assert!(matches!(old.severity, Severity::Info));
+        assert_eq!(old.params.as_ref().unwrap()["count"].as_u64(), Some(2));
+    }
+
+    #[test]
+    fn no_findings_when_all_fresh_and_signed() {
+        let drivers = vec![drv(true, 100), drv(true, 500)];
+        assert!(evaluate(&drivers).is_empty());
+    }
 }
