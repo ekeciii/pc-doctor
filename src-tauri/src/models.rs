@@ -138,6 +138,9 @@ impl Finding {
     }
 
     /// Faz 1 — düzeltme katmanını set et (Auto/Guided/Advisory).
+    /// Faz 2'de bulgular bunu açıkça çağıracak (örn. firewall'u Auto'ya yükseltme);
+    /// Faz 1'de katman `scan`'de merkezi türetildiği için henüz kullanılmıyor.
+    #[allow(dead_code)]
     pub fn with_fix_tier(mut self, tier: FixTier) -> Self {
         self.fix_tier = tier;
         self
