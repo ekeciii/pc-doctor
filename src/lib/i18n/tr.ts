@@ -219,6 +219,20 @@ export const tr = {
   fixAllCta: "Hepsini Düzelt",
   fixAllReady: "{count} öğe güvenle temizlenecek",
   fixAllNone: "Otomatik düzeltilecek bir şey yok",
+  // Faz 1 M4 — kategori grid + tier + guided
+  categoryScopeTitle: "Kapsam",
+  categoryClean: "Temiz",
+  categoryCount: "{count} bulgu",
+  tierAuto: "Otomatik",
+  tierGuided: "Rehberli",
+  tierAdvisory: "Bilgi",
+  guidedCta: "Nasıl?",
+  guidedDrawerTitle: "Nasıl düzeltilir?",
+  guidedStepsTitle: "Adımlar",
+  guidedStepOpen: "Aşağıdaki butonla ilgili Windows ayarını veya üretici sayfasını açın.",
+  guidedStepApply: "Açılan ekranda önerilen değişikliği uygulayın, sonra yeniden tarayın.",
+  guidedOpenSetting: "Ayarı aç",
+  guidedClose: "Kapat",
 } as const;
 
 export type TKey = keyof typeof tr;

@@ -2,7 +2,7 @@ import {
   AlertOctagon,
   AlertTriangle,
   CheckCircle2,
-  ExternalLink,
+  Compass,
   Info,
   ShieldCheck,
   Wrench,
@@ -13,6 +13,7 @@ import { Button } from "./ui/Button";
 import { cn } from "@/lib/utils";
 import type { Finding, Severity } from "@/lib/types";
 import { metricLabelFromCode, resolveFinding, useI18n, useT } from "@/lib/i18n";
+import type { TKey } from "@/lib/i18n";
 
 interface SeverityMeta {
   iconWrap: string;
@@ -58,10 +59,16 @@ interface Props {
   onDefenderQuickScan?: (finding: Finding) => void;
   onChkdskScan?: (finding: Finding, volume: string) => void;
   onChkdskFix?: (finding: Finding, volume: string, isSystem: boolean) => void;
-  onOpenSystemPropertiesPerformance?: () => void;
-  onOpenUrl?: (url: string) => void;
+  /** Guided (Rehberli) bulgular için "Nasıl?" → GuidedFixDrawer açar. */
+  onGuided?: (finding: Finding) => void;
   index?: number;
 }
+
+const TIER_CHIP: Record<"auto" | "guided" | "advisory", { key: TKey; cls: string }> = {
+  auto: { key: "tierAuto", cls: "bg-success-soft text-success-strong" },
+  guided: { key: "tierGuided", cls: "bg-info-soft text-info-strong" },
+  advisory: { key: "tierAdvisory", cls: "bg-muted text-muted-foreground" },
+};
 
 export function FindingCard({
   finding,
@@ -69,8 +76,7 @@ export function FindingCard({
   onDefenderQuickScan,
   onChkdskScan,
   onChkdskFix,
-  onOpenSystemPropertiesPerformance,
-  onOpenUrl,
+  onGuided,
   index = 0,
 }: Props) {
   const t = useT();
@@ -78,6 +84,8 @@ export function FindingCard({
   const resolved = resolveFinding(finding, locale);
   const s = meta[finding.severity];
   const action = finding.action;
+  const tier = finding.fixTier ?? "advisory";
+  const tierChip = TIER_CHIP[tier];
   return (
     <Card
       variant="default"
@@ -101,6 +109,14 @@ export function FindingCard({
             <Badge variant="outline" size="sm">
               {finding.category}
             </Badge>
+            <span
+              className={cn(
+                "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide",
+                tierChip.cls
+              )}
+            >
+              {t(tierChip.key)}
+            </span>
             {/* Sprint 12 K-ext pilot — metricCode varsa locale-aware label, yoksa metric String fallback */}
             {(finding.metricCode || finding.metric) && (
               <Badge variant={s.badge} size="default">
@@ -149,20 +165,11 @@ export function FindingCard({
                 {resolved.actionLabel ?? t("fix")}
               </Button>
             )}
-            {action.type === "openSystemPropertiesPerformance" && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onOpenSystemPropertiesPerformance?.()}
-              >
-                <ExternalLink className="w-4 h-4" />
-                {resolved.actionLabel ?? t("goToOem")}
-              </Button>
-            )}
-            {action.type === "openUrl" && (
-              <Button size="sm" variant="outline" onClick={() => onOpenUrl?.(action.url)}>
-                <ExternalLink className="w-4 h-4" />
-                {t("goToOem")}
+            {(action.type === "openSystemPropertiesPerformance" ||
+              action.type === "openUrl") && (
+              <Button size="sm" variant="outline" onClick={() => onGuided?.(finding)}>
+                <Compass className="w-4 h-4" />
+                {t("guidedCta")}
               </Button>
             )}
           </div>

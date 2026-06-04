@@ -220,4 +220,18 @@ export const en: Record<TKey, string> = {
   fixAllCta: "Fix Everything",
   fixAllReady: "{count} item(s) will be safely cleaned",
   fixAllNone: "Nothing to auto-fix",
+  // Phase 1 M4 — category grid + tier + guided
+  categoryScopeTitle: "Coverage",
+  categoryClean: "Clean",
+  categoryCount: "{count} finding(s)",
+  tierAuto: "Automatic",
+  tierGuided: "Guided",
+  tierAdvisory: "Info",
+  guidedCta: "How?",
+  guidedDrawerTitle: "How to fix",
+  guidedStepsTitle: "Steps",
+  guidedStepOpen: "Use the button below to open the relevant Windows setting or vendor page.",
+  guidedStepApply: "Apply the recommended change on the screen that opens, then re-scan.",
+  guidedOpenSetting: "Open setting",
+  guidedClose: "Close",
 };

@@ -16,7 +16,8 @@ import { ChkdskFixConfirmDialog } from "./components/ChkdskFixConfirmDialog";
 import { ChkdskRebootCountdownDialog } from "./components/ChkdskRebootCountdownDialog";
 import { ChkdskPendingBanner } from "./components/ChkdskPendingBanner";
 import { ChkdskBootResultBanner } from "./components/ChkdskBootResultBanner";
-import { ScanSummary } from "./components/ScanSummary";
+import { CategoryGrid } from "./components/CategoryGrid";
+import { GuidedFixDrawer } from "./components/GuidedFixDrawer";
 import { SettingsDialog, applyTheme } from "./components/SettingsDialog";
 import { HistoryDialog } from "./components/HistoryDialog";
 import { Alert, AlertDescription, AlertTitle } from "./components/ui/Alert";
@@ -107,6 +108,8 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyEnabled, setHistoryEnabled] = useState(true);
+  // Faz 1 M4 — Guided (Rehberli) bulgu için açık drawer.
+  const [guidedFinding, setGuidedFinding] = useState<Finding | null>(null);
   const updateChecked = useRef(false);
 
   useEffect(() => {
@@ -339,6 +342,20 @@ export default function App() {
     }
   }, []);
 
+  // M4 — GuidedFixDrawer "Ayarı aç": bulgunun action'ına göre doğru hedefi açar.
+  const handleGuidedOpenTarget = useCallback(
+    async (finding: Finding) => {
+      const a = finding.action;
+      if (a?.type === "openUrl") {
+        await handleOpenUrl(a.url);
+      } else if (a?.type === "openSystemPropertiesPerformance") {
+        await handleOpenSystemPropertiesPerformance();
+      }
+      setGuidedFinding(null);
+    },
+    [handleOpenSystemPropertiesPerformance]
+  );
+
   const handleChkdskClose = useCallback(() => setChkdskVolume(null), []);
   const handleChkdskNeedsElevation = useCallback(
     (reason: string) => setForceElevationBanner(reason),
@@ -550,14 +567,21 @@ export default function App() {
 
         {report && (
           <>
-            <ScanSummary report={report} />
+            <CategoryGrid
+              report={report}
+              onSelect={() =>
+                document
+                  .getElementById("issues")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" })
+              }
+            />
 
             <section className="mb-10">
               <SectionTitle index={1}>{t("drives")}</SectionTitle>
               <VolumeGrid volumes={report.volumes} />
             </section>
 
-            <section className="mb-10">
+            <section id="issues" className="mb-10 scroll-mt-4">
               <SectionTitle index={2}>{t("diagnoseSection")}</SectionTitle>
               {report.findings.length === 0 ? (
                 <Alert variant="success">
@@ -580,10 +604,7 @@ export default function App() {
                       onDefenderQuickScan={handleDefenderQuickScan}
                       onChkdskScan={handleChkdskScan}
                       onChkdskFix={handleChkdskFix}
-                      onOpenSystemPropertiesPerformance={
-                        handleOpenSystemPropertiesPerformance
-                      }
-                      onOpenUrl={handleOpenUrl}
+                      onGuided={setGuidedFinding}
                     />
                   ))}
                 </div>
@@ -692,6 +713,12 @@ export default function App() {
         />
 
         <HistoryDialog open={historyOpen} onClose={() => setHistoryOpen(false)} />
+
+        <GuidedFixDrawer
+          finding={guidedFinding}
+          onOpenTarget={handleGuidedOpenTarget}
+          onClose={() => setGuidedFinding(null)}
+        />
       </div>
     </div>
   );
