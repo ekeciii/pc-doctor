@@ -26,6 +26,40 @@ pub enum Severity {
     Good,
 }
 
+/// Faz 1 — bir bulgunun nasıl düzeltileceğini ilan eder (sağlık-dashboard çatısı).
+/// - `Auto`: app onay + System Restore noktasıyla değişikliği kendisi uygular (geri alınabilir).
+/// - `Guided`: app doğru ayar yerini açar + adım adım anlatır; değişikliği kullanıcı yapar.
+/// - `Advisory`: yalnız bilgi (donanım/log), otomatik aksiyon yok.
+///
+/// Default `Advisory` — bilinçli olarak `Auto`/`Guided` işaretlenmeyen her bulgu güvenli
+/// tarafta (yalnız bilgi) kalır.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum FixTier {
+    Auto,
+    Guided,
+    #[default]
+    Advisory,
+}
+
+impl FixTier {
+    /// Bir bulgunun aksiyonundan varsayılan düzeltme katmanını türetir (Faz 1 merkezi atama).
+    /// App'in kendisinin uyguladığı aksiyonlar `Auto`; kullanıcıyı bir yere yönlendirenler
+    /// `Guided`; aksiyonsuz bulgular `Advisory`. Faz 2'de bulgular `with_fix_tier` ile bunu
+    /// açıkça geçersiz kılabilir (örn. firewall'u `Auto`'ya yükseltme).
+    pub fn from_action(action: Option<&FindingAction>) -> FixTier {
+        match action {
+            Some(FindingAction::RunSystemFileCheck)
+            | Some(FindingAction::RunDefenderQuickScan)
+            | Some(FindingAction::RunChkdskScan { .. })
+            | Some(FindingAction::RunChkdskFix { .. }) => FixTier::Auto,
+            Some(FindingAction::OpenSystemPropertiesPerformance)
+            | Some(FindingAction::OpenUrl { .. }) => FixTier::Guided,
+            None => FixTier::Advisory,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct VolumeInfo {
@@ -65,6 +99,10 @@ pub struct Finding {
     /// Frontend bunu metric String fallback'inden önce dener.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub metric_code: Option<MetricCode>,
+    /// Faz 1 — düzeltme katmanı. Frontend kartta katmana göre aksiyon gösterir
+    /// (Auto→Düzelt, Guided→Nasıl?, Advisory→Detay) ve `Auto` olanlar "Hepsini Düzelt"e girer.
+    #[serde(default)]
+    pub fix_tier: FixTier,
 }
 
 impl Finding {
@@ -90,11 +128,18 @@ impl Finding {
             action_code: None,
             params: None,
             metric_code: None,
+            fix_tier: FixTier::Advisory,
         }
     }
 
     pub fn with_metric(mut self, metric: impl Into<String>) -> Self {
         self.metric = Some(metric.into());
+        self
+    }
+
+    /// Faz 1 — düzeltme katmanını set et (Auto/Guided/Advisory).
+    pub fn with_fix_tier(mut self, tier: FixTier) -> Self {
+        self.fix_tier = tier;
         self
     }
 
@@ -456,6 +501,10 @@ pub struct ScanReport {
     pub findings: Vec<Finding>,
     pub cleanup_targets: Vec<CleanupTarget>,
     pub total_reclaimable_bytes: u64,
+    /// Faz 1 — bulgulardan hesaplanan 0-100 sağlık skoru (backend tek kaynak).
+    /// `#[serde(default)]`: eski/eksik raporlar `record_scan`'de hâlâ deserialize olur.
+    #[serde(default)]
+    pub health: crate::health::HealthScore,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

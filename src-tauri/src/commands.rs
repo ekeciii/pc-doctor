@@ -112,6 +112,12 @@ fn scan_blocking() -> ScanReport {
         findings.extend(chkdsk_diag::evaluate(&chkdsk_vols));
         findings.sort_by_key(|f| severity_order(&f.severity));
 
+        // Faz 1: her bulgunun düzeltme katmanını aksiyonundan merkezi türet.
+        for f in &mut findings {
+            f.fix_tier = crate::models::FixTier::from_action(f.action.as_ref());
+        }
+
+        let health = crate::health::compute_health(&findings);
         let total_reclaimable_bytes = cleanup_targets.iter().map(|t| t.size_bytes).sum();
         ScanReport {
             generated_at: Utc::now().to_rfc3339(),
@@ -119,6 +125,7 @@ fn scan_blocking() -> ScanReport {
             findings,
             cleanup_targets,
             total_reclaimable_bytes,
+            health,
         }
     })
 }

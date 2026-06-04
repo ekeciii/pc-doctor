@@ -2,6 +2,7 @@ mod admin;
 mod collectors;
 mod commands;
 mod diagnostics;
+mod health;
 mod history;
 mod models;
 mod remediation;
