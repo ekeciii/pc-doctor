@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, ShieldAlert } from "lucide-react";
 import { Header } from "./components/Header";
-import { ScanButton } from "./components/ScanButton";
+import { ScoreHero } from "./components/ScoreHero";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { checkForUpdate, installUpdate, type AvailableUpdate } from "./lib/updater";
 import { FindingCard } from "./components/FindingCard";
@@ -244,6 +244,15 @@ export default function App() {
     [elevated]
   );
 
+  // Faz 1 — "Hepsini Düzelt": şu an batch'lenebilir tek Auto fix = disk temizliği.
+  // Mevcut onay + restore point + cleanup akışını tüm hedeflerle tetikler.
+  // (M5'te dedicated run_fix_all + ilerleme/özet dialog'una geçecek.)
+  const handleFixAll = useCallback(() => {
+    if (!report || report.cleanupTargets.length === 0) return;
+    if (!requireElevated(t("elevationRequired"))) return;
+    setPendingCleanupIds(report.cleanupTargets.map((target) => target.id));
+  }, [report, requireElevated, t]);
+
   const handleSystemFileCheck = useCallback((finding: Finding) => setPendingSfc(finding), []);
   const confirmSfc = useCallback(() => {
     setPendingSfc(null);
@@ -370,15 +379,13 @@ export default function App() {
           onOpenHistory={() => setHistoryOpen(true)}
         />
 
-        <section className="flex flex-col items-center mt-12 mb-12">
-          <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground mb-4">
-            {t("appSubtitle")}
-          </p>
-          <ScanButton scanning={scanning} hasReport={!!report} onClick={runScan} />
-          {!report && !scanning && (
-            <p className="mt-5 text-sm text-muted-foreground">{t("noScanYet")}</p>
-          )}
-        </section>
+        <ScoreHero
+          report={report}
+          scanning={scanning}
+          fixing={cleaning}
+          onScan={runScan}
+          onFixAll={handleFixAll}
+        />
 
         {availableUpdate && !updateDismissed && (
           <>

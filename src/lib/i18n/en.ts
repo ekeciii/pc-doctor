@@ -205,4 +205,19 @@ export const en: Record<TKey, string> = {
   chkdskScheduleInconsistentBody:
     "Run `chkntfs /x {volume}:` in an administrator PowerShell to cancel the schedule manually.",
   chkdskScheduleInconsistentDismiss: "Got it",
+  // Phase 1 — health score dashboard
+  scoreLabel: "Health score",
+  scoreVerdictExcellent: "In great shape",
+  scoreVerdictGood: "In good shape",
+  scoreVerdictWarning: "Needs attention",
+  scoreVerdictCritical: "Critical issues",
+  scoreAllClear: "All clear",
+  scoreChipCritical: "{count} critical",
+  scoreChipWarning: "{count} warning",
+  scoreChipInfo: "{count} info",
+  scoreBreakdownTitle: "Why this score?",
+  scoreBreakdownPoints: "−{points} pts",
+  fixAllCta: "Fix Everything",
+  fixAllReady: "{count} item(s) will be safely cleaned",
+  fixAllNone: "Nothing to auto-fix",
 };

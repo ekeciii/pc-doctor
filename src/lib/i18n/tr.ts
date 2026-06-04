@@ -204,6 +204,21 @@ export const tr = {
   chkdskScheduleInconsistentBody:
     "Yönetici PowerShell'de `chkntfs /x {volume}:` çalıştırarak planı manuel olarak iptal edin.",
   chkdskScheduleInconsistentDismiss: "Anladım",
+  // Faz 1 — sağlık skoru dashboard'u
+  scoreLabel: "Sağlık skoru",
+  scoreVerdictExcellent: "Mükemmel durumda",
+  scoreVerdictGood: "İyi durumda",
+  scoreVerdictWarning: "Dikkat gerekiyor",
+  scoreVerdictCritical: "Kritik sorunlar var",
+  scoreAllClear: "Her şey yolunda",
+  scoreChipCritical: "{count} kritik",
+  scoreChipWarning: "{count} uyarı",
+  scoreChipInfo: "{count} bilgi",
+  scoreBreakdownTitle: "Neden bu skor?",
+  scoreBreakdownPoints: "−{points} puan",
+  fixAllCta: "Hepsini Düzelt",
+  fixAllReady: "{count} öğe güvenle temizlenecek",
+  fixAllNone: "Otomatik düzeltilecek bir şey yok",
 } as const;
 
 export type TKey = keyof typeof tr;

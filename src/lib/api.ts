@@ -10,6 +10,8 @@ import type {
   CleanupTarget,
   DateCount,
   DefenderScanResult,
+  FixAllOutcome,
+  FixSpec,
   PendingChkdsk,
   ProgressLine,
   ScanFindingDetail,
@@ -110,6 +112,19 @@ export function executeCleanup(
     targetIds,
     forceWithoutRestore,
   }).catch((e) => { throw toError(e); });
+}
+
+/**
+ * Faz 1 — "Hepsini Düzelt": bir FixSpec listesini tek restore point + tek
+ * elevation altında uygular. RestoreFailedError yakalanıp force ile retry edilebilir.
+ */
+export function runFixAll(
+  fixes: FixSpec[],
+  forceWithoutRestore = false
+): Promise<FixAllOutcome> {
+  return invoke<FixAllOutcome>("run_fix_all", { fixes, forceWithoutRestore }).catch((e) => {
+    throw toError(e);
+  });
 }
 
 export function isElevated(): Promise<boolean> {
