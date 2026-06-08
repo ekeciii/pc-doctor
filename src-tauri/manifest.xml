@@ -5,9 +5,9 @@
     name="com.egeyu.pcdoctor"
     version="0.1.0.0"
     processorArchitecture="amd64"/>
-  <!-- Common-Controls v6 — TaskDialogIndirect vb. comctl32 v6'da. Özel manifest varsayılanı
-       geçersiz kıldığı için bu bağımlılık AÇIKÇA gerekli, yoksa exe açılışta
-       "TaskDialogIndirect giriş noktası bulunamadı" verir. -->
+  <!-- Common-Controls v6 dependency: TaskDialogIndirect lives in comctl32 v6.
+       The custom manifest overrides the default, so this must be explicit;
+       otherwise the exe fails at launch with TaskDialogIndirect entry-point error. -->
   <dependency>
     <dependentAssembly>
       <assemblyIdentity
