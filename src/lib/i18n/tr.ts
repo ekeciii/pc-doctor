@@ -252,6 +252,12 @@ export const tr = {
   fixLineEnableFirewall: "Windows Güvenlik Duvarı'nı aç",
   fixLineEnableUac: "UAC'yi aç (yeniden başlatma gerekir)",
   fixLineSetPagefileManaged: "Sanal belleği sistem-yönetimli yap (yeniden başlatma gerekir)",
+  // Yandan-kayan detay + temizlik animasyonu
+  back: "Geri",
+  categoryProblemsTitle: "{count} sorunlu alan",
+  cleaningInProgress: "Temizleniyor",
+  cleanedLocationsTitle: "Temizlenen yerler",
+  cleanedNothing: "Silinecek bir şey bulunamadı",
 } as const;
 
 export type TKey = keyof typeof tr;

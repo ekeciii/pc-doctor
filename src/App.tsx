@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 import { Header } from "./components/Header";
 import { HudBackdrop } from "./components/HudBackdrop";
 import { ScoreHero } from "./components/ScoreHero";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { checkForUpdate, installUpdate, type AvailableUpdate } from "./lib/updater";
-import { FindingCard } from "./components/FindingCard";
-import { CleanupPanel } from "./components/CleanupPanel";
+import { CategoryDetail } from "./components/CategoryDetail";
+import { CleanupDetail } from "./components/CleanupDetail";
+import type { CategoryDef } from "./components/categoryDefs";
 import { ConfirmDialog } from "./components/ConfirmDialog";
-import { VolumeGrid } from "./components/VolumeGrid";
 import { ElevationBanner } from "./components/ElevationBanner";
 import { SfcDismProgressDialog } from "./components/SfcDismProgressDialog";
 import { DefenderScanDialog } from "./components/DefenderScanDialog";
@@ -25,7 +25,6 @@ import { SettingsDialog, applyTheme } from "./components/SettingsDialog";
 import { HistoryDialog } from "./components/HistoryDialog";
 import { Alert, AlertDescription, AlertTitle } from "./components/ui/Alert";
 import { Button } from "./components/ui/Button";
-import { SectionTitle } from "./components/ui/SectionTitle";
 import {
   executeCleanup,
   isElevated,
@@ -114,6 +113,8 @@ export default function App() {
   const [historyEnabled, setHistoryEnabled] = useState(true);
   // Faz 1 M4 — Guided (Rehberli) bulgu için açık drawer.
   const [guidedFinding, setGuidedFinding] = useState<Finding | null>(null);
+  // Yandan-kayan detay: seçili kategori (null = ana ekran).
+  const [selectedCat, setSelectedCat] = useState<CategoryDef | null>(null);
   // Faz 1 M5 + Faz 2 — "Hepsini Düzelt" / tek-fix (run_fix_all) akışı.
   // pendingFixSpecs: onay bekleyen fix listesi (null = kapalı).
   const [pendingFixSpecs, setPendingFixSpecs] = useState<FixSpec[] | null>(null);
@@ -168,6 +169,7 @@ export default function App() {
     setScanning(true);
     setError(null);
     setLastResult(null);
+    setSelectedCat(null);
     setForceElevationBanner(null);
     setRestoreErrorIds(null);
     setRestoreErrorMessage(null);
@@ -356,6 +358,12 @@ export default function App() {
     });
   }, [pendingFixSpecs, report, t, fmtBytes]);
 
+  // Seçili kategorinin bulguları (detay paneli için).
+  const findingsForSelectedCat = useMemo(() => {
+    if (!report || !selectedCat || selectedCat.key === "cleanup") return [];
+    return report.findings.filter((f) => selectedCat.matches.includes(f.category));
+  }, [report, selectedCat]);
+
   const handleSystemFileCheck = useCallback((finding: Finding) => setPendingSfc(finding), []);
   const confirmSfc = useCallback(() => {
     setPendingSfc(null);
@@ -488,21 +496,13 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="h-screen overflow-hidden flex flex-col">
       <HudBackdrop band={report?.health.band} />
-      <div className="relative z-10 px-6 py-6 max-w-5xl mx-auto">
+      <div className="relative z-10 flex flex-col h-full w-full px-6 py-5 max-w-5xl mx-auto min-h-0">
         <Header
           elevated={elevated}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenHistory={() => setHistoryOpen(true)}
-        />
-
-        <ScoreHero
-          report={report}
-          scanning={scanning}
-          fixing={fixingAll}
-          onScan={runScan}
-          onFixAll={handleFixAll}
         />
 
         {availableUpdate && !updateDismissed && (
@@ -687,78 +687,54 @@ export default function App() {
           </Alert>
         )}
 
-        {lastResult && (
-          <Alert variant="success" className="mb-4 items-center animate-fade-in">
-            <CheckCircle2 />
-            <div className="flex-1">
-              <AlertTitle>{t("cleanupDone")}</AlertTitle>
-              <AlertDescription className="mt-0.5">
-                {t("reclaimed")}:{" "}
-                <b className="text-foreground">{fmtBytes(lastResult.reclaimedBytes)}</b>
-                {lastResult.restorePointCreated && ` · ${t("restorePointCreated")}`}
-              </AlertDescription>
-            </div>
-          </Alert>
-        )}
-
-        {report && (
-          <>
-            <CategoryGrid
-              report={report}
-              onSelect={() =>
-                document
-                  .getElementById("issues")
-                  ?.scrollIntoView({ behavior: "smooth", block: "start" })
-              }
-            />
-
-            <section className="mb-10">
-              <SectionTitle index={1}>{t("drives")}</SectionTitle>
-              <VolumeGrid volumes={report.volumes} />
-            </section>
-
-            <section id="issues" className="mb-10 scroll-mt-4">
-              <SectionTitle index={2}>{t("diagnoseSection")}</SectionTitle>
-              {report.findings.length === 0 ? (
-                <Alert variant="success">
-                  <CheckCircle2 />
-                  <div>
-                    <AlertTitle>{t("scanHealthyTitle")}</AlertTitle>
-                    <AlertDescription className="mt-1">
-                      {t("scanHealthyBody")}
-                    </AlertDescription>
-                  </div>
-                </Alert>
-              ) : (
-                <div className="space-y-2.5">
-                  {report.findings.map((f, i) => (
-                    <FindingCard
-                      key={f.id}
-                      finding={f}
-                      index={i}
-                      onSystemFileCheck={handleSystemFileCheck}
-                      onDefenderQuickScan={handleDefenderQuickScan}
-                      onChkdskScan={handleChkdskScan}
-                      onChkdskFix={handleChkdskFix}
-                      onGuided={setGuidedFinding}
-                      onApplyFix={handleApplyFix}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-
-            <section className="mb-14">
-              <SectionTitle index={3}>{t("cleanupSection")}</SectionTitle>
-              <CleanupPanel
-                targets={report.cleanupTargets}
-                totalBytes={report.totalReclaimableBytes}
-                busy={cleaning}
-                onFix={(ids) => setPendingCleanupIds(ids)}
+        {/* Tek ekran, yandan-kayan navigasyon: ANA panel ↔ kategori DETAY */}
+        <div className="relative flex-1 min-h-0 overflow-hidden">
+          <div
+            className="flex h-full transition-transform duration-300 ease-out"
+            style={{
+              width: "200%",
+              transform: selectedCat ? "translateX(-50%)" : "translateX(0)",
+            }}
+          >
+            {/* ANA panel */}
+            <div className="w-1/2 h-full overflow-y-auto px-1 pb-4">
+              <ScoreHero
+                report={report}
+                scanning={scanning}
+                fixing={fixingAll}
+                onScan={runScan}
+                onFixAll={handleFixAll}
               />
-            </section>
-          </>
-        )}
+              {report && <CategoryGrid report={report} onSelect={setSelectedCat} />}
+            </div>
+
+            {/* DETAY panel (yandan kayar) */}
+            <div className="w-1/2 h-full px-1 pt-2" aria-hidden={!selectedCat}>
+              {selectedCat?.key === "cleanup" ? (
+                <CleanupDetail
+                  targets={report?.cleanupTargets ?? []}
+                  totalBytes={report?.totalReclaimableBytes ?? 0}
+                  busy={cleaning}
+                  lastResult={lastResult}
+                  onFix={(ids) => setPendingCleanupIds(ids)}
+                  onBack={() => setSelectedCat(null)}
+                />
+              ) : (
+                <CategoryDetail
+                  category={selectedCat}
+                  findings={findingsForSelectedCat}
+                  onBack={() => setSelectedCat(null)}
+                  onSystemFileCheck={handleSystemFileCheck}
+                  onDefenderQuickScan={handleDefenderQuickScan}
+                  onChkdskScan={handleChkdskScan}
+                  onChkdskFix={handleChkdskFix}
+                  onGuided={setGuidedFinding}
+                  onApplyFix={handleApplyFix}
+                />
+              )}
+            </div>
+          </div>
+        </div>
 
         <ConfirmDialog
           open={!!pendingCleanupIds}

@@ -253,4 +253,10 @@ export const en: Record<TKey, string> = {
   fixLineEnableFirewall: "Turn on Windows Firewall",
   fixLineEnableUac: "Turn on UAC (restart required)",
   fixLineSetPagefileManaged: "Set virtual memory to system-managed (restart required)",
+  // Side-sliding detail + cleanup animation
+  back: "Back",
+  categoryProblemsTitle: "{count} problem area(s)",
+  cleaningInProgress: "Cleaning",
+  cleanedLocationsTitle: "Cleaned locations",
+  cleanedNothing: "Nothing to remove",
 };
