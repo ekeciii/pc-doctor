@@ -5,6 +5,20 @@
     name="com.egeyu.pcdoctor"
     version="0.1.0.0"
     processorArchitecture="amd64"/>
+  <!-- Common-Controls v6 — TaskDialogIndirect vb. comctl32 v6'da. Özel manifest varsayılanı
+       geçersiz kıldığı için bu bağımlılık AÇIKÇA gerekli, yoksa exe açılışta
+       "TaskDialogIndirect giriş noktası bulunamadı" verir. -->
+  <dependency>
+    <dependentAssembly>
+      <assemblyIdentity
+        type="win32"
+        name="Microsoft.Windows.Common-Controls"
+        version="6.0.0.0"
+        processorArchitecture="*"
+        publicKeyToken="6595b64144ccf1df"
+        language="*"/>
+    </dependentAssembly>
+  </dependency>
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
     <security>
       <requestedPrivileges>
