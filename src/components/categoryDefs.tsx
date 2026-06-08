@@ -39,7 +39,7 @@ export const CATEGORIES: CategoryDef[] = [
   { key: "startup", label: "Başlangıç", icon: Power, matches: ["Başlangıç"] },
   { key: "crashes", label: "Çökme geçmişi", icon: AlertTriangle, matches: ["Çökme geçmişi"] },
   { key: "pagefile", label: "Sanal bellek", icon: Database, matches: ["Sanal bellek"] },
-  { key: "cleanup", label: "Temizlik", icon: Wrench, matches: [] },
+  { key: "cleanup", label: "Temizlik", icon: Wrench, matches: ["Temizlik"] },
 ];
 
 export type CategoryStatus = "ok" | "info" | "warning" | "critical";
@@ -55,10 +55,6 @@ function rank(s: Severity): number {
 
 /** Bir kategorinin en kötü bulgusuna göre durumu + bulgu sayısı. */
 export function categoryStat(cat: CategoryDef, report: ScanReport): CategoryStat {
-  if (cat.key === "cleanup") {
-    const n = report.cleanupTargets.length;
-    return { status: n === 0 ? "ok" : "info", count: n };
-  }
   const related = report.findings.filter((f) => cat.matches.includes(f.category));
   if (related.length === 0) return { status: "ok", count: 0 };
   const worst = related.map((f) => f.severity).sort((a, b) => rank(a) - rank(b))[0];

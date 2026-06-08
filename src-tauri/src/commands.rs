@@ -111,6 +111,33 @@ fn scan_blocking() -> ScanReport {
             findings.extend(pagefile_diag::evaluate(pf));
         }
         findings.extend(chkdsk_diag::evaluate(&chkdsk_vols));
+
+        // Temizlik fırsatı bir SAĞLIK sinyalidir: önemli miktarda geçici/önbellek dosyası
+        // skoru hafif düşürür; temizleyince bulgu kalkar → skor artar (kullanıcı "temizledim,
+        // skor düzelmeli" bekliyor). <1 GB önemsiz sayılır (bulgu üretilmez).
+        let total_reclaimable_bytes: u64 = cleanup_targets.iter().map(|t| t.size_bytes).sum();
+        const ONE_GB: u64 = 1024 * 1024 * 1024;
+        if total_reclaimable_bytes >= ONE_GB {
+            let severity = if total_reclaimable_bytes >= 5 * ONE_GB {
+                crate::models::Severity::Warning
+            } else {
+                crate::models::Severity::Info
+            };
+            findings.push(
+                crate::models::Finding::code_only(
+                    "cleanup:reclaimable",
+                    "Temizlik",
+                    severity,
+                    "finding.cleanup.reclaimable.title",
+                    "finding.cleanup.reclaimable.description",
+                )
+                .with_metric_code(crate::models::MetricCode::Bytes {
+                    value: total_reclaimable_bytes,
+                })
+                .with_params(serde_json::json!({ "sizeGb": total_reclaimable_bytes / ONE_GB })),
+            );
+        }
+
         findings.sort_by_key(|f| severity_order(&f.severity));
 
         // Faz 1: her bulgunun düzeltme katmanını aksiyonundan merkezi türet.
@@ -119,7 +146,6 @@ fn scan_blocking() -> ScanReport {
         }
 
         let health = crate::health::compute_health(&findings);
-        let total_reclaimable_bytes = cleanup_targets.iter().map(|t| t.size_bytes).sum();
         ScanReport {
             generated_at: Utc::now().to_rfc3339(),
             volumes,

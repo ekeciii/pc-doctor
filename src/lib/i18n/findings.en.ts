@@ -49,6 +49,10 @@ export const findingsEn: Record<FindingCode, string> = {
   "finding.driver.outdated_summary.description":
     "Drivers untouched for 3+ years. Usually harmless; you can check Windows Update for newer versions.",
   "finding.driver.outdated_summary.action": "Open Windows Update",
+  // cleanup (Phase 2 — junk is a health signal; cleaning raises the score)
+  "finding.cleanup.reclaimable.title": "Accumulated temporary files",
+  "finding.cleanup.reclaimable.description":
+    "{sizeGb} GB of temp/cache files have piled up. Clean them to improve disk health.",
 
   // === defender ===
   "finding.defender.active_threats.title":

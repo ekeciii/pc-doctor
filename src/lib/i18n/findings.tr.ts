@@ -53,6 +53,10 @@ export const findingsTr = {
   "finding.driver.outdated_summary.description":
     "3+ yıldır güncellenmemiş sürücüler. Genelde sorun değildir; Windows Update'te yeni sürüm olup olmadığına bakabilirsiniz.",
   "finding.driver.outdated_summary.action": "Windows Update'i aç",
+  // cleanup (Faz 2 — temizlik bir sağlık sinyali, temizleyince skor artar)
+  "finding.cleanup.reclaimable.title": "Birikmiş geçici dosyalar",
+  "finding.cleanup.reclaimable.description":
+    "{sizeGb} GB geçici/önbellek dosyası birikmiş. Temizleyerek disk sağlığını artırabilirsin.",
 
   // === Sprint 7: defender ===
   "finding.defender.active_threats.title": "Defender'da {threatCount} aktif tehdit",

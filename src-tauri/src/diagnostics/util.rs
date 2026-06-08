@@ -81,6 +81,7 @@ pub fn sanitize_params(category: &str, params: &Value) -> Value {
     let allow: &[&str] = match category {
         "Disk" => &["mount", "freePercent", "freeFormatted"],
         "Sürücü" => &["count", "deviceName", "manufacturer", "driverClass", "years"],
+        "Temizlik" => &["sizeGb"],
         "Virüs" => &["threatCount", "ageDays"],
         "Disk sağlığı" => &[
             "diskName",
