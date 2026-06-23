@@ -55,9 +55,11 @@ impl FixTier {
             | Some(FindingAction::RunChkdskFix { .. })
             | Some(FindingAction::EnableFirewall)
             | Some(FindingAction::EnableUac)
-            | Some(FindingAction::SetPagefileManaged) => FixTier::Auto,
+            | Some(FindingAction::SetPagefileManaged)
+            | Some(FindingAction::RunCleanup) => FixTier::Auto,
             Some(FindingAction::OpenSystemPropertiesPerformance)
-            | Some(FindingAction::OpenUrl { .. }) => FixTier::Guided,
+            | Some(FindingAction::OpenUrl { .. })
+            | Some(FindingAction::Guided) => FixTier::Guided,
             None => FixTier::Advisory,
         }
     }
@@ -194,6 +196,13 @@ pub enum FindingAction {
     EnableUac,
     /// Faz 2 — tek tık otomatik fix: pagefile'ı sistem-yönetimli yap (reboot gerektirir).
     SetPagefileManaged,
+    /// Sprint 14 — disk doluluk bulgusundan tek tık "Yer aç": tüm temizlik
+    /// hedeflerini çalıştırır (onay + restore point). Auto tier.
+    RunCleanup,
+    /// Hedef bir Windows ayarı/URL'i olmayan ama yine de ayrıntılı yönlendirme
+    /// hak eden bulgular için: frontend "Nasıl?" rehber çekmecesini açar
+    /// (yedekle/temizle/üreticiye git gibi manuel adımlar). Guided tier.
+    Guided,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -476,6 +485,11 @@ pub struct ChkdskBootResult {
 pub struct ChkdskCancelOutcome {
     pub schedule_cleared: bool,
     pub reboot_aborted: bool,
+    /// `shutdown /a` GERÇEKTEN başarısız olduysa hata mesajı (split-brain uyarısı):
+    /// autochk exclude edildi ama yeniden başlatma planı iptal edilemedi. `None` =
+    /// abort başarılı ya da iptal edilecek bir reboot yoktu. Eskiden bu durum
+    /// sessizce `reboot_aborted=false` olarak yutuluyordu.
+    pub reboot_abort_error: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -493,6 +507,96 @@ pub struct SecurityConfig {
     pub dns_servers: Vec<String>,
     pub hosts_entry_count: u32,
     pub hosts_suspicious_lines: Vec<String>,
+}
+
+// === Sprint 14 — Defender durum panosu ===
+
+/// Defender durum + son tehditler özeti (Virüs kategorisi paneli).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DefenderOverview {
+    /// Defender sorgusu yapılabildi mi? (false = 3. parti AV / yetki sorunu)
+    pub available: bool,
+    pub status: Option<DefenderStatus>,
+    pub recent_threats: Vec<ThreatDetection>,
+}
+
+// === Sprint 14 — olay günlüğü özet paneli ===
+
+/// Son N gündeki Kritik/Hata olaylarının sağlayıcı+ID grubu. PII-GÜVENLİ:
+/// mesaj alanı YOK (invariant) — yalnız sağlayıcı, event ID, seviye, sayı, son tarih.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EventSummary {
+    pub provider: String,
+    pub event_id: u32,
+    pub level: String, // "Critical" | "Error"
+    pub count: u32,
+    pub last_occurred: String, // YYYY-MM-DD
+}
+
+// === Sprint 14 — disk bütünlüğü (chkdsk) sürücü paneli ===
+
+/// Bütünlük taraması yapılabilen sabit NTFS sürücü (panel için hafif model).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IntegrityVolume {
+    /// Tek harf, örn. "C".
+    pub drive_letter: String,
+    pub file_system: String,
+    pub size_bytes: u64,
+    pub free_bytes: u64,
+    /// Windows'un kurulu olduğu sürücü mü? (/f → reboot ile autochk planlanır)
+    pub is_system: bool,
+}
+
+// === Sprint 14 — büyük/kullanılmayan dosya tarayıcısı (sürücü başına) ===
+
+/// Tek bir büyük/kullanılmayan dosya kaydı. PII içerebilir (tam yol) — yalnız UI'da gösterilir,
+/// history'ye YAZILMAZ.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LargeFile {
+    pub path: String,
+    pub name: String,
+    /// Üst klasör (görüntüleme için kısaltılmış).
+    pub directory: String,
+    pub size_bytes: u64,
+    /// Son erişimden bu yana geçen gün (NTFS last-access; bazı sistemlerde kapalı olabilir).
+    pub last_accessed_days: Option<i64>,
+    pub last_modified_days: Option<i64>,
+}
+
+/// Bir sürücünün büyük/kullanılmayan dosya taraması sonucu.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DriveFileScan {
+    pub drive: String,
+    pub scanned_files: u64,
+    pub skipped_dirs: u64,
+    /// `min_size` üstü en büyük dosyalar (boyuta göre azalan).
+    pub large_files: Vec<LargeFile>,
+    /// `unused_days` günden uzun erişilmemiş büyük dosyalar (boyuta göre azalan).
+    pub unused_files: Vec<LargeFile>,
+    pub error: Option<String>,
+}
+
+/// Tek dosya silme hatası (yol + mesaj).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FileDeleteError {
+    pub path: String,
+    pub message: String,
+}
+
+/// Kullanıcı seçimli dosya silme sonucu (kalıcı silme).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FileDeleteResult {
+    pub deleted: u64,
+    pub failed: u64,
+    pub reclaimed_bytes: u64,
+    pub errors: Vec<FileDeleteError>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -549,6 +653,11 @@ pub enum FixSpec {
     EnableUac,
     /// Faz 2 — pagefile'ı sistem-yönetimli yap. Reboot gerektirir.
     SetPagefileManaged,
+    /// Defender Hızlı Tarama (Start-MpScan). Uzun sürer; batch'te en sona yakın çalışır.
+    RunDefenderQuickScan,
+    /// Sistem dosyası onarımı (DISM /RestoreHealth + sfc /scannow). En uzun adım;
+    /// batch'te EN SONA alınır (sıralama `run_fix_all`'da garanti edilir).
+    RunSystemFileCheck,
 }
 
 impl FixSpec {
@@ -559,13 +668,28 @@ impl FixSpec {
             FixSpec::EnableFirewall => "enableFirewall",
             FixSpec::EnableUac => "enableUac",
             FixSpec::SetPagefileManaged => "setPagefileManaged",
+            FixSpec::RunDefenderQuickScan => "defenderQuickScan",
+            FixSpec::RunSystemFileCheck => "systemFileCheck",
         }
     }
     /// Bu fix uygulandıktan sonra yeniden başlatma gerekiyor mu?
     pub fn requires_reboot(&self) -> bool {
         match self {
-            FixSpec::Cleanup { .. } | FixSpec::EnableFirewall => false,
+            FixSpec::Cleanup { .. }
+            | FixSpec::EnableFirewall
+            | FixSpec::RunDefenderQuickScan
+            | FixSpec::RunSystemFileCheck => false,
             FixSpec::EnableUac | FixSpec::SetPagefileManaged => true,
+        }
+    }
+    /// Batch'te çalışma sırası ağırlığı — küçük önce. Ağır streaming onarımlar
+    /// (Defender, sfc/DISM) en sona alınır; hızlı config fix'leri önce biter.
+    pub fn order_weight(&self) -> u8 {
+        match self {
+            FixSpec::Cleanup { .. } => 0,
+            FixSpec::EnableFirewall | FixSpec::EnableUac | FixSpec::SetPagefileManaged => 1,
+            FixSpec::RunDefenderQuickScan => 2,
+            FixSpec::RunSystemFileCheck => 3,
         }
     }
 }

@@ -4,7 +4,7 @@
 use crate::models::{Finding, FindingAction, MetricCode, Severity, ThermalSnapshot};
 use serde_json::json;
 
-const CATEGORY: &str = "Donanım";
+pub const CATEGORY: &str = "Donanım";
 
 pub fn evaluate(snap: &ThermalSnapshot) -> Vec<Finding> {
     let mut out = Vec::new();
@@ -109,6 +109,8 @@ fn make_temp_finding(
     )
     .with_metric(format!("{:.0}°C", max_temp))
     .with_metric_code(MetricCode::TemperatureCelsius { value: max_temp })
+    .with_action(FindingAction::Guided)
+    .with_action_code(format!("finding.thermal.{code_id}.action"))
     .with_params(json!({
         "maxTemp": format!("{:.0}", max_temp),
         "maxTempPrecise": format!("{:.1}", max_temp),

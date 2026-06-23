@@ -45,21 +45,35 @@ pub fn run_with_timeout(script: &str, timeout: Duration) -> Option<String> {
 
     let mut child = cmd.spawn().ok()?;
 
+    // ÖNEMLİ: stdout'u AYRI bir thread'de drain et. Aksi halde script'in çıktısı
+    // OS pipe buffer'ını (~4-64 KB) aşarsa child yazarken bloklanır, asla bitmez,
+    // timeout tetiklenir ve TÜM çıktı kaybolur. Reader thread pipe'ı `wait` ile
+    // eşzamanlı boşalttığı için bu kilitlenme oluşmaz.
+    let stdout = child.stdout.take()?;
+    let reader = std::thread::spawn(move || {
+        let mut buf = Vec::new();
+        let mut stdout = stdout;
+        let _ = stdout.read_to_end(&mut buf);
+        buf
+    });
+
     use wait_timeout::ChildExt;
     let status_opt = child.wait_timeout(timeout).ok()?;
     match status_opt {
         Some(status) => {
+            // Process bitti; reader thread'in pipe'ı tamamen okumasını bekle.
+            let buf = reader.join().unwrap_or_default();
             if !status.success() {
                 return None;
             }
-            let mut buf = Vec::new();
-            child.stdout.as_mut()?.read_to_end(&mut buf).ok()?;
             Some(String::from_utf8_lossy(&buf).into_owned())
         }
         None => {
-            // Timeout → child'ı öldür ve reap et
+            // Timeout → child'ı öldür ve reap et. kill() pipe'ı kapatır, böylece
+            // reader thread EOF görüp sonlanır (join'i askıda bırakmaz).
             let _ = child.kill();
             let _ = child.wait();
+            let _ = reader.join();
             None
         }
     }

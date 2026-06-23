@@ -5,7 +5,7 @@ use crate::diagnostics::util::short_date;
 use crate::models::{EventLogSignature, Finding, FindingAction, MetricCode, Severity};
 use serde_json::json;
 
-const CATEGORY: &str = "Olay günlüğü";
+pub const CATEGORY: &str = "Olay günlüğü";
 
 pub fn evaluate(signatures: &[EventLogSignature]) -> Vec<Finding> {
     signatures.iter().filter_map(classify).collect()

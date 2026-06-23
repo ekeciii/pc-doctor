@@ -5,6 +5,7 @@ pub mod defender;
 pub mod disk;
 pub mod drivers;
 pub mod event_log;
+pub mod large_files;
 pub mod pagefile;
 pub mod security_config;
 pub mod smart;

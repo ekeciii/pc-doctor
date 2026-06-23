@@ -5,7 +5,7 @@
 use crate::models::{Finding, FindingAction, MetricCode, PendingUpdate, Severity, UpdateSnapshot};
 use serde_json::json;
 
-const CATEGORY: &str = "Güncelleme";
+pub const CATEGORY: &str = "Güncelleme";
 
 pub fn evaluate(snap: &UpdateSnapshot) -> Vec<Finding> {
     let mut out = Vec::new();
@@ -88,9 +88,14 @@ pub fn evaluate(snap: &UpdateSnapshot) -> Vec<Finding> {
             )
             .with_metric(count.to_string())
             .with_metric_code(MetricCode::Count { value: count as u64 })
+            .with_action(FindingAction::Guided)
+            .with_action_code("finding.updates.winget.action")
             .with_params(json!({ "count": count }));
-            f.recommended_action =
-                Some("Terminal'de `winget upgrade --all` ile hepsini güncelleyebilirsin.".into());
+            f.recommended_action = Some(
+                "Yönetici PowerShell aç, `winget upgrade --all --silent` çalıştır; \
+                 tüm uygulamaları tek komutla güncelle."
+                    .into(),
+            );
             out.push(f);
         }
     }

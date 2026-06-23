@@ -3,6 +3,7 @@ pub mod chkdsk_boot_result;
 pub mod chkntfs;
 pub mod cleanup;
 pub mod defender_scan;
+pub mod file_delete;
 pub mod reboot;
 pub mod system_file_check;
 pub mod system_tweaks;

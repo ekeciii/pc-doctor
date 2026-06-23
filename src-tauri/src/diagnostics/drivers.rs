@@ -8,7 +8,7 @@
 use crate::models::{DriverInfo, Finding, FindingAction, MetricCode, Severity};
 use serde_json::json;
 
-const CATEGORY: &str = "Sürücü";
+pub const CATEGORY: &str = "Sürücü";
 /// "uzun süredir güncellenmemiş" eşiği (gün) — 3 yıl. Eski sürücü tek başına sorun değildir;
 /// yalnız toplu bir bilgi sinyali olarak gösterilir (kritik DEĞİL).
 const OLD_DRIVER_DAYS: i64 = 1095;

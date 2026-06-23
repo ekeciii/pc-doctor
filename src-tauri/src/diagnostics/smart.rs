@@ -1,10 +1,10 @@
 //! SMART/disk Finding'leri üret — Sprint 7 i18n migration.
 
 use crate::diagnostics::util::safe_disk_name;
-use crate::models::{Finding, MetricCode, Severity, SmartDisk};
+use crate::models::{Finding, FindingAction, MetricCode, Severity, SmartDisk};
 use serde_json::json;
 
-const CATEGORY: &str = "Disk sağlığı";
+pub const CATEGORY: &str = "Disk sağlığı";
 
 pub fn evaluate(disks: &[SmartDisk]) -> Vec<Finding> {
     disks.iter().flat_map(classify).collect()
@@ -32,6 +32,8 @@ fn classify(d: &SmartDisk) -> Vec<Finding> {
         .with_metric_code(MetricCode::BareString {
             text: d.health_status.clone(),
         })
+        .with_action(FindingAction::Guided)
+        .with_action_code("finding.smart.health.action")
         .with_params(json!({
             "diskName": disk_name.clone(),
             "healthStatus": d.health_status.clone(),
@@ -62,13 +64,17 @@ fn classify(d: &SmartDisk) -> Vec<Finding> {
             )
             .with_metric(format!("{w}%"))
             .with_metric_code(MetricCode::Percentage { value: w as f64 })
+            .with_action(FindingAction::Guided)
+            .with_action_code("finding.smart.wear.action")
             .with_params(json!({
                 "diskName": disk_name.clone(),
                 "wearPercent": w,
             }));
-            if w >= 80 {
-                f.recommended_action = Some("Yedek al; SSD değişimini planla.".into());
-            }
+            f.recommended_action = Some(if w >= 80 {
+                "Önemli dosyalarını hemen yedekle ve SSD değişimini planla.".into()
+            } else {
+                "Önemli dosyaların düzenli yedeğini al; aşınma ilerledikçe değişimi planla.".into()
+            });
             out.push(f);
         }
     }
@@ -90,6 +96,8 @@ fn classify(d: &SmartDisk) -> Vec<Finding> {
             )
             .with_metric(format!("{t}°C"))
             .with_metric_code(MetricCode::TemperatureCelsius { value: t as f64 })
+            .with_action(FindingAction::Guided)
+            .with_action_code("finding.smart.temperature.action")
             .with_params(json!({
                 "diskName": disk_name.clone(),
                 "temperatureC": t,
@@ -116,6 +124,8 @@ fn classify(d: &SmartDisk) -> Vec<Finding> {
         .with_metric_code(MetricCode::Count {
             value: read_err.saturating_add(write_err),
         })
+        .with_action(FindingAction::Guided)
+        .with_action_code("finding.smart.io_errors.action")
         .with_params(json!({
             "diskName": disk_name,
             "readErrors": read_err,

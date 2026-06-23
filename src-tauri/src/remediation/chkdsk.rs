@@ -46,6 +46,10 @@ static PERCENT_RE: Lazy<Regex> =
 
 #[derive(Debug)]
 pub enum ChkdskSession {
+    /// Başlatma rezervasyonu: child spawn edilene kadar slot'u atomik tutar.
+    /// `try_reserve()` → spawn → `put_session(Live*)` ile gerçek session'a dönüşür.
+    /// is_running→spawn→put_session arası TOCTOU yarışını kapatır.
+    Reserved,
     LiveScan(Child),
     LiveFix(Child),
     ScheduledFix {
@@ -60,11 +64,25 @@ pub enum ChkdskSession {
 
 static CURRENT_SESSION: Lazy<Mutex<Option<ChkdskSession>>> = Lazy::new(|| Mutex::new(None));
 
-fn is_running() -> bool {
-    CURRENT_SESSION
-        .lock()
-        .map(|g| g.is_some())
-        .unwrap_or(false)
+/// Atomik başlatma kapısı. Session boşsa `Reserved` işaretler ve `true` döner;
+/// doluysa (başka tarama/onarım sürüyor veya rezerve edilmiş) `false`.
+///
+/// Bunun TEK lock altında check-and-set yapması kritik: eski kod
+/// `is_running()` (lock al-bırak) → spawn → `put_session` (lock yeniden al)
+/// pattern'i kullanıyordu; iki eşzamanlı çağrı ikisi de geçip iki gerçek
+/// chkdsk.exe spawn edebiliyor, ikinci `put_session` ilkinin Child handle'ını
+/// ezerek iptal/reap edilemeyen bir live child sızdırıyordu.
+fn try_reserve() -> bool {
+    let mut guard = match CURRENT_SESSION.lock() {
+        Ok(g) => g,
+        Err(p) => p.into_inner(),
+    };
+    if guard.is_some() {
+        false
+    } else {
+        *guard = Some(ChkdskSession::Reserved);
+        true
+    }
 }
 
 fn put_session(s: ChkdskSession) {
@@ -88,23 +106,32 @@ fn take_session() -> Option<ChkdskSession> {
 /// - `LiveScan` / `LiveFix`: child.kill() + wait() (H1 invariant: guard drop ÖNCE wait).
 /// - `ScheduledFix`: `chkntfs /x V:` SONRA `shutdown /a` (invariant #11 — failure-safe sıra).
 ///
-/// Sprint 12 review H1+H3+H5 fix — `(schedule_cleared, reboot_aborted, cancelled_volume)`:
+/// Sprint 12 review H1+H3+H5 fix — `(schedule_cleared, reboot_abort, cancelled_volume)`:
 /// `cancelled_volume = Some(volume)` yalnız ScheduledFix iptal edildiğinde, multi-volume
 /// pending state'ten bu volume'ün spesifik `remove`'u için.
-pub fn cancel_session() -> (bool, bool, Option<String>) {
+///
+/// **2. eleman artık `Result<bool, String>`** (eski `bool` değil): `shutdown /a`'nın
+/// üç durumu var — `Ok(true)` iptal edildi, `Ok(false)` zaten planlı değildi (zararsız),
+/// `Err(e)` GERÇEKTEN başarısız. Eski `.unwrap_or(false)` Err'i zararsız "iptal edilmedi"
+/// gibi gösterip bir split-brain'i (autochk exclude EDİLDİ ama reboot hâlâ planlı)
+/// maskeliyordu. Caller artık Err'i ayırıp outcome'da yüzeye çıkarır.
+pub fn cancel_session() -> (bool, Result<bool, String>, Option<String>) {
     let session = take_session(); // guard drop edilir
     match session {
         Some(ChkdskSession::LiveScan(mut c)) | Some(ChkdskSession::LiveFix(mut c)) => {
             let _ = c.kill();
             let _ = c.wait();
-            (false, false, None)
+            (false, Ok(false), None)
         }
         Some(ChkdskSession::ScheduledFix { volume, .. }) => {
             let schedule_cleared = chkntfs::cancel(&volume).is_ok();
-            let reboot_aborted = reboot::abort_reboot().unwrap_or(false);
-            (schedule_cleared, reboot_aborted, Some(volume))
+            // Invariant #11: chkntfs /x ÖNCE (yukarıda) → shutdown /a SONRA. Err'i YUTMA.
+            let reboot_abort = reboot::abort_reboot();
+            (schedule_cleared, reboot_abort, Some(volume))
         }
-        None => (false, false, None),
+        // Rezervasyon (başlatma anı) — öldürülecek child yok, slot zaten boşaltıldı.
+        Some(ChkdskSession::Reserved) => (false, Ok(false), None),
+        None => (false, Ok(false), None),
     }
 }
 
@@ -218,17 +245,28 @@ fn spawn_chkdsk_child(args: &[&str]) -> Result<Child, String> {
 
 pub fn run_scan(app: AppHandle, volume: String) -> Result<ChkdskResult, String> {
     vol_util::validate_volume(&volume)?;
-    if is_running() {
+    if !try_reserve() {
         return Err("Bir chkdsk taraması zaten çalışıyor".into());
     }
     let target = format!("{volume}:");
     let started = Instant::now();
 
-    let mut child = spawn_chkdsk_child(&[target.as_str(), "/scan"])?;
-    let stdout = child
-        .stdout
-        .take()
-        .ok_or_else(|| "chkdsk stdout alınamadı".to_string())?;
+    let mut child = match spawn_chkdsk_child(&[target.as_str(), "/scan"]) {
+        Ok(c) => c,
+        Err(e) => {
+            take_session(); // rezervasyonu bırak
+            return Err(e);
+        }
+    };
+    let stdout = match child.stdout.take() {
+        Some(s) => s,
+        None => {
+            let _ = child.kill();
+            let _ = child.wait();
+            take_session(); // rezervasyonu bırak
+            return Err("chkdsk stdout alınamadı".into());
+        }
+    };
     put_session(ChkdskSession::LiveScan(child));
 
     let _ = app.emit(
@@ -285,18 +323,29 @@ pub fn run_nonsystem_fix(app: AppHandle, volume: String) -> Result<ChkdskFixResu
     if vol_util::is_system_drive(&volume) {
         return Err("System drive için live /f desteklenmiyor — schedule_system_fix kullan.".into());
     }
-    if is_running() {
+    if !try_reserve() {
         return Err("Bir chkdsk işlemi zaten çalışıyor".into());
     }
     let target = format!("{volume}:");
     let started = Instant::now();
 
     // /f ONLY — /x (force dismount) ASLA (invariant #5).
-    let mut child = spawn_chkdsk_child(&[target.as_str(), "/f"])?;
-    let stdout = child
-        .stdout
-        .take()
-        .ok_or_else(|| "chkdsk stdout alınamadı".to_string())?;
+    let mut child = match spawn_chkdsk_child(&[target.as_str(), "/f"]) {
+        Ok(c) => c,
+        Err(e) => {
+            take_session(); // rezervasyonu bırak
+            return Err(e);
+        }
+    };
+    let stdout = match child.stdout.take() {
+        Some(s) => s,
+        None => {
+            let _ = child.kill();
+            let _ = child.wait();
+            take_session(); // rezervasyonu bırak
+            return Err("chkdsk stdout alınamadı".into());
+        }
+    };
     put_session(ChkdskSession::LiveFix(child));
 
     let _ = app.emit(
@@ -358,10 +407,13 @@ pub fn schedule_system_fix(volume: String) -> Result<ChkdskFixResult, String> {
     if !vol_util::is_system_drive(&volume) {
         return Err("schedule_system_fix yalnız system drive için (C:).".into());
     }
-    if is_running() {
+    if !try_reserve() {
         return Err("Bir chkdsk işlemi zaten çalışıyor".into());
     }
-    chkntfs::schedule(&volume)?;
+    if let Err(e) = chkntfs::schedule(&volume) {
+        take_session(); // rezervasyonu bırak
+        return Err(e);
+    }
     let scheduled_at = chrono::Utc::now().to_rfc3339();
     put_session(ChkdskSession::ScheduledFix {
         volume: volume.clone(),
@@ -483,5 +535,20 @@ mod tests {
         assert_eq!(map_exit_code_fix(1), ChkdskStatus::Repaired);
         assert_eq!(map_exit_code_fix(2), ChkdskStatus::ErrorsFound);
         assert_eq!(map_exit_code_fix(3), ChkdskStatus::ScanFailed);
+    }
+
+    /// Yarış düzeltmesi: try_reserve atomik check-and-set yapmalı — ilk çağrı
+    /// slot'u alır, ikincisi (temizlenene dek) reddedilir. Bu, iki eşzamanlı
+    /// chkdsk başlatmasının ikisinin de gerçek child spawn etmesini engeller.
+    #[test]
+    fn try_reserve_is_exclusive_until_released() {
+        // Önceki testlerden kalmış olabilecek state'i temizle.
+        let _ = take_session();
+        assert!(try_reserve(), "boş slot rezerve edilebilmeli");
+        assert!(!try_reserve(), "dolu slot ikinci kez rezerve EDİLEMEMELİ");
+        // Rezervasyon bırakılınca tekrar alınabilir.
+        let _ = take_session();
+        assert!(try_reserve(), "bırakılan slot yeniden rezerve edilebilmeli");
+        let _ = take_session(); // temizlik
     }
 }

@@ -1,7 +1,7 @@
 use crate::admin::{self, NEEDS_ELEVATION, RESTORE_FAILED, SCHEDULE_INCONSISTENT, VOLUME_LOCKED};
 use crate::collectors::{
-    chkdsk_volumes, cleanup_targets, crash_history, defender, disk, drivers, event_log, pagefile,
-    security_config, smart, startup, thermal, updates,
+    chkdsk_volumes, cleanup_targets, crash_history, defender, disk, drivers, event_log,
+    large_files, pagefile, security_config, smart, startup, thermal, updates,
 };
 use crate::diagnostics::{
     chkdsk as chkdsk_diag, crash_history as crash_diag, defender as defender_diag, disk_full,
@@ -11,18 +11,24 @@ use crate::diagnostics::{
 };
 use crate::models::{
     ChkdskBootResult, ChkdskCancelOutcome, ChkdskFixResult, ChkdskResult, CleanupResult,
-    CleanupTarget, DefenderScanResult, FixAllOutcome, FixItemResult, FixSpec, PendingChkdsk,
-    ScanReport, SfcDismSummary,
+    CleanupTarget, DefenderScanResult, DriveFileScan, FileDeleteResult, FixAllOutcome,
+    FixItemResult, FixSpec, PendingChkdsk, ScanReport, SfcDismSummary,
 };
 use crate::remediation::{
-    chkdsk as chkdsk_remediation, chkdsk_boot_result, chkntfs, cleanup, defender_scan, reboot,
-    system_file_check, system_tweaks, volume as vol_util,
+    chkdsk as chkdsk_remediation, chkdsk_boot_result, chkntfs, cleanup, defender_scan,
+    file_delete, reboot, system_file_check, system_tweaks, volume as vol_util,
 };
 use crate::safety::{pending_state, restore_point};
 use chrono::Utc;
 use once_cell::sync::Lazy;
 use std::collections::HashSet;
+use tauri::Emitter;
 use tauri_plugin_opener::OpenerExt;
+
+/// "Temizlik" Finding kategorisi — commands.rs içinde inline üretiliyor (ayrı
+/// diagnostic modülü yok). sanitize_params allow-list'i bu string'e bağlı, bu
+/// yüzden const olarak tutulur (kategori_coverage testi referans alır).
+pub const CLEANUP_CATEGORY: &str = "Temizlik";
 
 /// Bilinen + onaylanmış URL allowlist'i. Frontend `open_oem_link` ile yalnızca bunları açabilir.
 static ALLOWED_SCHEME_URIS: Lazy<HashSet<&'static str>> = Lazy::new(|| {
@@ -126,7 +132,7 @@ fn scan_blocking() -> ScanReport {
             findings.push(
                 crate::models::Finding::code_only(
                     "cleanup:reclaimable",
-                    "Temizlik",
+                    CLEANUP_CATEGORY,
                     severity,
                     "finding.cleanup.reclaimable.title",
                     "finding.cleanup.reclaimable.description",
@@ -170,6 +176,193 @@ fn severity_order(s: &crate::models::Severity) -> u8 {
 #[tauri::command]
 pub fn list_cleanup_targets() -> Vec<CleanupTarget> {
     cleanup_targets::scan_all()
+}
+
+/// Sprint 14 — sürücü listesi (kullanım yüzdesiyle). Tam health-scan yapmadan disk
+/// kategorisinin dosya tarayıcısını besler.
+#[tauri::command]
+pub fn list_volumes() -> Vec<crate::models::VolumeInfo> {
+    disk::list_volumes()
+}
+
+/// Sprint 14 — fiziksel disklerin SMART telemetrisi (sağlık, sıcaklık, aşınma, G/Ç hataları).
+/// Disk sağlığı kategorisi panelini besler; PowerShell sorgusu spawn_blocking ile UI'ı bloklamaz.
+#[tauri::command]
+pub async fn list_smart_disks() -> Result<Vec<crate::models::SmartDisk>, String> {
+    tauri::async_runtime::spawn_blocking(smart::collect)
+        .await
+        .map_err(|e| format!("Disk sağlığı sorgusu başarısız: {e}"))
+}
+
+/// Sprint 14 — disk bütünlüğü paneli için sabit NTFS sürücüler (proaktif tarama/onarım hedefleri).
+#[tauri::command]
+pub async fn list_integrity_volumes() -> Result<Vec<crate::models::IntegrityVolume>, String> {
+    tauri::async_runtime::spawn_blocking(chkdsk_volumes::list_integrity_volumes)
+        .await
+        .map_err(|e| format!("Sürücü listesi başarısız: {e}"))
+}
+
+/// Sprint 15 — yerel AI: yüklü Ollama modellerini listele (Ollama yoksa hata).
+#[tauri::command]
+pub async fn ai_list_models() -> Result<Vec<String>, String> {
+    tauri::async_runtime::spawn_blocking(crate::ai::list_models)
+        .await
+        .map_err(|e| format!("Model listesi başarısız: {e}"))?
+}
+
+/// Sprint 15 — yerel AI sohbeti (stream). Yanıt `ai-chat-token`/`ai-chat-done` event'leriyle gelir.
+#[tauri::command]
+pub async fn ai_chat(
+    app: tauri::AppHandle,
+    model: String,
+    messages: Vec<crate::ai::ChatMessage>,
+) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || crate::ai::stream_chat(&app, &model, &messages))
+        .await
+        .map_err(|e| format!("AI sohbet görevi başarısız: {e}"))?
+}
+
+/// Sprint 14 — sanal bellek paneli: RAM/pagefile/hibernation durumu.
+#[tauri::command]
+pub async fn pagefile_info() -> Result<Option<crate::models::PagefileSnapshot>, String> {
+    tauri::async_runtime::spawn_blocking(pagefile::snapshot)
+        .await
+        .map_err(|e| format!("Sanal bellek bilgisi başarısız: {e}"))
+}
+
+/// Sprint 14 — çökme geçmişi paneli: WER sayısı + en çok çöken kaynaklar (PII-normalize).
+#[tauri::command]
+pub async fn crash_history() -> Result<crate::models::CrashHistory, String> {
+    use crate::diagnostics::util::{normalize_user_path, short_date, truncate_safe};
+    tauri::async_runtime::spawn_blocking(|| {
+        let mut h = crash_history::snapshot();
+        // Kaynak adı dosya yolu içerebilir → normalize + truncate (panelde de PII-temiz).
+        for sig in &mut h.reliability_signatures {
+            sig.source = truncate_safe(&normalize_user_path(&sig.source), 80);
+            sig.last_occurred = short_date(&sig.last_occurred);
+        }
+        h
+    })
+    .await
+    .map_err(|e| format!("Çökme geçmişi başarısız: {e}"))
+}
+
+/// Sprint 14 — Windows Güvenilirlik İzleyici'yi (perfmon /rel) aç.
+#[tauri::command]
+pub fn open_reliability_monitor() -> Result<(), String> {
+    use std::process::Command;
+    #[cfg(windows)]
+    use std::os::windows::process::CommandExt;
+    let mut cmd = Command::new("perfmon.exe");
+    cmd.arg("/rel");
+    #[cfg(windows)]
+    cmd.creation_flags(0x0800_0000); // CREATE_NO_WINDOW
+    cmd.spawn()
+        .map(|_| ())
+        .map_err(|e| format!("Güvenilirlik İzleyici açılamadı: {e}"))
+}
+
+/// Sprint 14 — başlangıç paneli: boot süresi + başlangıç öğeleri.
+#[tauri::command]
+pub async fn startup_info() -> Result<crate::models::StartupInfo, String> {
+    tauri::async_runtime::spawn_blocking(startup::snapshot)
+        .await
+        .map_err(|e| format!("Başlangıç bilgisi başarısız: {e}"))
+}
+
+/// Sprint 14 — bekleyen güncellemeler (Windows Update online + winget). YAVAŞ (~30-50 sn);
+/// frontend butonla tetikler, otomatik değil.
+#[tauri::command]
+pub async fn update_snapshot() -> Result<crate::models::UpdateSnapshot, String> {
+    tauri::async_runtime::spawn_blocking(updates::snapshot)
+        .await
+        .map_err(|e| format!("Güncelleme sorgusu başarısız: {e}"))
+}
+
+/// Sprint 14 — güvenlik konfigi panosu: firewall/UAC/BitLocker/DNS/hosts durumu.
+#[tauri::command]
+pub async fn security_overview() -> Result<crate::models::SecurityConfig, String> {
+    tauri::async_runtime::spawn_blocking(security_config::collect)
+        .await
+        .map_err(|e| format!("Güvenlik durumu başarısız: {e}"))
+}
+
+/// Sprint 14 — termal panel: sıcaklık bölgeleri + CPU performans/yük (~3 sn örnekleme).
+#[tauri::command]
+pub async fn thermal_snapshot() -> Result<crate::models::ThermalSnapshot, String> {
+    tauri::async_runtime::spawn_blocking(thermal::snapshot)
+        .await
+        .map_err(|e| format!("Sıcaklık ölçümü başarısız: {e}"))
+}
+
+/// Sprint 14 — Defender durum panosu: koruma durumu + son tehditler (tam tarama olmadan).
+#[tauri::command]
+pub async fn defender_overview() -> Result<crate::models::DefenderOverview, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        let status = defender::collect_status();
+        let recent_threats = defender::collect_recent_threats();
+        crate::models::DefenderOverview {
+            available: status.is_some(),
+            status,
+            recent_threats,
+        }
+    })
+    .await
+    .map_err(|e| format!("Defender durumu başarısız: {e}"))
+}
+
+/// Sprint 14 — sürücü paneli: dikkat gerektiren sürücüler (imzasız VEYA ≥2 yıl eski).
+#[tauri::command]
+pub async fn list_flagged_drivers() -> Result<Vec<crate::models::DriverInfo>, String> {
+    tauri::async_runtime::spawn_blocking(drivers::list_outdated_drivers)
+        .await
+        .map_err(|e| format!("Sürücü listesi başarısız: {e}"))
+}
+
+/// Sprint 14 — olay günlüğü paneli: son `days` gündeki Kritik/Hata olay özetleri (PII-güvenli).
+#[tauri::command]
+pub async fn recent_event_summaries(days: i64) -> Result<Vec<crate::models::EventSummary>, String> {
+    tauri::async_runtime::spawn_blocking(move || event_log::recent_summaries(days))
+        .await
+        .map_err(|e| format!("Olay günlüğü sorgusu başarısız: {e}"))
+}
+
+/// Sprint 14 — Windows Olay Görüntüleyici'yi (eventvwr.msc) aç.
+#[tauri::command]
+pub fn open_event_viewer() -> Result<(), String> {
+    use std::process::Command;
+    #[cfg(windows)]
+    use std::os::windows::process::CommandExt;
+    let mut cmd = Command::new("eventvwr.exe");
+    #[cfg(windows)]
+    cmd.creation_flags(0x0800_0000); // CREATE_NO_WINDOW
+    cmd.spawn()
+        .map(|_| ())
+        .map_err(|e| format!("Olay Görüntüleyici açılamadı: {e}"))
+}
+
+/// Sprint 14 — bir sürücüde (C:, D:…) büyük + kullanılmayan dosyaları tara.
+/// `min_size_mb` büyük-liste eşiği (MB), `unused_days` kullanılmama eşiği (gün).
+/// Ağır walk işlemi spawn_blocking ile UI thread'ini bloklamaz.
+#[tauri::command]
+pub async fn scan_large_files(
+    drive: String,
+    min_size_mb: u64,
+    unused_days: i64,
+) -> Result<DriveFileScan, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        large_files::scan_drive(&drive, min_size_mb.saturating_mul(1024 * 1024), unused_days)
+    })
+    .await
+    .map_err(|e| format!("Dosya taraması başarısız: {e}"))
+}
+
+/// Sprint 14 — kullanıcı-seçimli dosyaları kalıcı sil (her yol korumalı-konum denetiminden geçer).
+#[tauri::command]
+pub async fn delete_user_files(paths: Vec<String>) -> Result<FileDeleteResult, String> {
+    tauri::async_runtime::spawn_blocking(move || file_delete::delete_files(&paths))
+        .await
+        .map_err(|e| format!("Silme görevi başarısız: {e}"))
 }
 
 #[tauri::command]
@@ -245,11 +438,13 @@ pub fn execute_cleanup(
 /// aksine batch için tek nokta açar. Bir fix patlarsa diğerleri devam eder (izolasyon);
 /// sonunda madde madde sonuç + reboot grubu döner.
 ///
-/// Ağır streaming onarımlar (sfc/DISM, Defender, chkdsk) bilinçli olarak burada DEĞİL —
-/// kendi butonları + ilerleme dialoglarıyla ayrı çalışır. Faz 2 config fix'leri
-/// (başlangıç, pagefile, firewall/UAC, güncelleme) `FixSpec`'e eklenince otomatik kapsanır.
+/// Hızlı config fix'leri (temizlik, firewall/UAC, pagefile) ÖNCE, ağır streaming
+/// onarımlar (Defender Hızlı Tarama, sfc/DISM) `order_weight` ile EN SONA çalışır.
+/// Ağır adımlar kendi event'lerini (`sfc-dism-progress`, `defender-scan-*`) yayar;
+/// ek olarak her adımdan önce `fix-all-progress` ile aktif adım bildirilir.
 #[tauri::command]
 pub fn run_fix_all(
+    app: tauri::AppHandle,
     fixes: Vec<FixSpec>,
     force_without_restore: bool,
 ) -> Result<FixAllOutcome, String> {
@@ -273,7 +468,26 @@ pub fn run_fix_all(
         }
     }
 
-    let items: Vec<FixItemResult> = fixes.iter().map(run_one_fix).collect();
+    // Ağır onarımlar sona — hızlı fix'ler önce biter, kullanıcı erken ilerleme görür.
+    let mut fixes = fixes;
+    fixes.sort_by_key(|f| f.order_weight());
+
+    let total = fixes.len() as u32;
+    let items: Vec<FixItemResult> = fixes
+        .iter()
+        .enumerate()
+        .map(|(i, spec)| {
+            let _ = app.emit(
+                "fix-all-progress",
+                serde_json::json!({
+                    "id": spec.id(),
+                    "index": i as u32,
+                    "total": total,
+                }),
+            );
+            run_one_fix(&app, spec)
+        })
+        .collect();
     Ok(summarize_fix_all(
         items,
         restore_point_created,
@@ -284,7 +498,7 @@ pub fn run_fix_all(
 /// Tek bir fix'i uygular (izole — panik/hata batch'i durdurmaz). Tekil remediation
 /// fonksiyonlarını doğrudan çağırır (komut sarmalayıcılarını değil) ki restore point
 /// tekrarlanmasın.
-fn run_one_fix(spec: &FixSpec) -> FixItemResult {
+fn run_one_fix(app: &tauri::AppHandle, spec: &FixSpec) -> FixItemResult {
     let id = spec.id().to_string();
     let reboot_required = spec.requires_reboot();
     match spec {
@@ -299,6 +513,16 @@ fn run_one_fix(spec: &FixSpec) -> FixItemResult {
         FixSpec::EnableUac => fix_item(id, system_tweaks::enable_uac().is_ok(), reboot_required),
         FixSpec::SetPagefileManaged => {
             fix_item(id, system_tweaks::set_pagefile_managed().is_ok(), reboot_required)
+        }
+        FixSpec::RunDefenderQuickScan => {
+            // scan_ok=false (tarama çalıştı ama tehdit kaldı vb.) yine de "çalıştı" sayılır;
+            // yalnız komutun kendisi patlarsa (Err) başarısız.
+            let ran = defender_scan::run(app.clone()).is_ok();
+            fix_item(id, ran, reboot_required)
+        }
+        FixSpec::RunSystemFileCheck => {
+            let ran = system_file_check::run(app.clone()).is_ok();
+            fix_item(id, ran, reboot_required)
         }
     }
 }
@@ -390,16 +614,18 @@ pub async fn run_chkdsk_scan(
 /// döner; pending_state::remove(volume) yapılır (clear DEĞİL).
 #[tauri::command]
 pub fn cancel_chkdsk_scan(app: tauri::AppHandle) -> ChkdskCancelOutcome {
-    let (schedule_cleared, reboot_aborted, cancelled_volume) =
+    let (schedule_cleared, reboot_abort, cancelled_volume) =
         chkdsk_remediation::cancel_session();
     if schedule_cleared {
         if let Some(v) = cancelled_volume.as_ref() {
             let _ = pending_state::remove(&app, v);
         }
     }
+    let (reboot_aborted, reboot_abort_error) = split_reboot_abort(reboot_abort);
     ChkdskCancelOutcome {
         schedule_cleared,
         reboot_aborted,
+        reboot_abort_error,
     }
 }
 
@@ -503,16 +729,30 @@ pub async fn run_chkdsk_fix(
 /// multi-volume (Sprint 11 H6) invariantı ihlal etmiyor. Diğer pending volumes KORUNUR.
 #[tauri::command]
 pub fn cancel_chkdsk_session(app: tauri::AppHandle) -> ChkdskCancelOutcome {
-    let (schedule_cleared, reboot_aborted, cancelled_volume) =
+    let (schedule_cleared, reboot_abort, cancelled_volume) =
         chkdsk_remediation::cancel_session();
     if schedule_cleared {
         if let Some(v) = cancelled_volume.as_ref() {
             let _ = pending_state::remove(&app, v);
         }
     }
+    let (reboot_aborted, reboot_abort_error) = split_reboot_abort(reboot_abort);
     ChkdskCancelOutcome {
         schedule_cleared,
         reboot_aborted,
+        reboot_abort_error,
+    }
+}
+
+/// `cancel_session`'ın `Result<bool, String>` abort sonucunu outcome alanlarına ayırır.
+/// `Err` => `shutdown /a` GERÇEKTEN başarısız (split-brain riski); yutma, yüzeye çıkar.
+fn split_reboot_abort(reboot_abort: Result<bool, String>) -> (bool, Option<String>) {
+    match reboot_abort {
+        Ok(aborted) => (aborted, None),
+        Err(e) => {
+            eprintln!("[chkdsk] reboot abort FAILED (split-brain riski): {e}");
+            (false, Some(e))
+        }
     }
 }
 
@@ -736,6 +976,8 @@ mod tests {
             (r#"{"type":"enableFirewall"}"#, "enableFirewall"),
             (r#"{"type":"enableUac"}"#, "enableUac"),
             (r#"{"type":"setPagefileManaged"}"#, "setPagefileManaged"),
+            (r#"{"type":"runDefenderQuickScan"}"#, "defenderQuickScan"),
+            (r#"{"type":"runSystemFileCheck"}"#, "systemFileCheck"),
         ] {
             let spec: crate::models::FixSpec =
                 serde_json::from_str(json).expect("unit variant deserialize");
