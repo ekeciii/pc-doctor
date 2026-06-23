@@ -9,6 +9,8 @@
     "build": "tsc -b && vite build",
     "check:i18n": "node scripts/check-i18n.mjs",
     "check:all": "node scripts/check-all.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "preview": "vite preview",
     "tauri": "tauri"
   },
@@ -36,6 +38,7 @@
     "@vitejs/plugin-react": "^4.3.3",
     "tailwindcss": "^4.3.0",
     "typescript": "^5.6.3",
-    "vite": "^5.4.11"
+    "vite": "^5.4.11",
+    "vitest": "^2.1.8"
   }
 }

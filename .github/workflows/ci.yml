@@ -1,0 +1,63 @@
+name: CI
+
+# PR ve main push'unda tüm doğrulama ağını çalıştırır:
+# i18n parity + güvenlik invariant testleri + cargo lib testleri + frontend build.
+# Bu sayede kırık bir invariant veya bozuk i18n main'e merge edilemez.
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+# Aynı ref için eski koşuları iptal et (PR'a yeni push gelince).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Rust (stable + msvc)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Cache cargo registry + target
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "src-tauri -> target"
+
+      - name: Install npm deps
+        run: npm ci --no-audit --no-fund
+
+      # check:all = i18n + security_invariants + cargo lib + vitest + frontend build
+      - name: Run composite check
+        run: npm run check:all
+
+  # Bağımlılık güvenlik denetimi — RustSec advisory DB'ye karşı Cargo.lock.
+  # Ayrı job (ubuntu, hızlı); ana check'i bloklamaz ama PR'da görünür.
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+      - name: Run cargo audit
+        working-directory: src-tauri
+        run: cargo audit
