@@ -3,7 +3,6 @@ import type { ScanReport, ScoreBand } from "@/lib/types";
 import { useT } from "@/lib/i18n";
 import type { TKey } from "@/lib/i18n";
 import { Button } from "./ui/Button";
-import { ScanButton } from "./ScanButton";
 import { HealthScoreRing } from "./HealthScoreRing";
 import { ScanningReactor } from "./ScanningReactor";
 import { ScoreBreakdown } from "./ScoreBreakdown";
@@ -76,22 +75,54 @@ export function ScoreHero({ report, scanning, fixing, onScan, onFixAll }: Props)
   }
 
   if (!report) {
+    // Kompakt standby — kategoriler asıl içerik, skor/tarama üstte küçük kalır.
     return (
-      <section className="flex flex-col items-center pt-12 pb-10">
-        <HudPanel glow="var(--color-primary)" statusKey="hudStandby">
-          <p className="mt-6 text-xs uppercase tracking-[0.24em] text-muted-foreground mb-6 font-mono">
-            {t("appSubtitle")}
-          </p>
-          <ScanButton scanning={scanning} hasReport={false} onClick={onScan} />
-          {!scanning && <p className="mt-6 text-sm text-muted-foreground">{t("noScanYet")}</p>}
-        </HudPanel>
+      <section className="pt-2 pb-5">
+        <div
+          className="hud-corners relative w-full rounded-xl border bg-card/55 backdrop-blur-xl px-5 py-4 animate-fade-in flex items-center gap-4"
+          style={{
+            borderColor: "color-mix(in oklch, var(--color-primary) 26%, transparent)",
+            boxShadow:
+              "0 0 0 1px color-mix(in oklch, var(--color-primary) 12%, transparent), 0 18px 50px -30px color-mix(in oklch, var(--color-primary) 45%, transparent)",
+          }}
+        >
+          <span className="shrink-0 w-11 h-11 rounded-lg bg-primary-soft text-primary-strong flex items-center justify-center">
+            <ShieldCheck className="w-6 h-6" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="font-display font-bold text-foreground leading-tight">
+              {t("standbyTitle")}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t("noScanYet")}</p>
+          </div>
+          <Button size="default" onClick={onScan} disabled={scanning} className="shrink-0 gap-2">
+            <RotateCw className={cn("w-4 h-4", scanning && "animate-spin")} />
+            {t("scanNow")}
+          </Button>
+        </div>
       </section>
     );
   }
 
   const { health } = report;
   const glow = BAND_COLOR[health.band];
-  const fixableCount = report.cleanupTargets.length;
+  // "Hepsini Düzelt" kapsamı = disk temizliği + otomatik sistem fix'leri
+  // (firewall/UAC/pagefile). handleFixAll bunları tür bazında tekilleştirir,
+  // sayım da öyle olmalı — yoksa cleanup hedefi yokken buton yanlışça kilitlenir.
+  const systemFixTypes = new Set(
+    report.findings
+      .map((f) => f.action?.type)
+      .filter(
+        (type) =>
+          type === "enableFirewall" ||
+          type === "enableUac" ||
+          type === "setPagefileManaged" ||
+          type === "runDefenderQuickScan" ||
+          type === "runSystemFileCheck"
+      )
+  );
+  const cleanupCount = report.cleanupTargets.length;
+  const fixableCount = cleanupCount + systemFixTypes.size;
   const canFixAll = fixableCount > 0;
   const time = formatTime(report.generatedAt);
 

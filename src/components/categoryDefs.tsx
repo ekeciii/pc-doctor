@@ -42,7 +42,7 @@ export const CATEGORIES: CategoryDef[] = [
   { key: "cleanup", label: "Temizlik", icon: Wrench, matches: ["Temizlik"] },
 ];
 
-export type CategoryStatus = "ok" | "info" | "warning" | "critical";
+export type CategoryStatus = "idle" | "ok" | "info" | "warning" | "critical";
 
 export interface CategoryStat {
   status: CategoryStatus;
@@ -53,8 +53,10 @@ function rank(s: Severity): number {
   return { critical: 0, warning: 1, info: 2, good: 3 }[s];
 }
 
-/** Bir kategorinin en kötü bulgusuna göre durumu + bulgu sayısı. */
-export function categoryStat(cat: CategoryDef, report: ScanReport): CategoryStat {
+/** Bir kategorinin en kötü bulgusuna göre durumu + bulgu sayısı.
+ *  `report === null` → henüz taranmadı (idle). */
+export function categoryStat(cat: CategoryDef, report: ScanReport | null): CategoryStat {
+  if (!report) return { status: "idle", count: 0 };
   const related = report.findings.filter((f) => cat.matches.includes(f.category));
   if (related.length === 0) return { status: "ok", count: 0 };
   const worst = related.map((f) => f.severity).sort((a, b) => rank(a) - rank(b))[0];

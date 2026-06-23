@@ -22,6 +22,7 @@ import {
 import type { ChkdskProgress, ChkdskResult } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
+import { useDuration } from "@/lib/duration";
 
 interface Props {
   open: boolean;
@@ -43,14 +44,9 @@ const STAGE_LABEL_KEYS = [
 
 type Phase = "running" | "done" | "error" | "cancelled";
 
-function formatDuration(s: number): string {
-  const m = Math.floor(s / 60);
-  const sec = s % 60;
-  return `${m} dk ${sec} sn`;
-}
-
 export function ChkdskProgressDialog({ open, volume, onClose, onNeedsElevation }: Props) {
   const t = useT();
+  const formatDuration = useDuration();
   const [phase, setPhase] = useState<Phase>("running");
   const [stage, setStage] = useState(0);
   const [percent, setPercent] = useState<number | null>(null);

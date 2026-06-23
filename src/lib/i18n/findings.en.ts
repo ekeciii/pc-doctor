@@ -67,6 +67,7 @@ export const findingsEn: Record<FindingCode, string> = {
   "finding.defender.av_off.title": "Antivirus is disabled",
   "finding.defender.av_off.description":
     "The Defender antivirus engine is off. If another AV is installed, check its status.",
+  "finding.defender.av_off.action": "Open Windows Security",
   "finding.defender.tamper_off.title": "Defender tamper protection is OFF",
   "finding.defender.tamper_off.description":
     "Tamper Protection is disabled. Malware could alter Defender settings.",
@@ -85,23 +86,29 @@ export const findingsEn: Record<FindingCode, string> = {
   "finding.smart.health.title": "{diskName} health warning: {healthStatus}",
   "finding.smart.health.description":
     "Operational status: {operationalStatus}. Back up your data and run the manufacturer's diagnostic tool.",
+  "finding.smart.health.action": "How do I back up?",
   "finding.smart.wear.title": "{diskName} SSD wear {wearPercent}%",
   "finding.smart.wear.description":
     "SSDs have a limited write lifespan. Values above 80% indicate the drive is nearing end of life.",
+  "finding.smart.wear.action": "Backup + replacement steps",
   "finding.smart.temperature.title": "{diskName} temperature is high: {temperatureC}°C",
   "finding.smart.temperature.description":
     "Sustained disk temperatures above 70°C shorten drive lifespan and increase the risk of data loss.",
+  "finding.smart.temperature.action": "Cooling steps",
   "finding.smart.io_errors.title": "{diskName} has accumulated I/O errors",
   "finding.smart.io_errors.description":
     "Total read errors: {readErrors}. Total write errors: {writeErrors}. The drive may be starting to fail.",
+  "finding.smart.io_errors.action": "Backup + chkdsk steps",
 
   // === thermal ===
   "finding.thermal.critical.title": "Hardware is critically hot: {maxTemp}°C",
   "finding.thermal.critical.description":
     "The ACPI thermal sensor ({zoneCount} zones) measured {maxTempPrecise}°C. At this level, CPU/GPU thermal throttling and reduced hardware lifespan are unavoidable. Note: sensor placement varies by OEM.",
+  "finding.thermal.critical.action": "Cooling steps",
   "finding.thermal.warning.title": "Hardware temperature is high: {maxTemp}°C",
   "finding.thermal.warning.description":
     "The ACPI thermal sensor ({zoneCount} zones) measured {maxTempPrecise}°C. If it rises further under load, throttling will kick in.",
+  "finding.thermal.warning.action": "Cooling steps",
   "finding.thermal.throttling_critical.title":
     "Severe CPU throttling: only {perfPercent}% of nominal speed",
   "finding.thermal.throttling_critical.description":
@@ -157,6 +164,7 @@ export const findingsEn: Record<FindingCode, string> = {
   "finding.updates.wu_some.description":
     "Not urgent, but we recommend installing them to stay up to date.",
   "finding.updates.wu_some.action": "Open Windows Update",
+  "finding.updates.winget.action": "Update with one command",
   "finding.updates.winget.title": "{count} apps can be updated (winget)",
   "finding.updates.winget.description":
     "Newer versions of your installed applications are available.",
