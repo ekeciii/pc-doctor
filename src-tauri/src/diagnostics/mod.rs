@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod code_coverage_tests;
+
 pub mod chkdsk;
 pub mod crash_history;
 pub mod defender;
