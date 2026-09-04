@@ -53,6 +53,7 @@ static ALLOWED_HTTPS_HOSTS: Lazy<HashSet<&'static str>> = Lazy::new(|| {
         "www.intel.com",
         "www.realtek.com",
         "www.google.com", // driver fallback aramaları için
+        "github.com", // Faz 2 — Ayarlar'daki Gizlilik/KVKK/EULA linkleri (proje deposu)
     ])
 });
 
@@ -1002,6 +1003,7 @@ mod tests {
     fn allow_known_https() {
         assert!(is_allowed_url("https://www.nvidia.com/Download/index.aspx"));
         assert!(is_allowed_url("https://www.google.com/search?q=foo"));
+        assert!(is_allowed_url("https://github.com/ekeciii/pc-doctor/blob/main/PRIVACY.md"));
     }
 
     #[test]

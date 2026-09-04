@@ -1,0 +1,65 @@
+PC DOCTOR - KULLANIM KOSULLARI / TERMS OF USE
+================================================================================
+
+TURKCE
+--------------------------------------------------------------------------------
+
+PC Doctor, Windows sistem ayarlarini degistirebilen ve yonetici (admin)
+yetkisiyle calisan bir bakim aracidir. Kurulumu ve kullanimi asagidaki
+kosullari kabul ettiginiz anlamina gelir.
+
+- Yonetici yetkisi isteyen islemler (Sistem Geri Yukleme noktasi, sfc/DISM
+  onarimi, chkdsk /f, guvenlik duvari/UAC acma, sayfa dosyasi ayari) her
+  seferinde ayri onayinizi ister; hicbiri onayiniz olmadan calismaz.
+
+- chkdsk /f dosya sistemi onarimi yapar; sistem surucusunde yeniden baslatma
+  gerektirir. Her chkdsk /f oncesi bir Sistem Geri Yukleme noktasi olusturulur.
+
+- Buyuk/kullanilmayan dosya bulucusu, sectiginiz dosyalari Geri Donusum
+  Kutusu'na tasir (kalici silmez) - yanlislikla sectiklerinizi oradan geri
+  alabilirsiniz.
+
+- Sistem ayari degisiklikleri (UAC, guvenlik duvari, sayfa dosyasi) yalnizca
+  guvenligi guclendirme yonunde calisir.
+
+- Yazilim "OLDUGU GIBI" sunulur, hicbir garanti olmaksizin. Kritik
+  islemlerden once verilerinizi yedeklemeniz onerilir.
+
+- Ciddi donanim arizasi veya veri kurtarma senaryolarinda profesyonel
+  teknik servise basvurun.
+
+Tam metin: https://github.com/ekeciii/pc-doctor/blob/main/EULA.md
+Gizlilik: https://github.com/ekeciii/pc-doctor/blob/main/PRIVACY.md
+Lisans (MIT): https://github.com/ekeciii/pc-doctor/blob/main/LICENSE
+
+--------------------------------------------------------------------------------
+ENGLISH
+--------------------------------------------------------------------------------
+
+PC Doctor is a maintenance tool that can change Windows system settings and
+runs with administrator privileges. Installing and using it means you accept
+the terms below.
+
+- Operations requiring admin rights (System Restore point, sfc/DISM repair,
+  chkdsk /f, enabling firewall/UAC, pagefile configuration) ask for your
+  explicit confirmation every time; none of them run without your consent.
+
+- chkdsk /f repairs the file system; on the system drive it requires a
+  reboot. A System Restore point is created before every chkdsk /f.
+
+- The large/unused-file finder moves the files you select to the Recycle
+  Bin (not a permanent delete) - you can restore mistaken selections from
+  there.
+
+- System setting changes (UAC, firewall, pagefile) only ever strengthen
+  security.
+
+- The software is provided "AS IS", without warranty of any kind. Backing
+  up important data before critical operations is recommended.
+
+- For serious hardware failure or data-recovery scenarios, consult a
+  professional technician.
+
+Full text: https://github.com/ekeciii/pc-doctor/blob/main/EULA.md
+Privacy: https://github.com/ekeciii/pc-doctor/blob/main/PRIVACY.md
+License (MIT): https://github.com/ekeciii/pc-doctor/blob/main/LICENSE

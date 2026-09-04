@@ -118,9 +118,6 @@ export const en: Record<TKey, string> = {
   settingsThemeAuto: "System",
   settingsThemeLight: "Light",
   settingsThemeDark: "Dark",
-  settingsTelemetry: "Telemetry (off)",
-  settingsTelemetryExplain:
-    "PC Doctor sends no data off-device. Telemetry opt-in remains disabled this sprint.",
   settingsHistory: "Scan history",
   settingsHistoryExplain:
     "Each scan's summary counts are stored in a local SQLite file. No personal data is written.",
@@ -130,6 +127,30 @@ export const en: Record<TKey, string> = {
   settingsAbout: "About",
   settingsAboutBody: "PC Doctor — built with Tauri 2 + React + Rust.",
   settingsSaveFailed: "Could not save settings",
+  // Phase 2 — Settings: privacy/legal links
+  settingsPrivacyHeading: "Privacy and terms",
+  settingsPrivacyExplain:
+    "The Privacy Policy explains in detail what data PC Doctor reads and why, where it's stored, and how the local AI feature works.",
+  settingsPrivacyLink: "Privacy Policy",
+  settingsEulaLink: "Terms of Use",
+  // Phase 2 — first-run data-access disclosure
+  disclosureTitle: "What does PC Doctor access?",
+  disclosureIntro: "Before you scan, a quick summary of what PC Doctor does:",
+  disclosureBullet1:
+    "It reads system information across ~13 categories — disk, drivers, security settings, event logs, and more — all of it stays on your device.",
+  disclosureBullet2:
+    "No data is ever sent to a PC Doctor server; there is no telemetry.",
+  disclosureBullet3:
+    "Scan history (summary counts only, no personal data) is stored in a local file; you can clear it anytime.",
+  disclosureBullet4:
+    "The only network traffic is the update check (GitHub). You're always asked before anything requiring admin rights.",
+  disclosureLinkPrefix: "Details: ",
+  disclosureAck: "Got it, continue",
+  // Phase 2 — AI drawer first-open data notice
+  aiConsentTitle: "How does this chat work?",
+  aiConsentBody:
+    "To answer your questions, your scan summary (health score, finding titles, drive usage) is sent to the local Ollama model installed on your device. No data leaves it.",
+  aiConsentAck: "Got it",
   // History
   historyTitle: "Scan history",
   historyEmpty: "No scans recorded yet. Run your first scan.",
