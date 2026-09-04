@@ -119,7 +119,12 @@ pub fn snapshot() -> Option<PagefileSnapshot> {
         .as_ref()
         .and_then(|p| p.capacity_mb)
         .filter(|&v| v > 0)
-        .or_else(|| bundle.system.as_ref().and_then(|s| s.total_physical_memory_mb))
+        .or_else(|| {
+            bundle
+                .system
+                .as_ref()
+                .and_then(|s| s.total_physical_memory_mb)
+        })
         .unwrap_or(0);
     let automatic_managed = bundle
         .system
@@ -129,12 +134,10 @@ pub fn snapshot() -> Option<PagefileSnapshot> {
     let configured = bundle
         .settings
         .into_iter()
-        .filter_map(|s| {
-            Some(PagefileEntry {
-                name: s.name.unwrap_or_default(),
-                initial_size_mb: s.initial_size.unwrap_or(0),
-                maximum_size_mb: s.maximum_size.unwrap_or(0),
-            })
+        .map(|s| PagefileEntry {
+            name: s.name.unwrap_or_default(),
+            initial_size_mb: s.initial_size.unwrap_or(0),
+            maximum_size_mb: s.maximum_size.unwrap_or(0),
         })
         .collect();
     let (allocated_mb, peak_mb) = bundle

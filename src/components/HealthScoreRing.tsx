@@ -92,7 +92,10 @@ export function HealthScoreRing({ health, size = 268 }: Props) {
       {/* reaktör halesi */}
       <div
         aria-hidden
-        className={cn("absolute inset-0 rounded-full blur-3xl opacity-30", !reduced && "animate-pulse-glow")}
+        className={cn(
+          "absolute inset-0 rounded-full blur-3xl opacity-30",
+          !reduced && "animate-pulse-glow"
+        )}
         style={{ background: `radial-gradient(circle, ${color} 0%, transparent 66%)` }}
       />
 
@@ -141,7 +144,15 @@ export function HealthScoreRing({ health, size = 268 }: Props) {
         />
 
         {/* iz */}
-        <circle cx={c} cy={c} r={r} fill="none" stroke="var(--color-muted)" strokeWidth={stroke} className="opacity-60" />
+        <circle
+          cx={c}
+          cy={c}
+          r={r}
+          fill="none"
+          stroke="var(--color-muted)"
+          strokeWidth={stroke}
+          className="opacity-60"
+        />
 
         {/* değer yayı */}
         <circle
@@ -160,21 +171,35 @@ export function HealthScoreRing({ health, size = 268 }: Props) {
 
         {/* parlayan uç nokta */}
         {displayed > 1 && (
-          <circle cx={hx} cy={hy} r={5.5} fill="currentColor" style={{ filter: "drop-shadow(0 0 8px currentColor)" }} />
+          <circle
+            cx={hx}
+            cy={hy}
+            r={5.5}
+            fill="currentColor"
+            style={{ filter: "drop-shadow(0 0 8px currentColor)" }}
+          />
         )}
       </svg>
 
       {/* merkez okuma */}
       <div className="absolute inset-0 flex flex-col items-center justify-center select-none">
         <div className="flex items-start font-mono font-semibold tabular-nums leading-none text-foreground">
-          <span style={{ fontSize: size * 0.3, textShadow: `0 0 22px color-mix(in oklch, ${color} 55%, transparent)` }}>
+          <span
+            style={{
+              fontSize: size * 0.3,
+              textShadow: `0 0 22px color-mix(in oklch, ${color} 55%, transparent)`,
+            }}
+          >
             {displayed}
           </span>
           <span className="mt-1.5 text-muted-foreground" style={{ fontSize: size * 0.082 }}>
             /100
           </span>
         </div>
-        <div className="mt-1.5 font-display font-semibold tracking-tight" style={{ color, fontSize: size * 0.07 }}>
+        <div
+          className="mt-1.5 font-display font-semibold tracking-tight"
+          style={{ color, fontSize: size * 0.07 }}
+        >
           {t(BAND_VERDICT[health.band])}
         </div>
         <div className="mt-1 text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-mono">

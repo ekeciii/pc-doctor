@@ -68,16 +68,9 @@ pub fn read_all(app: &AppHandle) -> Option<PendingChkdskState> {
     parse_any(&raw)
 }
 
-/// Sprint 8 legacy API — tek volume yazar (mevcut listeyi EZER).
-/// Sprint 11+ caller'lar `write_all` veya `append` kullansın.
-pub fn write(app: &AppHandle, state: &PendingChkdsk) -> Result<(), String> {
-    write_all(app, &PendingChkdskState::new(vec![state.clone()]))
-}
-
 pub fn write_all(app: &AppHandle, state: &PendingChkdskState) -> Result<(), String> {
     let p = path_for(app)?;
-    let raw = serde_json::to_string_pretty(state)
-        .map_err(|e| format!("serialize: {e}"))?;
+    let raw = serde_json::to_string_pretty(state).map_err(|e| format!("serialize: {e}"))?;
     std::fs::write(&p, raw).map_err(|e| format!("write: {e}"))
 }
 

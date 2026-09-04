@@ -67,7 +67,7 @@ pub fn relaunch_as_admin() -> Result<(), String> {
         // ShellExecuteW HINSTANCE değeri > 32 ise başarılı (eski Win32 sözleşmesi).
         let code = hinst.0 as isize;
         if code <= 32 {
-            return Err(format!("ShellExecuteW başarısız (kod={})", code));
+            return Err(format!("ShellExecuteW failed (code={})", code));
         }
     }
     Ok(())
@@ -75,7 +75,7 @@ pub fn relaunch_as_admin() -> Result<(), String> {
 
 #[cfg(not(windows))]
 pub fn relaunch_as_admin() -> Result<(), String> {
-    Err("Bu platformda desteklenmiyor".into())
+    Err("Not supported on this platform".into())
 }
 
 /// Komut katmanı için kullanılacak sentinel hata mesajı.
@@ -97,7 +97,3 @@ pub const SCHEDULE_INCONSISTENT: &str = "ScheduleInconsistent";
 /// Non-system /f volume kilitlenemedi (process aktif handle tutuyor).
 /// Frontend modal: "Sonraki açılışta planla" veya "Açık dosyaları kapat ve tekrar dene".
 pub const VOLUME_LOCKED: &str = "VolumeLocked";
-
-/// Restore Point için diskte yer kalmadı (< 500 MB free, sistem diski).
-/// Kullanıcıya Cleanup finding'i öner; force=true ile geçilebilir.
-pub const DISK_FULL_NO_RESTORE: &str = "DiskFullNoRestore";

@@ -62,13 +62,20 @@ pub fn collect() -> Vec<SmartDisk> {
 
     disks
         .into_iter()
-        .filter_map(|d| {
+        .map(|d| {
             let friendly_name = d.friendly_name.unwrap_or_else(|| "(bilinmiyor)".into());
-            let media_type = enum_label(d.media_type.as_ref(), &[(0, "Unknown"), (3, "HDD"), (4, "SSD"), (5, "SCM")]);
-            let health_status = enum_label(d.health_status.as_ref(), &[(0, "Healthy"), (1, "Warning"), (2, "Unhealthy")]);
+            let media_type = enum_label(
+                d.media_type.as_ref(),
+                &[(0, "Unknown"), (3, "HDD"), (4, "SSD"), (5, "SCM")],
+            );
+            let health_status = enum_label(
+                d.health_status.as_ref(),
+                &[(0, "Healthy"), (1, "Warning"), (2, "Unhealthy")],
+            );
             let operational_status = match d.operational_status {
                 Some(serde_json::Value::String(s)) => s,
-                Some(serde_json::Value::Array(arr)) => arr.iter()
+                Some(serde_json::Value::Array(arr)) => arr
+                    .iter()
                     .filter_map(|v| v.as_str().map(|s| s.to_string()))
                     .collect::<Vec<_>>()
                     .join(", "),
@@ -101,7 +108,7 @@ pub fn collect() -> Vec<SmartDisk> {
             let size_bytes = d.size.unwrap_or(0);
             let device_id_key = d.device_id.as_ref().map(value_as_id).unwrap_or_default();
             let rel = rel_map.get(&device_id_key);
-            Some(SmartDisk {
+            SmartDisk {
                 friendly_name,
                 media_type,
                 health_status,
@@ -113,7 +120,7 @@ pub fn collect() -> Vec<SmartDisk> {
                 read_errors_total: rel.and_then(|r| r.read_errors_total),
                 write_errors_total: rel.and_then(|r| r.write_errors_total),
                 power_on_hours: rel.and_then(|r| r.power_on_hours),
-            })
+            }
         })
         .collect()
 }
@@ -158,4 +165,3 @@ fn enum_label(v: Option<&serde_json::Value>, map: &[(u64, &str)]) -> String {
         _ => "(bilinmiyor)".into(),
     }
 }
-

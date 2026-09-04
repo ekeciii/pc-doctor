@@ -17,6 +17,7 @@ import {
   onDefenderScanComplete,
   onDefenderScanStart,
   runDefenderQuickScan,
+  toError,
 } from "@/lib/api";
 import type { DefenderScanResult } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -68,7 +69,7 @@ export function DefenderScanDialog({ open, onClose, onNeedsElevation }: Props) {
           onClose();
           return;
         }
-        setError(String(e));
+        setError(toError(e).message);
         setRunning(false);
       }
     })();
@@ -172,9 +173,7 @@ export function DefenderScanDialog({ open, onClose, onNeedsElevation }: Props) {
                             <>
                               {" · "}
                               {t("processLabel")}:{" "}
-                              <span className="font-mono text-foreground/85">
-                                {th.processName}
-                              </span>
+                              <span className="font-mono text-foreground/85">{th.processName}</span>
                             </>
                           ) : null}
                         </div>

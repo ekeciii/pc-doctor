@@ -23,7 +23,9 @@ pub fn evaluate(snap: &UpdateSnapshot) -> Vec<Finding> {
                 "finding.updates.wu_security.description",
             )
             .with_metric(count.to_string())
-            .with_metric_code(MetricCode::Count { value: count as u64 })
+            .with_metric_code(MetricCode::Count {
+                value: count as u64,
+            })
             .with_action(FindingAction::OpenUrl {
                 url: "ms-settings:windowsupdate".into(),
             })
@@ -31,7 +33,7 @@ pub fn evaluate(snap: &UpdateSnapshot) -> Vec<Finding> {
             .with_params(json!({
                 "count": count,
             }));
-            f.recommended_action = Some("Windows Update'i aç ve indirme & kurmayı başlat.".into());
+            f.recommendation_code = Some("finding.updates.wu_security.recommendation".into());
             out.push(f);
         } else if total >= 10 {
             let mut f = Finding::code_only(
@@ -42,15 +44,15 @@ pub fn evaluate(snap: &UpdateSnapshot) -> Vec<Finding> {
                 "finding.updates.wu_many.description",
             )
             .with_metric(total.to_string())
-            .with_metric_code(MetricCode::Count { value: total as u64 })
+            .with_metric_code(MetricCode::Count {
+                value: total as u64,
+            })
             .with_action(FindingAction::OpenUrl {
                 url: "ms-settings:windowsupdate".into(),
             })
             .with_action_code("finding.updates.wu_many.action")
             .with_params(json!({ "count": total }));
-            f.recommended_action = Some(
-                "Windows Update'ten birikenleri kur. PC'yi yeniden başlatman gerekebilir.".into(),
-            );
+            f.recommendation_code = Some("finding.updates.wu_many.recommendation".into());
             out.push(f);
         } else if total >= 1 {
             out.push(
@@ -62,7 +64,9 @@ pub fn evaluate(snap: &UpdateSnapshot) -> Vec<Finding> {
                     "finding.updates.wu_some.description",
                 )
                 .with_metric(total.to_string())
-                .with_metric_code(MetricCode::Count { value: total as u64 })
+                .with_metric_code(MetricCode::Count {
+                    value: total as u64,
+                })
                 .with_action(FindingAction::OpenUrl {
                     url: "ms-settings:windowsupdate".into(),
                 })
@@ -87,15 +91,13 @@ pub fn evaluate(snap: &UpdateSnapshot) -> Vec<Finding> {
                 "finding.updates.winget.description",
             )
             .with_metric(count.to_string())
-            .with_metric_code(MetricCode::Count { value: count as u64 })
+            .with_metric_code(MetricCode::Count {
+                value: count as u64,
+            })
             .with_action(FindingAction::Guided)
             .with_action_code("finding.updates.winget.action")
             .with_params(json!({ "count": count }));
-            f.recommended_action = Some(
-                "Yönetici PowerShell aç, `winget upgrade --all --silent` çalıştır; \
-                 tüm uygulamaları tek komutla güncelle."
-                    .into(),
-            );
+            f.recommendation_code = Some("finding.updates.winget.recommendation".into());
             out.push(f);
         }
     }

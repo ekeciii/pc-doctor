@@ -57,9 +57,8 @@ fn collect_windows_updates() -> Option<Vec<PendingUpdate>> {
                 let title = r.title?;
                 let is_mandatory = r.is_mandatory.unwrap_or(false);
                 let lower = title.to_lowercase();
-                let is_security = is_mandatory
-                    || lower.contains("security")
-                    || lower.contains("güvenlik");
+                let is_security =
+                    is_mandatory || lower.contains("security") || lower.contains("güvenlik");
                 Some(PendingUpdate {
                     source: "WindowsUpdate".into(),
                     title,
@@ -98,7 +97,9 @@ fn collect_winget_upgrade_count() -> Option<u32> {
         let count = lines
             .iter()
             .skip(idx + 1)
-            .take_while(|l| !l.trim().is_empty() && !l.contains("upgrade") && !l.contains("yükseltme"))
+            .take_while(|l| {
+                !l.trim().is_empty() && !l.contains("upgrade") && !l.contains("yükseltme")
+            })
             // Sadece bir id alanı görünüyorsa veri satırı say
             .filter(|l| l.split_whitespace().count() >= 3)
             .count() as u32;

@@ -152,7 +152,7 @@ pub fn list_integrity_volumes() -> Vec<IntegrityVolume> {
         .filter_map(|v| serde_json::from_value::<PsVolume>(v).ok())
         .filter_map(|v| {
             let letter = v.drive_letter.filter(|s| !s.is_empty())?.to_uppercase();
-            let is_system = letter.chars().next() == Some(system_letter);
+            let is_system = letter.starts_with(system_letter);
             Some(IntegrityVolume {
                 drive_letter: letter,
                 file_system: v.file_system.unwrap_or_else(|| "NTFS".into()),

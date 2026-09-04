@@ -24,11 +24,7 @@ export function TrendSparkline({ code, days = 30 }: Props) {
 
   if (data === null) return null;
   if (data.length === 0) {
-    return (
-      <div className="text-[10px] text-muted-foreground italic">
-        {t("trendNoData")}
-      </div>
-    );
+    return <div className="text-[10px] text-muted-foreground italic">{t("trendNoData")}</div>;
   }
 
   const width = 120;
@@ -40,7 +36,7 @@ export function TrendSparkline({ code, days = 30 }: Props) {
   const points = data
     .map((d, i) => {
       const x = padding + i * stepX;
-      const y = height - padding - ((d.count / maxCount) * (height - padding * 2));
+      const y = height - padding - (d.count / maxCount) * (height - padding * 2);
       return `${x.toFixed(1)},${y.toFixed(1)}`;
     })
     .join(" ");
@@ -68,16 +64,8 @@ export function TrendSparkline({ code, days = 30 }: Props) {
         {data.map((d, i) => {
           if (i !== data.length - 1) return null;
           const x = padding + i * stepX;
-          const y = height - padding - ((d.count / maxCount) * (height - padding * 2));
-          return (
-            <circle
-              key={i}
-              cx={x}
-              cy={y}
-              r="2"
-              fill="currentColor"
-            />
-          );
+          const y = height - padding - (d.count / maxCount) * (height - padding * 2);
+          return <circle key={i} cx={x} cy={y} r="2" fill="currentColor" />;
         })}
       </svg>
       <span className="text-[10px] text-muted-foreground tabular-nums">

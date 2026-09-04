@@ -1,7 +1,7 @@
 import { ShieldAlert } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "./ui/Alert";
 import { Button } from "./ui/Button";
-import { relaunchAsAdmin } from "@/lib/api";
+import { relaunchAsAdmin, toError } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 
 interface Props {
@@ -18,7 +18,7 @@ export function ElevationBanner({ isElevated, forceShow, reason }: Props) {
     try {
       await relaunchAsAdmin();
     } catch (e) {
-      alert(`${t("relaunchFailed")}: ${String(e)}`);
+      alert(`${t("relaunchFailed")}: ${toError(e).message}`);
     }
   };
 

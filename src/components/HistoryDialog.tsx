@@ -20,19 +20,8 @@ import { Button } from "./ui/Button";
 import { Alert, AlertDescription } from "./ui/Alert";
 import { Card } from "./ui/Card";
 import { Badge } from "./ui/Badge";
-import {
-  listScans,
-  listScanFindings,
-  clearHistory,
-  type ScanRecord,
-} from "@/lib/api";
-import {
-  metricLabel,
-  resolveFinding,
-  useDateFmt,
-  useI18n,
-  useT,
-} from "@/lib/i18n";
+import { listScans, listScanFindings, clearHistory, toError, type ScanRecord } from "@/lib/api";
+import { metricLabel, resolveFinding, useDateFmt, useI18n, useT } from "@/lib/i18n";
 import { TrendSparkline } from "./TrendSparkline";
 import { HistoryTrendTab } from "./HistoryTrendTab";
 import type { Finding, ScanFindingDetail, Severity } from "@/lib/types";
@@ -86,9 +75,7 @@ export function HistoryDialog({ open, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [detailCache, setDetailCache] = useState<Record<number, ScanFindingDetail[]>>(
-    {}
-  );
+  const [detailCache, setDetailCache] = useState<Record<number, ScanFindingDetail[]>>({});
   const [detailLoading, setDetailLoading] = useState<number | null>(null);
   // Sprint 11 T-ext — tab toggle
   const [activeTab, setActiveTab] = useState<"history" | "trend">("history");
@@ -99,7 +86,7 @@ export function HistoryDialog({ open, onClose }: Props) {
       const rows = await listScans(100);
       setRecords(rows);
     } catch (e) {
-      setError(`${t("historyLoadFailed")}: ${String(e)}`);
+      setError(`${t("historyLoadFailed")}: ${toError(e).message}`);
       setRecords([]);
     }
   };
@@ -143,7 +130,7 @@ export function HistoryDialog({ open, onClose }: Props) {
       setDetailCache({});
       await reload();
     } catch (e) {
-      setError(String(e));
+      setError(toError(e).message);
     } finally {
       setWorking(false);
     }
@@ -155,9 +142,7 @@ export function HistoryDialog({ open, onClose }: Props) {
         <DialogHeader>
           <div className="flex-1">
             <DialogTitle>{t("historyTitle")}</DialogTitle>
-            <DialogDescription className="mt-1">
-              {t("settingsHistoryExplain")}
-            </DialogDescription>
+            <DialogDescription className="mt-1">{t("settingsHistoryExplain")}</DialogDescription>
           </div>
         </DialogHeader>
         <DialogBody className="space-y-3">
@@ -244,8 +229,7 @@ export function HistoryDialog({ open, onClose }: Props) {
                             {t("historyColFindings")}: {r.findingCount}
                             {r.criticalCount > 0 &&
                               ` · ${r.criticalCount} ${t("severityCritical")}`}
-                            {r.warningCount > 0 &&
-                              ` · ${r.warningCount} ${t("severityWarning")}`}
+                            {r.warningCount > 0 && ` · ${r.warningCount} ${t("severityWarning")}`}
                           </div>
                         </div>
                         <Badge variant={sev.badge} size="default">
@@ -307,13 +291,7 @@ export function HistoryDialog({ open, onClose }: Props) {
   );
 }
 
-function FindingRow({
-  detail,
-  locale,
-}: {
-  detail: ScanFindingDetail;
-  locale: "tr" | "en";
-}) {
+function FindingRow({ detail, locale }: { detail: ScanFindingDetail; locale: "tr" | "en" }) {
   // Parse params_json defansif — Sprint 7 sanitize_params'tan ZATEN geçmiş.
   let params: Record<string, string | number> | null = null;
   if (detail.paramsJson) {
@@ -345,17 +323,13 @@ function FindingRow({
   const metric = metricLabel(null, titleCode, params, locale);
   return (
     <li className="flex items-start gap-2 text-xs">
-      <div
-        className={`shrink-0 w-5 h-5 rounded flex items-center justify-center ${sev.iconBg}`}
-      >
+      <div className={`shrink-0 w-5 h-5 rounded flex items-center justify-center ${sev.iconBg}`}>
         {sev.icon}
       </div>
       <div className="flex-1 min-w-0">
         <div className="font-medium text-foreground truncate">{resolved.title}</div>
         {resolved.description && (
-          <div className="text-muted-foreground mt-0.5 leading-snug">
-            {resolved.description}
-          </div>
+          <div className="text-muted-foreground mt-0.5 leading-snug">{resolved.description}</div>
         )}
         {/* Sprint 10 T — trendline mini sparkline */}
         <div className="mt-1">

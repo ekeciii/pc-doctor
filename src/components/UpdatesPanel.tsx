@@ -1,14 +1,7 @@
 import { useState } from "react";
-import {
-  CheckCircle2,
-  Download,
-  ExternalLink,
-  Loader2,
-  Package,
-  ShieldAlert,
-} from "lucide-react";
+import { CheckCircle2, Download, ExternalLink, Loader2, Package, ShieldAlert } from "lucide-react";
 import type { PendingUpdate, UpdateSnapshot } from "@/lib/types";
-import { openOemLink, updateSnapshot } from "@/lib/api";
+import { openOemLink, toError, updateSnapshot } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
@@ -26,7 +19,7 @@ export function UpdatesPanel() {
     setError(null);
     updateSnapshot()
       .then(setSnap)
-      .catch((e) => setError(String(e)))
+      .catch((e) => setError(toError(e).message))
       .finally(() => setLoading(false));
   };
 
@@ -39,7 +32,11 @@ export function UpdatesPanel() {
         <h3 className="font-display text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           {t("updatesHeading")}
         </h3>
-        <Button size="sm" variant="outline" onClick={() => openOemLink("ms-settings:windowsupdate").catch(() => {})}>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => openOemLink("ms-settings:windowsupdate").catch(() => {})}
+        >
           <ExternalLink className="w-3.5 h-3.5" />
           {t("updatesOpenWu")}
         </Button>
@@ -66,7 +63,9 @@ export function UpdatesPanel() {
       )}
 
       {error && (
-        <div className="rounded-md bg-destructive-soft/60 text-destructive-strong text-xs p-3">{error}</div>
+        <div className="rounded-md bg-destructive-soft/60 text-destructive-strong text-xs p-3">
+          {error}
+        </div>
       )}
 
       {snap && !loading && (
@@ -90,7 +89,10 @@ export function UpdatesPanel() {
               {t("updatesWuFailed")}
             </Card>
           ) : wu.length === 0 ? (
-            <Card variant="default" className="p-4 flex items-center gap-2 text-sm text-foreground/90">
+            <Card
+              variant="default"
+              className="p-4 flex items-center gap-2 text-sm text-foreground/90"
+            >
               <CheckCircle2 className="w-4 h-4 text-success" />
               {t("updatesWuNone")}
             </Card>
@@ -135,12 +137,17 @@ function UpdateRow({ update }: { update: PendingUpdate }) {
   return (
     <Card
       variant="default"
-      className={cn("flex items-center gap-3 p-3", update.isSecurity ? "border-destructive/30" : "border-border")}
+      className={cn(
+        "flex items-center gap-3 p-3",
+        update.isSecurity ? "border-destructive/30" : "border-border"
+      )}
     >
       <span
         className={cn(
           "shrink-0 w-7 h-7 rounded-md flex items-center justify-center",
-          update.isSecurity ? "bg-destructive-soft text-destructive-strong" : "bg-primary-soft text-primary-strong"
+          update.isSecurity
+            ? "bg-destructive-soft text-destructive-strong"
+            : "bg-primary-soft text-primary-strong"
         )}
       >
         {update.isSecurity ? <ShieldAlert className="w-4 h-4" /> : <Download className="w-4 h-4" />}
@@ -149,7 +156,9 @@ function UpdateRow({ update }: { update: PendingUpdate }) {
         <div className="text-sm text-foreground truncate" title={update.title}>
           {update.title}
         </div>
-        {update.kb && <div className="text-[11px] font-mono text-muted-foreground">{update.kb}</div>}
+        {update.kb && (
+          <div className="text-[11px] font-mono text-muted-foreground">{update.kb}</div>
+        )}
       </div>
       {update.severity && (
         <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-muted text-muted-foreground uppercase">

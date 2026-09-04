@@ -24,7 +24,10 @@ pub fn enable_firewall() -> Result<(), String> {
     let script = "Set-NetFirewallProfile -All -Enabled True; \
         $off = Get-NetFirewallProfile | Where-Object { -not $_.Enabled }; \
         if (-not $off) { 'OK' }";
-    verify(powershell::run_with_timeout(script, Duration::from_secs(20)))
+    verify(powershell::run_with_timeout(
+        script,
+        Duration::from_secs(20),
+    ))
 }
 
 /// UAC'yi açar (EnableLUA = 1). Etkili olması için yeniden başlatma gerekir.
@@ -34,7 +37,10 @@ pub fn enable_uac() -> Result<(), String> {
         "Set-ItemProperty -Path '{key}' -Name 'EnableLUA' -Value 1 -Type DWord; \
          if ((Get-ItemProperty -Path '{key}' -Name 'EnableLUA').EnableLUA -eq 1) {{ 'OK' }}"
     );
-    verify(powershell::run_with_timeout(&script, Duration::from_secs(15)))
+    verify(powershell::run_with_timeout(
+        &script,
+        Duration::from_secs(15),
+    ))
 }
 
 /// Pagefile'ı sistem-yönetimliye alır. Etkili olması için yeniden başlatma gerekir.
@@ -42,5 +48,8 @@ pub fn set_pagefile_managed() -> Result<(), String> {
     let script = "$c = Get-WmiObject Win32_ComputerSystem; \
         $c.AutomaticManagedPagefile = $true; [void]$c.Put(); \
         if ((Get-WmiObject Win32_ComputerSystem).AutomaticManagedPagefile) { 'OK' }";
-    verify(powershell::run_with_timeout(script, Duration::from_secs(20)))
+    verify(powershell::run_with_timeout(
+        script,
+        Duration::from_secs(20),
+    ))
 }

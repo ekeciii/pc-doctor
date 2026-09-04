@@ -2,35 +2,31 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { forwardRef, type HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
-export const cardVariants = cva(
-  "rounded-lg bg-card text-card-foreground border border-border",
-  {
-    variants: {
-      variant: {
-        default: "shadow-sm",
-        elevated: "shadow-md",
-        flat: "shadow-none",
-        outline: "border-2",
-      },
-      tone: {
-        neutral: "",
-        primary: "border-primary/30 bg-primary-soft/40",
-        success: "border-success/30 bg-success-soft/40",
-        warning: "border-warning/30 bg-warning-soft/40",
-        destructive: "border-destructive/30 bg-destructive-soft/40",
-        info: "border-info/30 bg-info-soft/40",
-      },
+export const cardVariants = cva("rounded-lg bg-card text-card-foreground border border-border", {
+  variants: {
+    variant: {
+      default: "shadow-sm",
+      elevated: "shadow-md",
+      flat: "shadow-none",
+      outline: "border-2",
     },
-    defaultVariants: {
-      variant: "default",
-      tone: "neutral",
+    tone: {
+      neutral: "",
+      primary: "border-primary/30 bg-primary-soft/40",
+      success: "border-success/30 bg-success-soft/40",
+      warning: "border-warning/30 bg-warning-soft/40",
+      destructive: "border-destructive/30 bg-destructive-soft/40",
+      info: "border-info/30 bg-info-soft/40",
     },
-  }
-);
+  },
+  defaultVariants: {
+    variant: "default",
+    tone: "neutral",
+  },
+});
 
 export interface CardProps
-  extends HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof cardVariants> {}
+  extends HTMLAttributes<HTMLDivElement>, VariantProps<typeof cardVariants> {}
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ className, variant, tone, ...props }, ref) => (

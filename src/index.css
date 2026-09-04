@@ -21,8 +21,8 @@
 
   /* === Semantic renkler (OKLCH, açık tema) === */
   /* Yüzeyler */
-  --color-background: oklch(98.8% 0.005 80);          /* warm canvas */
-  --color-foreground: oklch(22% 0.015 250);            /* deep ink */
+  --color-background: oklch(98.8% 0.005 80); /* warm canvas */
+  --color-foreground: oklch(22% 0.015 250); /* deep ink */
   --color-card: oklch(100% 0 0);
   --color-card-foreground: oklch(22% 0.015 250);
   --color-popover: oklch(100% 0 0);
@@ -79,10 +79,12 @@
   --shadow-xs: 0 1px 2px 0 oklch(48% 0.07 205 / 0.05);
   --shadow-sm: 0 1px 2px 0 oklch(48% 0.07 205 / 0.06), 0 1px 3px 0 oklch(48% 0.07 205 / 0.04);
   --shadow-md: 0 4px 6px -1px oklch(48% 0.07 205 / 0.08), 0 2px 4px -2px oklch(48% 0.07 205 / 0.05);
-  --shadow-lg: 0 10px 15px -3px oklch(48% 0.07 205 / 0.09), 0 4px 6px -4px oklch(48% 0.07 205 / 0.05);
-  --shadow-xl: 0 20px 25px -5px oklch(48% 0.07 205 / 0.10), 0 8px 10px -6px oklch(48% 0.07 205 / 0.05);
+  --shadow-lg:
+    0 10px 15px -3px oklch(48% 0.07 205 / 0.09), 0 4px 6px -4px oklch(48% 0.07 205 / 0.05);
+  --shadow-xl:
+    0 20px 25px -5px oklch(48% 0.07 205 / 0.1), 0 8px 10px -6px oklch(48% 0.07 205 / 0.05);
   --shadow-2xl: 0 25px 50px -12px oklch(48% 0.07 205 / 0.22);
-  --shadow-ring-primary: 0 0 0 3px oklch(48% 0.07 205 / 0.20);
+  --shadow-ring-primary: 0 0 0 3px oklch(48% 0.07 205 / 0.2);
 
   /* === Animasyonlar === */
   --animate-fade-in: fade-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
@@ -98,35 +100,110 @@
   --animate-ping-ring: ping-ring 2.6s ease-out infinite;
 
   @keyframes fade-in {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
   @keyframes rise-in {
-    from { opacity: 0; transform: translateY(6px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   @keyframes breathe {
-    0%, 100% { transform: scale(1); filter: brightness(1); }
-    50%      { transform: scale(1.012); filter: brightness(1.04); }
+    0%,
+    100% {
+      transform: scale(1);
+      filter: brightness(1);
+    }
+    50% {
+      transform: scale(1.012);
+      filter: brightness(1.04);
+    }
   }
   @keyframes scan-sweep {
-    0%   { transform: translateY(-10vh); opacity: 0; }
-    10%  { opacity: 0.9; }
-    90%  { opacity: 0.9; }
-    100% { transform: translateY(110vh); opacity: 0; }
+    0% {
+      transform: translateY(-10vh);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.9;
+    }
+    90% {
+      opacity: 0.9;
+    }
+    100% {
+      transform: translateY(110vh);
+      opacity: 0;
+    }
   }
-  @keyframes spin-slow { to { transform: rotate(360deg); } }
-  @keyframes spin-rev  { to { transform: rotate(-360deg); } }
-  @keyframes pulse-glow { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+  @keyframes spin-slow {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes spin-rev {
+    to {
+      transform: rotate(-360deg);
+    }
+  }
+  @keyframes pulse-glow {
+    0%,
+    100% {
+      opacity: 0.45;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
   @keyframes flicker {
-    0%, 100% { opacity: 1; } 41% { opacity: 1; } 42% { opacity: 0.82; }
-    43% { opacity: 1; } 70% { opacity: 1; } 71% { opacity: 0.9; } 72% { opacity: 1; }
+    0%,
+    100% {
+      opacity: 1;
+    }
+    41% {
+      opacity: 1;
+    }
+    42% {
+      opacity: 0.82;
+    }
+    43% {
+      opacity: 1;
+    }
+    70% {
+      opacity: 1;
+    }
+    71% {
+      opacity: 0.9;
+    }
+    72% {
+      opacity: 1;
+    }
   }
-  @keyframes radar { to { transform: rotate(360deg); } }
+  @keyframes radar {
+    to {
+      transform: rotate(360deg);
+    }
+  }
   @keyframes ping-ring {
-    0%   { transform: scale(0.55); opacity: 0.7; }
-    80%  { opacity: 0; }
-    100% { transform: scale(1.35); opacity: 0; }
+    0% {
+      transform: scale(0.55);
+      opacity: 0.7;
+    }
+    80% {
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1.35);
+      opacity: 0;
+    }
   }
 }
 
@@ -134,8 +211,16 @@
   /* İnce teknik ızgara — backdrop katmanı opacity'i kendi ayarlar. */
   .hud-grid {
     background-image:
-      linear-gradient(to right, color-mix(in oklch, var(--color-primary) 60%, transparent) 1px, transparent 1px),
-      linear-gradient(to bottom, color-mix(in oklch, var(--color-primary) 60%, transparent) 1px, transparent 1px);
+      linear-gradient(
+        to right,
+        color-mix(in oklch, var(--color-primary) 60%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        color-mix(in oklch, var(--color-primary) 60%, transparent) 1px,
+        transparent 1px
+      );
     background-size: 46px 46px;
     mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 35%, transparent 80%);
   }
@@ -144,12 +229,23 @@
   .hud-corners::after {
     content: "";
     position: absolute;
-    width: 18px; height: 18px;
+    width: 18px;
+    height: 18px;
     border-color: color-mix(in oklch, var(--color-primary) 75%, transparent);
     pointer-events: none;
   }
-  .hud-corners::before { top: 10px; left: 10px; border-top: 1.5px solid; border-left: 1.5px solid; }
-  .hud-corners::after  { bottom: 10px; right: 10px; border-bottom: 1.5px solid; border-right: 1.5px solid; }
+  .hud-corners::before {
+    top: 10px;
+    left: 10px;
+    border-top: 1.5px solid;
+    border-left: 1.5px solid;
+  }
+  .hud-corners::after {
+    bottom: 10px;
+    right: 10px;
+    border-bottom: 1.5px solid;
+    border-right: 1.5px solid;
+  }
 }
 
 /* Dark theme override */
@@ -161,10 +257,10 @@
   --color-popover: oklch(20% 0.02 250);
   --color-popover-foreground: oklch(94% 0.01 80);
 
-  --color-primary: oklch(72% 0.10 205);
+  --color-primary: oklch(72% 0.1 205);
   --color-primary-foreground: oklch(16% 0.018 250);
   --color-primary-soft: oklch(28% 0.04 205);
-  --color-primary-strong: oklch(82% 0.10 205);
+  --color-primary-strong: oklch(82% 0.1 205);
 
   --color-secondary: oklch(26% 0.02 250);
   --color-secondary-foreground: oklch(94% 0.01 80);
@@ -195,16 +291,25 @@
 
   --color-border: oklch(28% 0.02 250);
   --color-input: oklch(28% 0.02 250);
-  --color-ring: oklch(72% 0.10 205);
+  --color-ring: oklch(72% 0.1 205);
 }
 
 @layer base {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     border-color: var(--color-border);
   }
 
-  html, body, #root { height: 100%; }
-  html { font-feature-settings: "ss01", "cv11"; color-scheme: light dark; }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  html {
+    font-feature-settings: "ss01", "cv11";
+    color-scheme: light dark;
+  }
   body {
     margin: 0;
     font-family: var(--font-sans);
@@ -214,7 +319,10 @@
     text-rendering: optimizeLegibility;
   }
 
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     font-family: var(--font-display);
     letter-spacing: -0.02em;
   }
@@ -225,7 +333,9 @@
      SVG değer-animasyonları (HealthScoreRing) ayrıca JS tarafında
      usePrefersReducedMotion ile zaten ele alınıyor. */
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
+    *,
+    *::before,
+    *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;

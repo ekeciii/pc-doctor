@@ -38,12 +38,7 @@ export function UpdateBanner({ update, installing, progress, onInstall, onDismis
         )}
       </div>
       <div className="flex flex-col gap-2 shrink-0">
-        <Button
-          variant="default"
-          size="default"
-          onClick={onInstall}
-          disabled={installing}
-        >
+        <Button variant="default" size="default" onClick={onInstall} disabled={installing}>
           {installing ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />

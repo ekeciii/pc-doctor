@@ -27,8 +27,10 @@ pub struct Settings {
     pub history_retention_days: u32,
     /// Faz 2 — ilk-açılış veri-okuma bildirimi hangi sürümüne kadar onaylandı.
     /// `0` = hiç onaylanmadı (yeni kurulum + telemetry_enabled alanı silinen eski
-    /// settings.json'lar `#[serde(default)]` ile buraya düşer). `CURRENT_DISCLOSURE_VERSION`
-    /// ile karşılaştırılır; bildirim metni değişirse sabiti artır, kullanıcı tekrar görür.
+    /// settings.json'lar `#[serde(default)]` ile buraya düşer). Karşılaştırma
+    /// frontend'de yapılır — kaynak sabit `src/lib/settings.ts::CURRENT_DISCLOSURE_VERSION`;
+    /// bildirim metni değişirse orayı artır, kullanıcı tekrar görür. (Backend bu değere
+    /// hiç bakmaz, yalnız saklar — burada ayrıca tutmak iki dilde çift kaynak yaratırdı.)
     #[serde(default)]
     pub disclosure_ack_version: u32,
     /// Faz 2 — AI çekmecesindeki "veriniz yerel Ollama'ya gider" notu onaylandı mı.
@@ -36,16 +38,21 @@ pub struct Settings {
     pub ai_disclosure_ack: bool,
 }
 
-/// Mevcut ilk-açılış bildirim metninin sürümü. Metni değiştirirsen artır —
-/// eski kurulumlar `disclosure_ack_version < CURRENT_DISCLOSURE_VERSION` olduğu için
-/// bildirimi bir daha görür.
-pub const CURRENT_DISCLOSURE_VERSION: u32 = 1;
-
-fn default_schema_version() -> u32 { 1 }
-fn default_locale() -> String { "tr".into() }
-fn default_theme() -> String { "auto".into() }
-fn default_true() -> bool { true }
-fn default_retention_days() -> u32 { 90 }
+fn default_schema_version() -> u32 {
+    1
+}
+fn default_locale() -> String {
+    "tr".into()
+}
+fn default_theme() -> String {
+    "auto".into()
+}
+fn default_true() -> bool {
+    true
+}
+fn default_retention_days() -> u32 {
+    90
+}
 
 impl Default for Settings {
     fn default() -> Self {

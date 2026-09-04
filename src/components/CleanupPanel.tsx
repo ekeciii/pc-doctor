@@ -17,9 +17,7 @@ export function CleanupPanel({ targets, totalBytes, onFix, busy }: Props) {
   const t = useT();
   const fmtBytes = useByteFmt();
   const numberFmt = useNumberFmt();
-  const [selected, setSelected] = useState<Set<string>>(
-    () => new Set(targets.map((x) => x.id))
-  );
+  const [selected, setSelected] = useState<Set<string>>(() => new Set(targets.map((x) => x.id)));
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const selectedBytes = useMemo(

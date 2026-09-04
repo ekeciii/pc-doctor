@@ -177,7 +177,11 @@ export function ScoreHero({ report, scanning, fixing, onScan, onFixAll }: Props)
                 : undefined
             }
           >
-            {fixing ? <Sparkles className="w-5 h-5 animate-pulse" /> : <Wand2 className="w-5 h-5" />}
+            {fixing ? (
+              <Sparkles className="w-5 h-5 animate-pulse" />
+            ) : (
+              <Wand2 className="w-5 h-5" />
+            )}
             {t("fixAllCta")}
           </Button>
           <div className="flex items-center gap-3 text-sm">

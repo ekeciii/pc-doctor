@@ -40,7 +40,11 @@ export function PagefilePanel({ onSetManaged }: Props) {
           {t("pagefileHeading")}
         </h3>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={() => openSystemPropertiesPerformance().catch(() => {})}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => openSystemPropertiesPerformance().catch(() => {})}
+          >
             <ExternalLink className="w-3.5 h-3.5" />
             {t("pagefileAdvancedCta")}
           </Button>
@@ -64,7 +68,9 @@ export function PagefilePanel({ onSetManaged }: Props) {
       )}
 
       {error && (
-        <div className="rounded-md bg-destructive-soft/60 text-destructive-strong text-xs p-3">{error}</div>
+        <div className="rounded-md bg-destructive-soft/60 text-destructive-strong text-xs p-3">
+          {error}
+        </div>
       )}
 
       {unavailable && !loading && (
@@ -86,10 +92,16 @@ export function PagefilePanel({ onSetManaged }: Props) {
             <span
               className={cn(
                 "shrink-0 w-9 h-9 rounded-md flex items-center justify-center",
-                snap.automaticManaged ? "bg-success-soft text-success-strong" : "bg-info-soft text-info-strong"
+                snap.automaticManaged
+                  ? "bg-success-soft text-success-strong"
+                  : "bg-info-soft text-info-strong"
               )}
             >
-              {snap.automaticManaged ? <CheckCircle2 className="w-4 h-4" /> : <Database className="w-4 h-4" />}
+              {snap.automaticManaged ? (
+                <CheckCircle2 className="w-4 h-4" />
+              ) : (
+                <Database className="w-4 h-4" />
+              )}
             </span>
             <div className="min-w-0 flex-1">
               <div className="text-sm font-semibold text-foreground">{t("pagefileMode")}</div>
@@ -107,7 +119,11 @@ export function PagefilePanel({ onSetManaged }: Props) {
 
           {/* metrikler */}
           <div className="grid grid-cols-2 gap-2.5">
-            <MetricTile icon={<MemoryStick className="w-3.5 h-3.5" />} label={t("pagefileRam")} value={mb(snap.totalRamMb)} />
+            <MetricTile
+              icon={<MemoryStick className="w-3.5 h-3.5" />}
+              label={t("pagefileRam")}
+              value={mb(snap.totalRamMb)}
+            />
             <MetricTile
               icon={<Moon className="w-3.5 h-3.5" />}
               label={t("pagefileHibernation")}
@@ -141,7 +157,10 @@ export function PagefilePanel({ onSetManaged }: Props) {
               {snap.configured.map((e, i) => (
                 <Card key={i} variant="default" className="flex items-center gap-3 p-2.5">
                   <Database className="w-4 h-4 text-primary shrink-0" />
-                  <span className="text-sm font-mono text-foreground truncate flex-1" title={e.name}>
+                  <span
+                    className="text-sm font-mono text-foreground truncate flex-1"
+                    title={e.name}
+                  >
                     {e.name}
                   </span>
                   <span className="text-[11px] font-mono text-muted-foreground tabular-nums shrink-0">
@@ -154,21 +173,33 @@ export function PagefilePanel({ onSetManaged }: Props) {
             </div>
           )}
 
-          <p className="text-[11px] text-muted-foreground px-1 leading-relaxed">{t("pagefileFootnote")}</p>
+          <p className="text-[11px] text-muted-foreground px-1 leading-relaxed">
+            {t("pagefileFootnote")}
+          </p>
         </>
       )}
     </div>
   );
 }
 
-function MetricTile({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function MetricTile({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
   return (
     <Card variant="default" className="p-3">
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-mono flex items-center gap-1">
         {icon}
         {label}
       </div>
-      <div className="text-base font-display font-bold tabular-nums mt-0.5 text-foreground">{value}</div>
+      <div className="text-base font-display font-bold tabular-nums mt-0.5 text-foreground">
+        {value}
+      </div>
     </Card>
   );
 }

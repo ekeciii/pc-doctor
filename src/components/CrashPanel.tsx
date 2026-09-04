@@ -1,4 +1,12 @@
-import { AlertTriangle, CheckCircle2, ExternalLink, FileWarning, Loader2, RotateCw, Wrench } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ExternalLink,
+  FileWarning,
+  Loader2,
+  RotateCw,
+  Wrench,
+} from "lucide-react";
 import type { CrashSignature } from "@/lib/types";
 import { crashHistory, openReliabilityMonitor } from "@/lib/api";
 import { useT } from "@/lib/i18n";
@@ -32,7 +40,11 @@ export function CrashPanel({ onRepairSystemFiles }: Props) {
             <Wrench className="w-3.5 h-3.5" />
             {t("crashRepairCta")}
           </Button>
-          <Button size="sm" variant="outline" onClick={() => openReliabilityMonitor().catch(() => {})}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => openReliabilityMonitor().catch(() => {})}
+          >
             <ExternalLink className="w-3.5 h-3.5" />
             {t("crashReliabilityCta")}
           </Button>
@@ -56,7 +68,9 @@ export function CrashPanel({ onRepairSystemFiles }: Props) {
       )}
 
       {error && (
-        <div className="rounded-md bg-destructive-soft/60 text-destructive-strong text-xs p-3">{error}</div>
+        <div className="rounded-md bg-destructive-soft/60 text-destructive-strong text-xs p-3">
+          {error}
+        </div>
       )}
 
       {data && (
@@ -66,7 +80,11 @@ export function CrashPanel({ onRepairSystemFiles }: Props) {
             variant="default"
             className={cn(
               "flex items-center gap-3 p-4",
-              werTone === "bad" ? "border-destructive/30" : werTone === "warn" ? "border-warning/30" : "border-success/30"
+              werTone === "bad"
+                ? "border-destructive/30"
+                : werTone === "warn"
+                  ? "border-warning/30"
+                  : "border-success/30"
             )}
           >
             <span
@@ -79,7 +97,11 @@ export function CrashPanel({ onRepairSystemFiles }: Props) {
                     : "bg-success-soft text-success-strong"
               )}
             >
-              {werTone === "ok" ? <CheckCircle2 className="w-4 h-4" /> : <FileWarning className="w-4 h-4" />}
+              {werTone === "ok" ? (
+                <CheckCircle2 className="w-4 h-4" />
+              ) : (
+                <FileWarning className="w-4 h-4" />
+              )}
             </span>
             <div className="min-w-0 flex-1">
               <div className="text-sm font-semibold text-foreground">{t("crashWerTitle")}</div>
@@ -108,7 +130,9 @@ export function CrashPanel({ onRepairSystemFiles }: Props) {
             )
           )}
 
-          <p className="text-[11px] text-muted-foreground px-1 leading-relaxed">{t("crashFootnote")}</p>
+          <p className="text-[11px] text-muted-foreground px-1 leading-relaxed">
+            {t("crashFootnote")}
+          </p>
         </>
       )}
     </div>

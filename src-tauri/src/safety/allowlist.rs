@@ -28,9 +28,7 @@ pub fn ensure_within_allowlist(path: &Path) -> Result<PathBuf, AppError> {
         .canonicalize()
         .or_else(|_| -> Result<PathBuf, std::io::Error> { Ok(normalize(path)) })?;
     for root in allowed_roots() {
-        let normalized_root = root
-            .canonicalize()
-            .unwrap_or_else(|_| normalize(&root));
+        let normalized_root = root.canonicalize().unwrap_or_else(|_| normalize(&root));
         if canonical.starts_with(&normalized_root) {
             return Ok(canonical);
         }

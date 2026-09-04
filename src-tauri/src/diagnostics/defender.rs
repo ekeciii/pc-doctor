@@ -1,7 +1,9 @@
 //! Defender durumu + tehdit listesinden Finding üretir.
 //! Sprint 7: code-only i18n; PII whitelist (threat_name title/description'a yazılmaz).
 
-use crate::models::{DefenderStatus, Finding, FindingAction, MetricCode, Severity, ThreatDetection};
+use crate::models::{
+    DefenderStatus, Finding, FindingAction, MetricCode, Severity, ThreatDetection,
+};
 use serde_json::json;
 
 pub const CATEGORY: &str = "Virüs";
@@ -24,11 +26,16 @@ pub fn evaluate(status: &DefenderStatus, threats: &[ThreatDetection]) -> Vec<Fin
             "finding.defender.active_threats.description",
         )
         .with_metric(count.to_string())
-        .with_metric_code(MetricCode::Count { value: count as u64 })
+        .with_metric_code(MetricCode::Count {
+            value: count as u64,
+        })
         .with_action(FindingAction::RunDefenderQuickScan)
         .with_action_code("finding.defender.active_threats.action")
         .with_params(json!({ "threatCount": count }));
-        out.push(with_recommend(f, "Defender Hızlı Tarama çalıştır."));
+        out.push(with_recommend(
+            f,
+            "finding.defender.active_threats.recommendation",
+        ));
     }
 
     if !status.real_time_protection {
@@ -43,10 +50,7 @@ pub fn evaluate(status: &DefenderStatus, threats: &[ThreatDetection]) -> Vec<Fin
         .with_metric_code(MetricCode::BareString { text: "!".into() })
         .with_action(FindingAction::RunDefenderQuickScan)
         .with_action_code("finding.defender.rt_off.action");
-        out.push(with_recommend(
-            f,
-            "Defender Hızlı Tarama çalıştır + gerçek zamanlı korumayı aç.",
-        ));
+        out.push(with_recommend(f, "finding.defender.rt_off.recommendation"));
     } else if !status.antivirus_enabled {
         let f = Finding::code_only(
             "defender:av-off",
@@ -61,11 +65,7 @@ pub fn evaluate(status: &DefenderStatus, threats: &[ThreatDetection]) -> Vec<Fin
             url: "ms-settings:windowsdefender".into(),
         })
         .with_action_code("finding.defender.av_off.action");
-        out.push(with_recommend(
-            f,
-            "Windows Güvenlik → Virüs ve tehdit koruması bölümünden antivirüs motorunu aç \
-             (başka bir AV kuruluysa onu güncel tut).",
-        ));
+        out.push(with_recommend(f, "finding.defender.av_off.recommendation"));
     }
 
     if !status.tamper_protection {
@@ -84,7 +84,7 @@ pub fn evaluate(status: &DefenderStatus, threats: &[ThreatDetection]) -> Vec<Fin
         .with_action_code("finding.defender.tamper_off.action");
         out.push(with_recommend(
             f,
-            "Windows Güvenlik → Virüs ve tehdit koruması → Ayarları yönet bölümünden aç.",
+            "finding.defender.tamper_off.recommendation",
         ));
     }
 
@@ -111,7 +111,7 @@ pub fn evaluate(status: &DefenderStatus, threats: &[ThreatDetection]) -> Vec<Fin
             .with_params(json!({ "ageDays": age }));
             out.push(with_recommend(
                 f,
-                "Windows Update üzerinden imza güncellemesi çek.",
+                "finding.defender.sig_stale.recommendation",
             ));
         }
     }
@@ -130,14 +130,17 @@ pub fn evaluate(status: &DefenderStatus, threats: &[ThreatDetection]) -> Vec<Fin
             .with_action(FindingAction::RunDefenderQuickScan)
             .with_action_code("finding.defender.scan_stale.action")
             .with_params(json!({ "ageDays": age }));
-            out.push(with_recommend(f, "Defender Hızlı Tarama çalıştır."));
+            out.push(with_recommend(
+                f,
+                "finding.defender.scan_stale.recommendation",
+            ));
         }
     }
 
     out
 }
 
-fn with_recommend(mut f: Finding, msg: &str) -> Finding {
-    f.recommended_action = Some(msg.to_string());
+fn with_recommend(mut f: Finding, code: &str) -> Finding {
+    f.recommendation_code = Some(code.to_string());
     f
 }

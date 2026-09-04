@@ -40,9 +40,15 @@ import {
   runChkdskFix,
   runFixAll,
   scan,
+  toError,
   VolumeLockedError,
 } from "./lib/api";
-import { CURRENT_DISCLOSURE_VERSION, getSettings, saveSettings, type AppSettings } from "./lib/settings";
+import {
+  CURRENT_DISCLOSURE_VERSION,
+  getSettings,
+  saveSettings,
+  type AppSettings,
+} from "./lib/settings";
 import type {
   ChkdskFixResult,
   CleanupResult,
@@ -100,10 +106,7 @@ export default function App() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (chkdskScheduleError) {
-      window.sessionStorage.setItem(
-        "chkdsk-schedule-error",
-        JSON.stringify(chkdskScheduleError)
-      );
+      window.sessionStorage.setItem("chkdsk-schedule-error", JSON.stringify(chkdskScheduleError));
     } else {
       window.sessionStorage.removeItem("chkdsk-schedule-error");
     }
@@ -117,9 +120,10 @@ export default function App() {
   const [availableUpdate, setAvailableUpdate] = useState<AvailableUpdate | null>(null);
   const [updateDismissed, setUpdateDismissed] = useState(false);
   const [updateInstalling, setUpdateInstalling] = useState(false);
-  const [updateProgress, setUpdateProgress] = useState<
-    { downloaded: number; total: number | null } | null
-  >(null);
+  const [updateProgress, setUpdateProgress] = useState<{
+    downloaded: number;
+    total: number | null;
+  } | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -179,7 +183,7 @@ export default function App() {
       });
       setAvailableUpdate(null);
     } catch (e) {
-      setUpdateError(`${t("updateInstallFailed")}: ${String(e)}`);
+      setUpdateError(`${t("updateInstallFailed")}: ${toError(e).message}`);
     } finally {
       setUpdateInstalling(false);
     }
@@ -435,12 +439,9 @@ export default function App() {
   );
 
   // Sprint 8 — chkdsk /f action handler
-  const handleChkdskFix = useCallback(
-    (_finding: Finding, volume: string, isSystem: boolean) => {
-      setPendingChkdskFix({ volume, isSystem });
-    },
-    []
-  );
+  const handleChkdskFix = useCallback((_finding: Finding, volume: string, isSystem: boolean) => {
+    setPendingChkdskFix({ volume, isSystem });
+  }, []);
 
   const handleChkdskFixConfirm = useCallback(
     async (force: boolean) => {
@@ -460,9 +461,7 @@ export default function App() {
             const fresh = await scan();
             setReport(fresh);
             if (historyEnabled) {
-              recordScan(fresh).catch((err) =>
-                console.warn("[history] record failed:", err)
-              );
+              recordScan(fresh).catch((err) => console.warn("[history] record failed:", err));
             }
           } catch (err) {
             console.warn("[chkdsk] rescan after live fix failed:", err);
@@ -646,11 +645,7 @@ export default function App() {
               </details>
             </div>
             <div className="shrink-0">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setChkdskScheduleError(null)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setChkdskScheduleError(null)}>
                 {t("chkdskScheduleInconsistentDismiss")}
               </Button>
             </div>
@@ -662,9 +657,7 @@ export default function App() {
             <ShieldAlert />
             <div className="flex-1 min-w-0">
               <AlertTitle>{t("restoreErrorTitle")}</AlertTitle>
-              <AlertDescription className="mt-1">
-                {t("restoreErrorExplain")}
-              </AlertDescription>
+              <AlertDescription className="mt-1">{t("restoreErrorExplain")}</AlertDescription>
               {restoreErrorMessage && (
                 <details className="mt-2 text-xs">
                   <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
@@ -693,9 +686,7 @@ export default function App() {
             <ShieldAlert />
             <div className="flex-1 min-w-0">
               <AlertTitle>{t("restoreErrorTitle")}</AlertTitle>
-              <AlertDescription className="mt-1">
-                {t("restoreErrorExplain")}
-              </AlertDescription>
+              <AlertDescription className="mt-1">{t("restoreErrorExplain")}</AlertDescription>
               <details className="mt-2 text-xs">
                 <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
                   {t("technicalDetail")}
@@ -706,18 +697,10 @@ export default function App() {
               </details>
             </div>
             <div className="flex flex-col gap-2 shrink-0">
-              <Button
-                variant="warning"
-                size="default"
-                onClick={retryChkdskFixWithoutRestore}
-              >
+              <Button variant="warning" size="default" onClick={retryChkdskFixWithoutRestore}>
                 {t("proceedWithoutRestore")}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setRestoreErrorChkdsk(null)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setRestoreErrorChkdsk(null)}>
                 {t("cancel")}
               </Button>
             </div>
@@ -775,12 +758,7 @@ export default function App() {
                   </details>
                 )}
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="shrink-0"
-                onClick={() => setError(null)}
-              >
+              <Button variant="ghost" size="sm" className="shrink-0" onClick={() => setError(null)}>
                 {t("errorDismiss")}
               </Button>
             </div>
@@ -958,10 +936,7 @@ export default function App() {
 
         <FirstRunDisclosure open={disclosureOpen} onAck={handleDisclosureAck} />
 
-        <FixAllSummaryDialog
-          outcome={fixAllOutcome}
-          onClose={() => setFixAllOutcome(null)}
-        />
+        <FixAllSummaryDialog outcome={fixAllOutcome} onClose={() => setFixAllOutcome(null)} />
       </div>
     </div>
   );

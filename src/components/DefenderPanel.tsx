@@ -1,12 +1,4 @@
-import {
-  Bug,
-  CheckCircle2,
-  Loader2,
-  RotateCw,
-  ShieldCheck,
-  ShieldX,
-  XCircle,
-} from "lucide-react";
+import { Bug, CheckCircle2, Loader2, RotateCw, ShieldCheck, ShieldX, XCircle } from "lucide-react";
 import type { ThreatDetection } from "@/lib/types";
 import { defenderOverview } from "@/lib/api";
 import { useT } from "@/lib/i18n";
@@ -59,7 +51,9 @@ export function DefenderPanel({ onQuickScan }: Props) {
       )}
 
       {error && (
-        <div className="rounded-md bg-destructive-soft/60 text-destructive-strong text-xs p-3">{error}</div>
+        <div className="rounded-md bg-destructive-soft/60 text-destructive-strong text-xs p-3">
+          {error}
+        </div>
       )}
 
       {data && !data.available && !loading && (
@@ -86,8 +80,18 @@ export function DefenderPanel({ onQuickScan }: Props) {
               warnAt={7}
               badAt={30}
             />
-            <AgeTile label={t("defenderLastQuick")} days={s.lastQuickScanDays} warnAt={14} badAt={30} />
-            <AgeTile label={t("defenderLastFull")} days={s.lastFullScanDays} warnAt={30} badAt={90} />
+            <AgeTile
+              label={t("defenderLastQuick")}
+              days={s.lastQuickScanDays}
+              warnAt={14}
+              badAt={30}
+            />
+            <AgeTile
+              label={t("defenderLastFull")}
+              days={s.lastFullScanDays}
+              warnAt={30}
+              badAt={90}
+            />
           </div>
 
           {/* son tehditler */}
@@ -113,7 +117,15 @@ export function DefenderPanel({ onQuickScan }: Props) {
   );
 }
 
-function StatusTile({ label, on, critical = false }: { label: string; on: boolean; critical?: boolean }) {
+function StatusTile({
+  label,
+  on,
+  critical = false,
+}: {
+  label: string;
+  on: boolean;
+  critical?: boolean;
+}) {
   const t = useT();
   return (
     <Card
@@ -137,7 +149,16 @@ function StatusTile({ label, on, critical = false }: { label: string; on: boolea
       </span>
       <div className="min-w-0">
         <div className="text-xs text-muted-foreground truncate">{label}</div>
-        <div className={cn("text-sm font-semibold", on ? "text-success-strong" : critical ? "text-destructive-strong" : "text-warning-strong")}>
+        <div
+          className={cn(
+            "text-sm font-semibold",
+            on
+              ? "text-success-strong"
+              : critical
+                ? "text-destructive-strong"
+                : "text-warning-strong"
+          )}
+        >
           {on ? t("defenderOn") : t("defenderOff")}
         </div>
       </div>
@@ -168,7 +189,9 @@ function AgeTile({
           : "text-muted-foreground";
   return (
     <Card variant="default" className="p-3">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-mono">{label}</div>
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-mono">
+        {label}
+      </div>
       <div className={cn("text-sm font-semibold tabular-nums", toneClass)}>
         {days == null ? "—" : t("defenderDaysAgo", { days })}
       </div>
@@ -188,13 +211,17 @@ const THREAT_TONE: Record<string, string> = {
 
 function ThreatRow({ threat }: { threat: ThreatDetection }) {
   const tone = THREAT_TONE[threat.status.toLowerCase()] ?? "bg-muted text-muted-foreground";
-  const handled = ["quarantined", "removed", "cleaned", "blocked"].includes(threat.status.toLowerCase());
+  const handled = ["quarantined", "removed", "cleaned", "blocked"].includes(
+    threat.status.toLowerCase()
+  );
   return (
     <Card variant="default" className="flex items-center gap-3 p-2.5">
       <span
         className={cn(
           "shrink-0 w-7 h-7 rounded-md flex items-center justify-center",
-          handled ? "bg-success-soft text-success-strong" : "bg-destructive-soft text-destructive-strong"
+          handled
+            ? "bg-success-soft text-success-strong"
+            : "bg-destructive-soft text-destructive-strong"
         )}
       >
         {handled ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
@@ -207,7 +234,12 @@ function ThreatRow({ threat }: { threat: ThreatDetection }) {
           {threat.detectedAt.split("T")[0]}
         </div>
       </div>
-      <span className={cn("shrink-0 px-2 py-0.5 rounded-full text-[11px] font-mono font-semibold", tone)}>
+      <span
+        className={cn(
+          "shrink-0 px-2 py-0.5 rounded-full text-[11px] font-mono font-semibold",
+          tone
+        )}
+      >
         {threat.status}
       </span>
     </Card>

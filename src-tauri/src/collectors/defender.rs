@@ -11,8 +11,8 @@ struct MpStatus {
     is_tamper_protected: Option<bool>,
     antivirus_enabled: Option<bool>,
     behavior_monitor_enabled: Option<bool>,
-    quick_scan_age: Option<i64>,        // days
-    full_scan_age: Option<i64>,         // days
+    quick_scan_age: Option<i64>,          // days
+    full_scan_age: Option<i64>,           // days
     antivirus_signature_age: Option<i64>, // days
 }
 
@@ -76,7 +76,7 @@ pub fn collect_recent_threats() -> Vec<ThreatDetection> {
                 .to_string();
             let status = obj
                 .get("Status")
-                .map(|s| status_label(s))
+                .map(status_label)
                 .unwrap_or_else(|| "(bilinmiyor)".into());
             let detected_at = obj
                 .get("DetectedAt")
@@ -113,4 +113,3 @@ fn status_label(v: &serde_json::Value) -> String {
         _ => format!("Status_{}", id),
     }
 }
-

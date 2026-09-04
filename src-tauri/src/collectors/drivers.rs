@@ -75,7 +75,7 @@ pub fn list_outdated_drivers() -> Vec<DriverInfo> {
         }
     }
     // En eski sürücüler önce
-    out.sort_by(|a, b| b.age_days.cmp(&a.age_days));
+    out.sort_by_key(|d| std::cmp::Reverse(d.age_days));
     out
 }
 

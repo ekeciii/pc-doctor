@@ -28,10 +28,7 @@ pub fn evaluate(info: &StartupInfo) -> Vec<Finding> {
                 "seconds": secs,
                 "milliseconds": ms,
             }));
-            f.recommended_action = Some(
-                "Başlangıç öğelerini azalt, disk sağlığını kontrol et, son sürücü güncellemelerini gözden geçir."
-                    .into(),
-            );
+            f.recommendation_code = Some("finding.startup.slow_critical.recommendation".into());
             out.push(f);
         } else if ms >= 60_000 {
             let mut f = Finding::code_only(
@@ -51,8 +48,7 @@ pub fn evaluate(info: &StartupInfo) -> Vec<Finding> {
                 "seconds": secs,
                 "milliseconds": ms,
             }));
-            f.recommended_action =
-                Some("Başlangıç uygulamalarını azalt, hızlı başlatmayı aktif tut.".into());
+            f.recommendation_code = Some("finding.startup.slow_warning.recommendation".into());
             out.push(f);
         }
     }
@@ -72,14 +68,15 @@ pub fn evaluate(info: &StartupInfo) -> Vec<Finding> {
             "finding.startup.too_many.description",
         )
         .with_metric(count.to_string())
-        .with_metric_code(MetricCode::Count { value: count as u64 })
+        .with_metric_code(MetricCode::Count {
+            value: count as u64,
+        })
         .with_action(FindingAction::OpenUrl {
             url: "ms-settings:startupapps".into(),
         })
         .with_action_code("finding.startup.too_many.action")
         .with_params(json!({ "count": count }));
-        f.recommended_action =
-            Some("Ayarlar → Uygulamalar → Başlangıç'tan gerekmeyenleri devre dışı bırak.".into());
+        f.recommendation_code = Some("finding.startup.too_many.recommendation".into());
         out.push(f);
     }
 

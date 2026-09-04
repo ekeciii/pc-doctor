@@ -17,6 +17,7 @@ import {
   onSfcDismComplete,
   onSfcDismProgress,
   runSystemFileCheck,
+  toError,
 } from "@/lib/api";
 import type { ProgressLine, SfcDismSummary } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -78,7 +79,7 @@ export function SfcDismProgressDialog({ open, onClose, onNeedsElevation }: Props
           onClose();
           return;
         }
-        setError(String(e));
+        setError(toError(e).message);
         setPhase("error");
       }
     })();
@@ -154,9 +155,7 @@ export function SfcDismProgressDialog({ open, onClose, onNeedsElevation }: Props
             {t("sfcLogTitle")}
           </h3>
           <div className="flex-1 min-h-[12rem] rounded-md bg-foreground/95 text-background/90 p-3.5 text-xs font-mono overflow-auto leading-relaxed">
-            {lines.length === 0 && (
-              <div className="text-background/40">{t("sfcRunning")}…</div>
-            )}
+            {lines.length === 0 && <div className="text-background/40">{t("sfcRunning")}…</div>}
             {lines.map((l, i) => (
               <div key={i} className="whitespace-pre-wrap break-words">
                 {l}

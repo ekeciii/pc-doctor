@@ -163,9 +163,7 @@ export function CategoryDetail({
                       size: fmtBytes(cleanupResult.reclaimedBytes),
                     })}
                   </AlertTitle>
-                  <AlertDescription className="mt-1">
-                    {t("diskResolvedBody")}
-                  </AlertDescription>
+                  <AlertDescription className="mt-1">{t("diskResolvedBody")}</AlertDescription>
                 </div>
               </Alert>
             )}
@@ -256,12 +254,24 @@ export function CategoryDetail({
         {/* Sanal bellek: RAM/pagefile/hibernation paneli */}
         {isPagefile && (
           <div className="mb-1">
-            <PagefilePanel onSetManaged={() => onApplyFix(synthFix({ type: "setPagefileManaged" }))} />
+            <PagefilePanel
+              onSetManaged={() => onApplyFix(synthFix({ type: "setPagefileManaged" }))}
+            />
           </div>
         )}
         {findings.length === 0 ? (
           // Disk kategorileri kendi panelleriyle durumu zaten gösterir → genel uyarıyı atla.
-          isDiskFull || isDiskHealth || isChkdsk || isEvents || isDrivers || isVirus || isThermal || isSecurity || isUpdates || isStartup || isCrashes ? null : (
+          isDiskFull ||
+          isDiskHealth ||
+          isChkdsk ||
+          isEvents ||
+          isDrivers ||
+          isVirus ||
+          isThermal ||
+          isSecurity ||
+          isUpdates ||
+          isStartup ||
+          isCrashes ? null : (
             <Alert variant="success">
               <CheckCircle2 />
               <div>

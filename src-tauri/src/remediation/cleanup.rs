@@ -1,5 +1,5 @@
-use crate::collectors::cleanup_targets::{CANDIDATES, measure};
-use crate::models::{AppError, CleanupTargetResult};
+use crate::collectors::cleanup_targets::{measure, CANDIDATES};
+use crate::models::CleanupTargetResult;
 use crate::safety::allowlist;
 use std::path::Path;
 use std::process::Command;
@@ -11,10 +11,7 @@ use std::os::windows::process::CommandExt;
 const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 pub fn execute(target_ids: &[String]) -> Vec<CleanupTargetResult> {
-    target_ids
-        .iter()
-        .map(|id| run_one(id))
-        .collect()
+    target_ids.iter().map(|id| run_one(id)).collect()
 }
 
 fn run_one(id: &str) -> CleanupTargetResult {
@@ -134,7 +131,11 @@ fn clear_recycle_bin(label: &str) -> CleanupTargetResult {
                 reclaimed_bytes: 0,
                 items_removed: 0,
                 items_skipped: 0,
-                error: Some(if stderr.is_empty() { "Clear-RecycleBin başarısız".into() } else { stderr }),
+                error: Some(if stderr.is_empty() {
+                    "Clear-RecycleBin başarısız".into()
+                } else {
+                    stderr
+                }),
             }
         }
         Err(e) => CleanupTargetResult {
@@ -147,6 +148,3 @@ fn clear_recycle_bin(label: &str) -> CleanupTargetResult {
         },
     }
 }
-
-#[allow(dead_code)]
-pub type _SilenceAppError = AppError;

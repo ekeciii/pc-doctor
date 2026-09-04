@@ -43,7 +43,10 @@ pub fn run(app: AppHandle) -> Result<DefenderScanResult, String> {
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr).to_string();
         Some(if stderr.is_empty() {
-            format!("Tarama başarısız (exit {})", output.status.code().unwrap_or(-1))
+            format!(
+                "Tarama başarısız (exit {})",
+                output.status.code().unwrap_or(-1)
+            )
         } else {
             stderr
         })

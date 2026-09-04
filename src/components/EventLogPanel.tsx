@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { AlertOctagon, AlertTriangle, ExternalLink, Loader2, RotateCw, ScrollText } from "lucide-react";
+import {
+  AlertOctagon,
+  AlertTriangle,
+  ExternalLink,
+  Loader2,
+  RotateCw,
+  ScrollText,
+} from "lucide-react";
 import type { EventSummary } from "@/lib/types";
 import { openEventViewer, recentEventSummaries } from "@/lib/api";
 import { useT } from "@/lib/i18n";
@@ -14,13 +21,17 @@ const RANGES = [7, 30] as const;
 export function EventLogPanel() {
   const t = useT();
   const [days, setDays] = useState<(typeof RANGES)[number]>(7);
-  const { data: events, loading, error, reload } = useAsync(
-    () => recentEventSummaries(days),
-    [days]
-  );
+  const {
+    data: events,
+    loading,
+    error,
+    reload,
+  } = useAsync(() => recentEventSummaries(days), [days]);
 
-  const criticalCount = events?.filter((e) => isCritical(e.level)).reduce((a, e) => a + e.count, 0) ?? 0;
-  const errorCount = events?.filter((e) => !isCritical(e.level)).reduce((a, e) => a + e.count, 0) ?? 0;
+  const criticalCount =
+    events?.filter((e) => isCritical(e.level)).reduce((a, e) => a + e.count, 0) ?? 0;
+  const errorCount =
+    events?.filter((e) => !isCritical(e.level)).reduce((a, e) => a + e.count, 0) ?? 0;
 
   return (
     <div className="space-y-2.5">
@@ -38,7 +49,9 @@ export function EventLogPanel() {
                 onClick={() => setDays(r)}
                 className={cn(
                   "px-2 py-0.5 text-[11px] font-mono transition-colors",
-                  days === r ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"
+                  days === r
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-secondary"
                 )}
               >
                 {t("eventPanelDays", { days: r })}
@@ -78,7 +91,9 @@ export function EventLogPanel() {
       )}
 
       {error && (
-        <div className="rounded-md bg-destructive-soft/60 text-destructive-strong text-xs p-3">{error}</div>
+        <div className="rounded-md bg-destructive-soft/60 text-destructive-strong text-xs p-3">
+          {error}
+        </div>
       )}
 
       {events && events.length === 0 && !loading && (
@@ -96,7 +111,9 @@ export function EventLogPanel() {
         </div>
       )}
 
-      <p className="text-[11px] text-muted-foreground px-1 leading-relaxed">{t("eventPanelFootnote")}</p>
+      <p className="text-[11px] text-muted-foreground px-1 leading-relaxed">
+        {t("eventPanelFootnote")}
+      </p>
     </div>
   );
 }
@@ -120,7 +137,9 @@ function EventRow({ ev }: { ev: EventSummary }) {
       <span
         className={cn(
           "shrink-0 w-8 h-8 rounded-md flex items-center justify-center",
-          critical ? "bg-destructive-soft text-destructive-strong" : "bg-warning-soft text-warning-strong"
+          critical
+            ? "bg-destructive-soft text-destructive-strong"
+            : "bg-warning-soft text-warning-strong"
         )}
       >
         {critical ? <AlertOctagon className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
@@ -130,13 +149,16 @@ function EventRow({ ev }: { ev: EventSummary }) {
           {ev.provider}
         </div>
         <div className="text-[11px] font-mono text-muted-foreground tabular-nums">
-          {t("eventPanelEventId", { id: ev.eventId })} · {t("eventPanelLastSeen", { date: ev.lastOccurred })}
+          {t("eventPanelEventId", { id: ev.eventId })} ·{" "}
+          {t("eventPanelLastSeen", { date: ev.lastOccurred })}
         </div>
       </div>
       <span
         className={cn(
           "shrink-0 px-2 py-0.5 rounded-full text-[11px] font-mono font-semibold tabular-nums",
-          critical ? "bg-destructive-soft text-destructive-strong" : "bg-warning-soft text-warning-strong"
+          critical
+            ? "bg-destructive-soft text-destructive-strong"
+            : "bg-warning-soft text-warning-strong"
         )}
       >
         {t("eventPanelCount", { count: ev.count })}

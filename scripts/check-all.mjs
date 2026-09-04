@@ -1,16 +1,24 @@
 #!/usr/bin/env node
 /**
- * Sprint 16 — composite CI guard. Tüm doğrulama adımlarını sıralı koştur.
+ * Faz 3 — composite CI guard. Tüm doğrulama adımlarını sıralı koştur.
  *
  * Adımlar:
  *  1. `node scripts/check-i18n.mjs` — TS dict + t() çağrı uyumu
- *  2. `cargo test --test security_invariants` — Backend invariant 1-22
- *  3. `cargo test --lib` — Backend unit tests
- *  4. `npm test` (vitest) — Frontend saf-mantık testleri (toError vb.)
- *  5. `npm run build` — Frontend TS compile + Vite bundle
+ *  2. `cargo fmt --check` — Backend format (hızlı fail)
+ *  3. `cargo clippy --all-targets -- -D warnings` — Backend lint
+ *  4. `prettier --check` — Frontend format
+ *  5. `cargo test --test security_invariants` — Backend invariant 1-22
+ *  6. `cargo test --lib` — Backend unit tests
+ *  7. `npm test` (vitest) — Frontend saf-mantık testleri (toError vb.)
+ *  8. `npm run build` — Frontend TS compile + Vite bundle
+ *
+ * `cargo audit` BİLEREK burada değil — release.yml'nin kendi audit adımı var
+ * (bkz. o dosya); check:all'a eklemek her local `npm run check:all` çalıştıran
+ * geliştiricinin `cargo-audit` binary'sini kurmasını zorunlu kılardı.
  *
  * Exit 0 hepsi geçtiyse; ilk fail'de stop.
  * Çalıştırma: `npm run check:all`
+ * Lokal kurulum: `rustup component add clippy rustfmt` (bir kez).
  */
 
 import { spawn } from "node:child_process";
@@ -25,6 +33,24 @@ const STEPS = [
     name: "i18n integrity",
     cmd: "node",
     args: ["scripts/check-i18n.mjs"],
+    cwd: ROOT,
+  },
+  {
+    name: "Backend rustfmt check",
+    cmd: "cargo",
+    args: ["fmt", "--check"],
+    cwd: TAURI_DIR,
+  },
+  {
+    name: "Backend clippy",
+    cmd: "cargo",
+    args: ["clippy", "--all-targets", "--message-format=short", "--", "-D", "warnings"],
+    cwd: TAURI_DIR,
+  },
+  {
+    name: "Frontend format check (prettier)",
+    cmd: process.platform === "win32" ? "npm.cmd" : "npm",
+    args: ["run", "format:check"],
     cwd: ROOT,
   },
   {

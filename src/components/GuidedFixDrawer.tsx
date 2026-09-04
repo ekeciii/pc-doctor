@@ -45,9 +45,7 @@ export function GuidedFixDrawer({ finding, onOpenTarget, onClose }: Props) {
             {t("guidedStepsTitle")}
           </p>
           <ol className="space-y-3">
-            {resolved?.recommendedAction && (
-              <Step n={1}>{resolved.recommendedAction}</Step>
-            )}
+            {resolved?.recommendedAction && <Step n={1}>{resolved.recommendedAction}</Step>}
             {hasTarget ? (
               <>
                 <Step n={resolved?.recommendedAction ? 2 : 1}>{t("guidedStepOpen")}</Step>

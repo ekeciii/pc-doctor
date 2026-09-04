@@ -22,7 +22,7 @@ pub fn list_models() -> Result<Vec<String>, String> {
     let resp = ureq::get(&format!("{OLLAMA}/api/tags"))
         .timeout(Duration::from_secs(5))
         .call()
-        .map_err(|e| format!("Ollama'ya ulaşılamadı: {e}"))?;
+        .map_err(|e| format!("Could not reach Ollama: {e}"))?;
     let v: serde_json::Value = resp.into_json().map_err(|e| e.to_string())?;
     let models = v
         .get("models")
@@ -50,7 +50,7 @@ pub fn stream_chat(app: &AppHandle, model: &str, messages: &[ChatMessage]) -> Re
         // Bağlantı için kısa, toplam akış için uzun süre (büyük modeller yavaş üretebilir).
         .timeout(Duration::from_secs(600))
         .send_json(body)
-        .map_err(|e| format!("Ollama sohbet hatası: {e}"))?;
+        .map_err(|e| format!("Ollama chat error: {e}"))?;
 
     let reader = BufReader::new(resp.into_reader());
     for line in reader.lines() {

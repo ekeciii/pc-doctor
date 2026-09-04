@@ -26,13 +26,7 @@ interface Props {
  * Default focus "Vazgeç" butonuna (invariant #22: destructive default focus YASAK).
  * System variant: reboot uyarısı + 5 bullet. Non-system: "kullanım dışı olmalı" uyarısı.
  */
-export function ChkdskFixConfirmDialog({
-  open,
-  volume,
-  isSystem,
-  onConfirm,
-  onCancel,
-}: Props) {
+export function ChkdskFixConfirmDialog({ open, volume, isSystem, onConfirm, onCancel }: Props) {
   const t = useT();
   const [force, setForce] = useState(false);
   return (

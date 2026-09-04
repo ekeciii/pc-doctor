@@ -72,6 +72,8 @@ export interface Finding {
   titleCode?: string;
   descriptionCode?: string;
   actionCode?: string;
+  /** Faz 3 — `recommendedAction`'ın locale-aware karşılığı (`finding.<cat>.<id>.recommendation`). */
+  recommendationCode?: string;
   params?: Record<string, string | number> | null;
   /** Sprint 12 K-ext pilot — opsiyonel locale-bağımsız metric kodu */
   metricCode?: MetricCode | null;
@@ -372,12 +374,7 @@ export interface ChkdskProgress {
 }
 
 export type ChkdskStatus =
-  | "clean"
-  | "errorsFound"
-  | "repaired"
-  | "scheduled"
-  | "scanFailed"
-  | "cancelled";
+  "clean" | "errorsFound" | "repaired" | "scheduled" | "scanFailed" | "cancelled";
 
 export interface ChkdskResult {
   volume: string;

@@ -68,7 +68,12 @@ function verdictOf(d: SmartDisk): Verdict {
   const ioErrors = (d.readErrorsTotal ?? 0) + (d.writeErrorsTotal ?? 0);
   const unhealthy = d.healthStatus.toLowerCase() === "unhealthy";
   const warning = d.healthStatus.toLowerCase() === "warning";
-  if (unhealthy || ioErrors >= 100 || (d.wearPercent ?? 0) >= 95 || (d.temperatureCelsius ?? 0) >= 80) {
+  if (
+    unhealthy ||
+    ioErrors >= 100 ||
+    (d.wearPercent ?? 0) >= 95 ||
+    (d.temperatureCelsius ?? 0) >= 80
+  ) {
     return "risk";
   }
   if (warning || (d.wearPercent ?? 0) >= 80 || (d.temperatureCelsius ?? 0) >= 70) {
@@ -79,7 +84,12 @@ function verdictOf(d: SmartDisk): Verdict {
 
 const VERDICT_META: Record<
   Verdict,
-  { tint: string; glow: string; icon: JSX.Element; labelKey: "diskVerdictHealthy" | "diskVerdictWatch" | "diskVerdictRisk" }
+  {
+    tint: string;
+    glow: string;
+    icon: JSX.Element;
+    labelKey: "diskVerdictHealthy" | "diskVerdictWatch" | "diskVerdictRisk";
+  }
 > = {
   healthy: {
     tint: "bg-success-soft text-success-strong",
@@ -133,7 +143,10 @@ function DiskCard({ disk, index }: { disk: SmartDisk; index: number }) {
             <HardDrive className="w-[18px] h-[18px]" />
           </span>
           <div className="min-w-0 flex-1">
-            <div className="font-display font-semibold text-foreground truncate" title={disk.friendlyName}>
+            <div
+              className="font-display font-semibold text-foreground truncate"
+              title={disk.friendlyName}
+            >
               {disk.friendlyName}
             </div>
             <div className="text-[11px] font-mono text-muted-foreground tabular-nums">
@@ -182,7 +195,10 @@ function DiskCard({ disk, index }: { disk: SmartDisk; index: number }) {
               <span>{t("diskMetricWear")}</span>
               <span className="tabular-nums text-foreground/90">{wear}%</span>
             </div>
-            <Progress value={wear} tone={wear >= 95 ? "destructive" : wear >= 80 ? "warning" : "primary"} />
+            <Progress
+              value={wear}
+              tone={wear >= 95 ? "destructive" : wear >= 80 ? "warning" : "primary"}
+            />
           </div>
         )}
 
@@ -216,10 +232,16 @@ function Metric({
   tone?: "ok" | "warn" | "bad";
 }) {
   const toneClass =
-    tone === "bad" ? "text-destructive-strong" : tone === "warn" ? "text-warning-strong" : "text-foreground";
+    tone === "bad"
+      ? "text-destructive-strong"
+      : tone === "warn"
+        ? "text-warning-strong"
+        : "text-foreground";
   return (
     <div className="min-w-0">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-mono">{label}</div>
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-mono">
+        {label}
+      </div>
       <div className={cn("text-sm font-semibold flex items-center gap-1 truncate", toneClass)}>
         {icon}
         {value}

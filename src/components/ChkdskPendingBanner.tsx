@@ -29,10 +29,7 @@ interface Props {
  * Backend (Sprint 11) Vec<PendingChkdsk> döner. Her volume için ayrı kart;
  * dismiss state sessionStorage'da per-volume tutulur.
  */
-export function ChkdskPendingBanner({
-  onRequestReboot,
-  onScheduleInconsistent,
-}: Props) {
+export function ChkdskPendingBanner({ onRequestReboot, onScheduleInconsistent }: Props) {
   const t = useT();
   const [pendings, setPendings] = useState<PendingChkdsk[]>([]);
   const [dismissedVolumes, setDismissedVolumes] = useState<Set<string>>(new Set());
@@ -92,16 +89,10 @@ export function ChkdskPendingBanner({
   return (
     <>
       {visiblePendings.map((pending) => (
-        <Alert
-          key={pending.volume}
-          variant="warning"
-          className="mb-4 items-start animate-fade-in"
-        >
+        <Alert key={pending.volume} variant="warning" className="mb-4 items-start animate-fade-in">
           <AlertTriangle />
           <div className="flex-1 min-w-0">
-            <AlertTitle>
-              {t("chkdskPendingBannerTitle", { volume: pending.volume })}
-            </AlertTitle>
+            <AlertTitle>{t("chkdskPendingBannerTitle", { volume: pending.volume })}</AlertTitle>
             <AlertDescription className="mt-1">
               {t("chkdskPendingBannerBody", { volume: pending.volume })}
             </AlertDescription>
@@ -117,11 +108,7 @@ export function ChkdskPendingBanner({
             <Button variant="outline" size="sm" onClick={() => handleCancel(pending.volume)}>
               {t("chkdskPendingCancel")}
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => dismissVolume(pending.volume)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => dismissVolume(pending.volume)}>
               {t("chkdskPendingLater")}
             </Button>
           </div>

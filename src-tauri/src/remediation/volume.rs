@@ -41,7 +41,18 @@ mod tests {
 
     #[test]
     fn validate_rejects_garbage() {
-        for bad in ["foo/../bar", "C:", "c", "CC", "", "C\n", ".", "1", "C/", "C\\"] {
+        for bad in [
+            "foo/../bar",
+            "C:",
+            "c",
+            "CC",
+            "",
+            "C\n",
+            ".",
+            "1",
+            "C/",
+            "C\\",
+        ] {
             assert!(validate_volume(bad).is_err(), "should reject: {bad:?}");
         }
     }

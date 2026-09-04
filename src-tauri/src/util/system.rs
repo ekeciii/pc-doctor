@@ -4,6 +4,7 @@
 //! Win32_SystemEnclosure.ChassisTypes DMTF spec'inde tanımlı:
 //! - 8=Portable, 9=Laptop, 10=Notebook, 11=Handheld, 14=SubNotebook,
 //!   30=Tablet, 31=Convertible, 32=Detachable
+//!
 //! UPS bağlı masaüstünde Win32_Battery dolu olabilir → ChassisTypes önce.
 //! ChassisTypes okunamazsa Win32_Battery fallback.
 
@@ -34,7 +35,8 @@ fn detect_once() -> bool {
     }
 
     // 2) Win32_Battery fallback (UPS false positive riski var ama nadirdir)
-    let battery_script = "@(Get-CimInstance -ClassName Win32_Battery -ErrorAction SilentlyContinue).Count -gt 0";
+    let battery_script =
+        "@(Get-CimInstance -ClassName Win32_Battery -ErrorAction SilentlyContinue).Count -gt 0";
     match powershell::run_fast(battery_script) {
         Some(s) => s.trim().eq_ignore_ascii_case("True"),
         None => false,
@@ -53,8 +55,8 @@ pub fn on_ac_power() -> Option<bool> {
     let raw = powershell::run_fast(script)?;
     let n: u32 = raw.trim().parse().ok()?;
     match n {
-        2 | 3 | 6 | 7 | 8 | 9 => Some(true),  // AC variantları
-        1 | 4 | 5 => Some(false),               // discharging variantları
+        2 | 3 | 6 | 7 | 8 | 9 => Some(true), // AC variantları
+        1 | 4 | 5 => Some(false),            // discharging variantları
         _ => None,
     }
 }

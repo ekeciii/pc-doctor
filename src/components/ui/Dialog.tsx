@@ -109,11 +109,7 @@ interface DialogContentProps extends HTMLAttributes<HTMLDivElement> {
   size?: "sm" | "default" | "lg" | "xl";
 }
 
-export function DialogContent({
-  className,
-  size = "default",
-  ...props
-}: DialogContentProps) {
+export function DialogContent({ className, size = "default", ...props }: DialogContentProps) {
   const widthClass = {
     sm: "w-[min(420px,94vw)]",
     default: "w-[min(540px,94vw)]",
@@ -137,10 +133,7 @@ export function DialogContent({
 export function DialogHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn(
-        "flex items-start gap-3 p-5 border-b border-border",
-        className
-      )}
+      className={cn("flex items-start gap-3 p-5 border-b border-border", className)}
       {...props}
     />
   );
@@ -149,19 +142,13 @@ export function DialogHeader({ className, ...props }: HTMLAttributes<HTMLDivElem
 export function DialogTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h2
-      className={cn(
-        "font-display text-xl font-bold tracking-tight text-foreground",
-        className
-      )}
+      className={cn("font-display text-xl font-bold tracking-tight text-foreground", className)}
       {...props}
     />
   );
 }
 
-export function DialogDescription({
-  className,
-  ...props
-}: HTMLAttributes<HTMLParagraphElement>) {
+export function DialogDescription({ className, ...props }: HTMLAttributes<HTMLParagraphElement>) {
   return (
     <p className={cn("text-sm text-muted-foreground leading-relaxed", className)} {...props} />
   );
@@ -174,10 +161,7 @@ export function DialogBody({ className, ...props }: HTMLAttributes<HTMLDivElemen
 export function DialogFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn(
-        "p-5 border-t border-border flex justify-end gap-3",
-        className
-      )}
+      className={cn("p-5 border-t border-border flex justify-end gap-3", className)}
       {...props}
     />
   );

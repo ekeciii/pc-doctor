@@ -1,14 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Bot, Loader2, Send, Sparkles, User, X } from "lucide-react";
 import type { ChatMessage, ScanReport } from "@/lib/types";
-import { aiChat, aiListModels, onAiDone, onAiError, onAiToken } from "@/lib/api";
-import {
-  metricLabelFromCode,
-  resolveFinding,
-  useByteFmt,
-  useI18n,
-  useT,
-} from "@/lib/i18n";
+import { aiChat, aiListModels, onAiDone, onAiError, onAiToken, toError } from "@/lib/api";
+import { metricLabelFromCode, resolveFinding, useByteFmt, useI18n, useT } from "@/lib/i18n";
 import { Button } from "./ui/Button";
 import { cn } from "@/lib/utils";
 import { getSettings, saveSettings, type AppSettings } from "@/lib/settings";
@@ -112,7 +106,10 @@ export function AiChatDrawer({ open, onClose, report }: Props) {
 
   const buildSystemMessage = (): ChatMessage => {
     const ctx = buildContext(report, locale, t, fmtBytes);
-    return { role: "system", content: `${t("aiSystemPrompt")}\n\n${t("aiContextHeading")}:\n${ctx}` };
+    return {
+      role: "system",
+      content: `${t("aiSystemPrompt")}\n\n${t("aiContextHeading")}:\n${ctx}`,
+    };
   };
 
   const send = async () => {
@@ -133,7 +130,7 @@ export function AiChatDrawer({ open, onClose, report }: Props) {
       await aiChat(model, wire);
     } catch (e) {
       setStreaming(false);
-      setError(String(e));
+      setError(toError(e).message);
     }
   };
 
@@ -307,7 +304,11 @@ export function AiChatDrawer({ open, onClose, report }: Props) {
               disabled={status !== "ready" || streaming || !input.trim()}
               aria-label={t("aiSend")}
             >
-              {streaming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {streaming ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
             </Button>
           </div>
           <p className="text-[10px] text-muted-foreground mt-1.5 px-1">{t("aiDisclaimer")}</p>
@@ -344,7 +345,9 @@ function Bubble({
         )}
       >
         {content}
-        {streaming && <span className="inline-block w-1.5 h-3.5 ml-0.5 bg-current animate-pulse align-middle" />}
+        {streaming && (
+          <span className="inline-block w-1.5 h-3.5 ml-0.5 bg-current animate-pulse align-middle" />
+        )}
       </div>
     </div>
   );
@@ -366,9 +369,7 @@ function buildContext(
     lines.push(`${t("aiCtxFindings")}:`);
     for (const f of report.findings) {
       const r = resolveFinding(f, locale);
-      const metric = f.metricCode
-        ? metricLabelFromCode(f.metricCode, locale)
-        : f.metric ?? "";
+      const metric = f.metricCode ? metricLabelFromCode(f.metricCode, locale) : (f.metric ?? "");
       lines.push(`- [${f.category}] ${r.title}${metric ? ` (${metric})` : ""} — ${f.severity}`);
     }
   }

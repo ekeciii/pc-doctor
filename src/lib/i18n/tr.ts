@@ -43,7 +43,7 @@ export const tr = {
   hide: "Gizle",
   drives: "Sürücüler",
   scanHealthyTitle: "Tarama tamamlandı; sistem sağlıklı görünüyor.",
-  scanHealthyBody: "11 kategori kontrol edildi; hiçbirinde sorun bulunmadı.",
+  scanHealthyBody: "13 kategori kontrol edildi; hiçbirinde sorun bulunmadı.",
   technicalDetail: "Teknik detay",
   updateInstallFailed: "Güncelleme yüklenemedi",
   adminBadge: "Yönetici",
@@ -133,12 +133,10 @@ export const tr = {
   settingsEulaLink: "Kullanım Koşulları",
   // Faz 2 — ilk açılış veri-okuma bildirimi
   disclosureTitle: "PC Doctor neye erişir?",
-  disclosureIntro:
-    "Taramaya başlamadan önce PC Doctor'ın ne yaptığını kısaca özetleyelim:",
+  disclosureIntro: "Taramaya başlamadan önce PC Doctor'ın ne yaptığını kısaca özetleyelim:",
   disclosureBullet1:
     "Disk, sürücü, güvenlik ayarı, olay günlüğü gibi ~13 kategoride sistem bilgisi okur — hepsi cihazında kalır.",
-  disclosureBullet2:
-    "Hiçbir veri PC Doctor'ın kendi sunucusuna gönderilmez; telemetri yoktur.",
+  disclosureBullet2: "Hiçbir veri PC Doctor'ın kendi sunucusuna gönderilmez; telemetri yoktur.",
   disclosureBullet3:
     "Tarama geçmişi (yalnız özet sayılar, kişisel veri değil) yerel bir dosyada saklanır; istediğin an silebilirsin.",
   disclosureBullet4:
@@ -195,8 +193,7 @@ export const tr = {
   chkdskFixBulletUnsavedLoss: "Kaydedilmemiş veriler kaybolabilir.",
   chkdskFixBulletVolumeLock: "Sürücü işlem boyunca kullanılamaz; açık dosyaları kapatın.",
   chkdskFixBulletRestorePoint: "Önce Sistem Geri Yükleme noktası oluşturulur (güvenlik).",
-  chkdskFixBulletAutochkSequence:
-    "Yeniden başlatma sonrası autochk Windows boot'tan önce çalışır.",
+  chkdskFixBulletAutochkSequence: "Yeniden başlatma sonrası autochk Windows boot'tan önce çalışır.",
   chkdskFixForceWithoutRestore:
     "Geri yükleme noktası oluşturulamazsa yine de devam et (önerilmez).",
   chkdskRebootCountdownTitle: "{volume}: onarımı için yeniden başlatılıyor",
@@ -237,8 +234,7 @@ export const tr = {
   trendWorseningHint: "{count} bulgu 3 hafta üst üste artıyor — dikkat.",
   trendWorseningBadge: "Kötüleşiyor",
   // Sprint 11 review H1+H4
-  chkdskScheduleInconsistentTitle:
-    "{volume}: chkdsk planı temizlenemedi — manuel müdahale gerek",
+  chkdskScheduleInconsistentTitle: "{volume}: chkdsk planı temizlenemedi — manuel müdahale gerek",
   chkdskScheduleInconsistentBody:
     "Yönetici PowerShell'de `chkntfs /x {volume}:` çalıştırarak planı manuel olarak iptal edin.",
   chkdskScheduleInconsistentDismiss: "Anladım",
@@ -270,7 +266,8 @@ export const tr = {
   scanNow: "Şimdi tara",
   // Sprint 14 — büyük/kullanılmayan dosya tarayıcısı
   fileFinderHeading: "Büyük & kullanılmayan dosyalar",
-  fileFinderIntro: "Her sürücüyü tara: {size} üstü en büyük dosyalar ve {days} gündür açılmamış dosyalar. Seçip kalıcı silebilirsin.",
+  fileFinderIntro:
+    "Her sürücüyü tara: {size} üstü en büyük dosyalar ve {days} gündür açılmamış dosyalar. Seçip kalıcı silebilirsin.",
   fileFinderScanCta: "Tara",
   fileFinderScanning: "{drive} taranıyor…",
   fileFinderTabLarge: "Büyük dosyalar ({count})",
@@ -286,7 +283,8 @@ export const tr = {
   fileFinderDeleteFailed: "{count} silinemedi",
   fileFinderConfirmTitle: "Dosyaları Geri Dönüşüm Kutusu'na taşı",
   fileFinderConfirmIntro: "{count} dosya ({size}) Geri Dönüşüm Kutusu'na taşınacak.",
-  fileFinderConfirmWarn: "Dosyalar Geri Dönüşüm Kutusu'na taşınır; yanlış seçtiysen oradan geri alabilirsin. Kutuyu boşaltırsan kalıcı olarak silinir.",
+  fileFinderConfirmWarn:
+    "Dosyalar Geri Dönüşüm Kutusu'na taşınır; yanlış seçtiysen oradan geri alabilirsin. Kutuyu boşaltırsan kalıcı olarak silinir.",
   fileFinderConfirmDelete: "Geri Dönüşüm Kutusu'na taşı",
   // Sprint 14 — disk sağlığı paneli (SMART)
   diskHealthHeading: "Fiziksel disk sağlığı",
@@ -305,17 +303,21 @@ export const tr = {
   diskHealthStatusUnhealthy: "Sağlıksız",
   diskPowerOnYears: "{years} yıl {days} gün",
   diskPowerOnDays: "{days} gün",
-  diskAdviceWatch: "Bu disk izlenmeli. Önemli verilerini yedekle ve sıcaklık/aşınma değerlerini takip et.",
-  diskAdviceRisk: "Bu disk risk altında. HEMEN tüm verilerini yedekle ve diski değiştirmeyi planla; üretici tanı aracını çalıştır.",
+  diskAdviceWatch:
+    "Bu disk izlenmeli. Önemli verilerini yedekle ve sıcaklık/aşınma değerlerini takip et.",
+  diskAdviceRisk:
+    "Bu disk risk altında. HEMEN tüm verilerini yedekle ve diski değiştirmeyi planla; üretici tanı aracını çalıştır.",
   // Sprint 14 — disk bütünlüğü (chkdsk) paneli
   integrityHeading: "Sürücü bütünlüğü (chkdsk)",
-  integrityIntro: "NTFS sürücülerde dosya sistemi tutarlılığını kontrol et. Tarama salt-okunurdur ve güvenlidir; onarım gerekirse ayrıca uygulayabilirsin.",
+  integrityIntro:
+    "NTFS sürücülerde dosya sistemi tutarlılığını kontrol et. Tarama salt-okunurdur ve güvenlidir; onarım gerekirse ayrıca uygulayabilirsin.",
   integrityLoading: "Sürücüler okunuyor…",
   integrityNone: "Taranabilir sabit NTFS sürücü bulunamadı.",
   integritySystemBadge: "Sistem",
   integrityScanCta: "Tarama",
   integrityRepairCta: "Onar (/f)",
-  integrityFootnote: "Tarama (chkdsk /scan) çevrimiçi ve salt-okunurdur — PC'yi kullanmaya devam edebilirsin. Onarım (/f) sistem sürücüsünde yeniden başlatmada (autochk) çalışır; yönetici yetkisi gerekir.",
+  integrityFootnote:
+    "Tarama (chkdsk /scan) çevrimiçi ve salt-okunurdur — PC'yi kullanmaya devam edebilirsin. Onarım (/f) sistem sürücüsünde yeniden başlatmada (autochk) çalışır; yönetici yetkisi gerekir.",
   // Sprint 14 — olay günlüğü paneli
   eventPanelHeading: "Son olaylar (Kritik/Hata)",
   eventPanelIntro: "Son günlerdeki Kritik ve Hata olayları sağlayıcıya göre gruplanır.",
@@ -327,22 +329,27 @@ export const tr = {
   eventPanelEventId: "Olay ID {id}",
   eventPanelLastSeen: "son: {date}",
   eventPanelCount: "{count}×",
-  eventPanelFootnote: "Gizlilik için olay mesaj içerikleri gösterilmez; yalnız sağlayıcı, olay ID'si ve sayım. Ayrıntı için Olay Görüntüleyici'yi aç.",
+  eventPanelFootnote:
+    "Gizlilik için olay mesaj içerikleri gösterilmez; yalnız sağlayıcı, olay ID'si ve sayım. Ayrıntı için Olay Görüntüleyici'yi aç.",
   // Sprint 14 — sürücüler paneli
   driversHeading: "Dikkat gerektiren sürücüler",
-  driversIntro: "İmzasız veya uzun süredir güncellenmemiş (≥2 yıl) sürücüler. Güncellemeler Windows Update üzerinden gelir.",
+  driversIntro:
+    "İmzasız veya uzun süredir güncellenmemiş (≥2 yıl) sürücüler. Güncellemeler Windows Update üzerinden gelir.",
   driversLoading: "Sürücüler taranıyor…",
   driversEmpty: "İmzasız veya eski sürücü bulunamadı. Sürücüler güncel görünüyor.",
   driversUpdateCta: "Windows Update",
   driversUnsignedTitle: "İmzasız ({count})",
-  driversUnsignedHint: "Dijital imzası doğrulanamayan sürücüler. Üretici/Windows Update'ten güncellemeyi değerlendir.",
+  driversUnsignedHint:
+    "Dijital imzası doğrulanamayan sürücüler. Üretici/Windows Update'ten güncellemeyi değerlendir.",
   driversOutdatedTitle: "Uzun süredir güncellenmemiş ({count})",
-  driversOutdatedHint: "2 yıldan eski sürücüler. Tek başına sorun olmayabilir; ama güncel sürücü kararlılık/performans sağlar.",
+  driversOutdatedHint:
+    "2 yıldan eski sürücüler. Tek başına sorun olmayabilir; ama güncel sürücü kararlılık/performans sağlar.",
   driversAgeYears: "{years} yıl",
   // Sprint 14 — Defender durum panosu
   defenderHeading: "Defender koruma durumu",
   defenderLoading: "Defender durumu okunuyor…",
-  defenderUnavailable: "Microsoft Defender durumu okunamadı. Üçüncü taraf bir antivirüs etkin olabilir veya yönetici yetkisi gerekiyor.",
+  defenderUnavailable:
+    "Microsoft Defender durumu okunamadı. Üçüncü taraf bir antivirüs etkin olabilir veya yönetici yetkisi gerekiyor.",
   defenderRtProtection: "Gerçek zamanlı koruma",
   defenderTamper: "Kurcalama koruması",
   defenderAntivirus: "Antivirüs",
@@ -364,11 +371,13 @@ export const tr = {
   thermalBattery: "Bataryada",
   thermalCpuPerf: "CPU performansı",
   thermalCpuLoad: "CPU yükü",
-  thermalThrottlingNote: "CPU yük altında baz hızının altında çalışıyor — olası termal/güç kısıtlaması (throttling). Güç planını kontrol et, toz temizliği yap.",
+  thermalThrottlingNote:
+    "CPU yük altında baz hızının altında çalışıyor — olası termal/güç kısıtlaması (throttling). Güç planını kontrol et, toz temizliği yap.",
   thermalZones: "Termal bölgeler",
   thermalZone: "Bölge {n}",
   thermalMax: "En yüksek",
-  thermalNoSensors: "ACPI sıcaklık sensörü bulunamadı. Bu birçok masaüstünde normaldir (anakart sensörü ACPI'ye açılmaz). Ayrıntılı sıcaklık için HWiNFO veya üretici aracı gerekir.",
+  thermalNoSensors:
+    "ACPI sıcaklık sensörü bulunamadı. Bu birçok masaüstünde normaldir (anakart sensörü ACPI'ye açılmaz). Ayrıntılı sıcaklık için HWiNFO veya üretici aracı gerekir.",
   // Sprint 14 — güvenlik konfigi panosu
   securityHeading: "Güvenlik duruşu",
   securityLoading: "Güvenlik ayarları okunuyor…",
@@ -389,12 +398,14 @@ export const tr = {
   securityBitlockerOn: "C: sürücüsü şifreli.",
   securityBitlockerOff: "C: şifreli değil — dizüstü için önerilir.",
   securityDns: "DNS sunucuları",
-  securityDnsHint: "Tanımadığın DNS sunucuları varsa ağ ayarlarından gözden geçir. (Yalnız bu cihazda gösterilir, kaydedilmez.)",
+  securityDnsHint:
+    "Tanımadığın DNS sunucuları varsa ağ ayarlarından gözden geçir. (Yalnız bu cihazda gösterilir, kaydedilmez.)",
   securityHosts: "hosts dosyası",
   securityHostsClean: "{count} giriş · şüpheli satır yok.",
   securityHostsSuspicious: "{count} şüpheli satır",
   securityHostsShow: "Şüpheli satırları göster",
-  securityHostsHint: "Tanımadığın satırları C:\\Windows\\System32\\drivers\\etc\\hosts'tan kaldır (Not Defteri'ni yönetici aç).",
+  securityHostsHint:
+    "Tanımadığın satırları C:\\Windows\\System32\\drivers\\etc\\hosts'tan kaldır (Not Defteri'ni yönetici aç).",
   // Sprint 14 — güncellemeler paneli
   updatesHeading: "Bekleyen güncellemeler",
   updatesOpenWu: "Windows Update",
@@ -408,7 +419,8 @@ export const tr = {
   updatesWuNone: "Bekleyen Windows güncellemesi yok. Sistem güncel.",
   updatesSecurityWarn: "{count} güvenlik güncellemesi bekliyor — bir an önce kur.",
   updatesWingetTitle: "winget paket güncellemeleri ({count})",
-  updatesWingetHint: "Yüklü uygulamalarda güncelleme var. Terminal'de şu komutla hepsini güncelleyebilirsin:",
+  updatesWingetHint:
+    "Yüklü uygulamalarda güncelleme var. Terminal'de şu komutla hepsini güncelleyebilirsin:",
   // Sprint 14 — başlangıç paneli
   startupHeading: "Başlangıç performansı",
   startupLoading: "Başlangıç öğeleri okunuyor…",
@@ -418,7 +430,8 @@ export const tr = {
   startupSeconds: "{s} sn",
   startupBootUnknown: "Açılış süresi okunamadı (Tanılama-Performans günlüğü mevcut olmayabilir).",
   startupItemsTitle: "Başlangıçta çalışanlar",
-  startupFootnote: "Gereksiz öğeleri 'Başlangıç uygulamaları' ayarından devre dışı bırakabilirsin. Tanımadığın bir öğe varsa adını araştır; emin değilsen kapatma.",
+  startupFootnote:
+    "Gereksiz öğeleri 'Başlangıç uygulamaları' ayarından devre dışı bırakabilirsin. Tanımadığın bir öğe varsa adını araştır; emin değilsen kapatma.",
   // Sprint 14 — çökme geçmişi paneli
   crashHeading: "Çökme & donma geçmişi (30 gün)",
   crashLoading: "Güvenilirlik kayıtları okunuyor…",
@@ -431,7 +444,8 @@ export const tr = {
   crashNoSignatures: "Güvenilirlik kaydı bulunamadı (servis kapalı olabilir).",
   crashLastSeen: "son: {date}",
   crashCount: "{count}×",
-  crashFootnote: "Tekrarlayan çökmelerde ilk adım 'Sistem dosyalarını onar' (sfc/DISM) — bozuk sistem dosyalarını tamir eder (15-30 dk, yönetici gerekir). Belirli bir uygulama/servis sık çöküyorsa onu güncelle/kaldır; sürücüyse OEM sayfasını ziyaret et. Ayrıntı için Güvenilirlik İzleyici'yi aç.",
+  crashFootnote:
+    "Tekrarlayan çökmelerde ilk adım 'Sistem dosyalarını onar' (sfc/DISM) — bozuk sistem dosyalarını tamir eder (15-30 dk, yönetici gerekir). Belirli bir uygulama/servis sık çöküyorsa onu güncelle/kaldır; sürücüyse OEM sayfasını ziyaret et. Ayrıntı için Güvenilirlik İzleyici'yi aç.",
   // Sprint 14 — sanal bellek paneli
   pagefileHeading: "Sanal bellek (sayfa dosyası)",
   pagefileLoading: "Sanal bellek bilgisi okunuyor…",
@@ -446,23 +460,27 @@ export const tr = {
   pagefileUsage: "Sayfa dosyası kullanımı (tepe/ayrılan)",
   pagefileConfigured: "Yapılandırılmış sayfa dosyaları",
   pagefileSystemManagedSize: "Sistem yönetimli",
-  pagefileFootnote: "Çoğu kullanıcı için 'sistem yönetimli' en iyisidir. Manuel boyut yalnız özel ihtiyaçta gerekir. Değişiklik yeniden başlatma ister.",
+  pagefileFootnote:
+    "Çoğu kullanıcı için 'sistem yönetimli' en iyisidir. Manuel boyut yalnız özel ihtiyaçta gerekir. Değişiklik yeniden başlatma ister.",
   // Sprint 15 — yerel AI sohbeti (Ollama)
   aiTitle: "PC Doctor Asistanı",
   aiSubtitle: "Yerel · gizli · çevrimdışı",
   aiClose: "Kapat",
   aiChecking: "Ollama kontrol ediliyor…",
   aiNoOllamaTitle: "Yerel AI bulunamadı",
-  aiNoOllamaBody: "Sohbet, makinende çalışan Ollama'yı kullanır — veri bilgisayarından çıkmaz. Kullanmak için Ollama'yı kurup bir model indir:",
+  aiNoOllamaBody:
+    "Sohbet, makinende çalışan Ollama'yı kullanır — veri bilgisayarından çıkmaz. Kullanmak için Ollama'yı kurup bir model indir:",
   aiSetupStep1: "ollama.com adresinden Ollama'yı indir ve kur.",
   aiSetupStep2: "Bir model indir (terminal):",
   aiSetupStep3: "Ollama çalışırken bu pencerede 'Tekrar dene'ye bas.",
   aiRetry: "Tekrar dene",
-  aiGreeting: "Merhaba! Tarama sonuçlarını görebiliyorum. Bir bulguyu açıklamamı, riskleri önceliklendirmemi veya bir adımın güvenli olup olmadığını sormamı isteyebilirsin.",
+  aiGreeting:
+    "Merhaba! Tarama sonuçlarını görebiliyorum. Bir bulguyu açıklamamı, riskleri önceliklendirmemi veya bir adımın güvenli olup olmadığını sormamı isteyebilirsin.",
   aiPlaceholder: "Bir şey sor… (Enter ile gönder)",
   aiDisabledPlaceholder: "Önce Ollama'yı başlat…",
   aiSend: "Gönder",
-  aiDisclaimer: "Yerel model yanıtları hatalı olabilir; kritik adımları doğrula. Asistan eylem çalıştırmaz, yalnız açıklar.",
+  aiDisclaimer:
+    "Yerel model yanıtları hatalı olabilir; kritik adımları doğrula. Asistan eylem çalıştırmaz, yalnız açıklar.",
   aiSuggestExplain: "En kritik bulguyu açıkla",
   aiSuggestPriority: "Neyi önce düzeltmeliyim?",
   aiSuggestSafe: "Disk temizliği güvenli mi?",

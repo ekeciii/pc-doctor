@@ -10,8 +10,8 @@ fn main() {
         // hitting ERROR_ELEVATION_REQUIRED (OS error 740).
         let is_dev = std::env::var("DEP_TAURI_DEV").as_deref() == Ok("true");
         if !is_dev {
-            let windows = tauri_build::WindowsAttributes::new()
-                .app_manifest(include_str!("manifest.xml"));
+            let windows =
+                tauri_build::WindowsAttributes::new().app_manifest(include_str!("manifest.xml"));
             attrs = attrs.windows_attributes(windows);
         }
     }

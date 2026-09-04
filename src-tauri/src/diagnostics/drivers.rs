@@ -45,10 +45,7 @@ fn summary(code_id: &str, severity: Severity, count: u64) -> Finding {
         url: "ms-settings:windowsupdate".into(),
     })
     .with_action_code(format!("finding.driver.{code_id}.action"));
-    f.recommended_action = Some(
-        "Windows Update > Gelişmiş seçenekler > İsteğe bağlı güncellemeler'den sürücüleri kontrol et."
-            .into(),
-    );
+    f.recommendation_code = Some(format!("finding.driver.{code_id}.recommendation"));
     f
 }
 
@@ -79,10 +76,16 @@ mod tests {
         ];
         let f = evaluate(&drivers);
         assert_eq!(f.len(), 2);
-        let unsigned = f.iter().find(|x| x.id == "driver:unsigned_summary").unwrap();
+        let unsigned = f
+            .iter()
+            .find(|x| x.id == "driver:unsigned_summary")
+            .unwrap();
         assert!(matches!(unsigned.severity, Severity::Warning));
         assert_eq!(unsigned.params.as_ref().unwrap()["count"].as_u64(), Some(2));
-        let old = f.iter().find(|x| x.id == "driver:outdated_summary").unwrap();
+        let old = f
+            .iter()
+            .find(|x| x.id == "driver:outdated_summary")
+            .unwrap();
         assert!(matches!(old.severity, Severity::Info));
         assert_eq!(old.params.as_ref().unwrap()["count"].as_u64(), Some(2));
     }

@@ -28,10 +28,7 @@ export function HistoryTrendTab() {
       setLoading(true);
       // Son 100 taramanın critical+warning finding code'larını topla
       const scans = await listScans(100).catch(() => []);
-      const codeMap = new Map<
-        string,
-        { code: string; category: string; severity: string }
-      >();
+      const codeMap = new Map<string, { code: string; category: string; severity: string }>();
       for (const s of scans) {
         if (s.criticalCount === 0 && s.warningCount === 0) continue;
         const details = await listScanFindings(s.id).catch(() => []);
@@ -83,11 +80,7 @@ export function HistoryTrendTab() {
   }, [codes, trends]);
 
   if (loading) {
-    return (
-      <div className="text-sm text-muted-foreground p-4">
-        {t("historyDetailLoading")}
-      </div>
-    );
+    return <div className="text-sm text-muted-foreground p-4">{t("historyDetailLoading")}</div>;
   }
 
   if (codes.length === 0) {
@@ -136,9 +129,7 @@ export function HistoryTrendTab() {
                     <div className="font-medium text-sm text-foreground truncate">
                       {resolved.title || c.code}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-0.5">
-                      {c.category}
-                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{c.category}</div>
                     <div className="mt-1">
                       <TrendSparkline code={c.code} days={21} />
                     </div>

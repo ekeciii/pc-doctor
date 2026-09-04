@@ -9,6 +9,11 @@
  *  - Template `{p}` referansı varsa caller'ın params'ında `p` MEVCUT
  *  - findings.tr.ts/findings.en.ts: template'lerdeki `{p}` Backend params'ında karşılık var mı?
  *    (semi-best-effort; tüm Backend emit sitelerini scan etmek bu script kapsamında yok.)
+ *  - Faz 3: Backend (`src-tauri/src/**.rs`) içindeki LİTERAL `"finding.<cat>.<id>.<field>"`
+ *    string'leri `findingsTr`'de var mı? (Sprint 7'den beri ertelenen kapsama kontrolü.)
+ *    Yalnız literal string'leri yakalar — `format!("finding.x.{code_id}.y")` gibi runtime'da
+ *    kurulan kodlar (thermal.rs/drivers.rs/event_log.rs code_id parametreleri) bu taramanın
+ *    kapsamı DIŞINDA kalır; bunlar için code_id'nin geçtiği match/if kollarını elle doğrula.
  *
  * Çalıştırma: `node scripts/check-i18n.mjs`
  * Exit code 0 = OK, 1 = mismatch.
@@ -20,6 +25,7 @@ import { join, dirname, resolve } from "node:path";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = join(ROOT, "src");
+const TAURI_SRC = join(ROOT, "src-tauri", "src");
 
 /** Recursive .ts/.tsx find. */
 async function* walk(dir) {
@@ -28,6 +34,26 @@ async function* walk(dir) {
     if (entry.isDirectory()) yield* walk(p);
     else if (/\.(ts|tsx)$/.test(entry.name) && !p.endsWith(".d.ts")) yield p;
   }
+}
+
+/** Recursive .rs find (skips target/ build output if ever nested under src, defensive). */
+async function* walkRust(dir) {
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    if (entry.name === "target") continue;
+    const p = join(dir, entry.name);
+    if (entry.isDirectory()) yield* walkRust(p);
+    else if (p.endsWith(".rs")) yield p;
+  }
+}
+
+/** Literal `"finding.<cat>.<id>.<field>"` string references in Rust source (comments included —
+ * acceptable false-positive risk, a commented-out code string still names a real dict key). */
+function extractFindingCodeLiterals(source) {
+  const out = new Set();
+  const re = /"(finding\.[a-z0-9_]+\.[a-z0-9_]+\.[a-z0-9_]+)"/g;
+  let m;
+  while ((m = re.exec(source))) out.add(m[1]);
+  return out;
 }
 
 /** Extract `t("key", { p: ... })` calls from source. */
@@ -174,9 +200,26 @@ async function main() {
     }
   }
 
+  // === Check 4: Backend literal finding-code references ⊆ findingsTr keys ===
+  // (Faz 3 — long-deferred since Sprint 7. Literal-only; see module docstring for the
+  // format!()-templated gap in thermal.rs/drivers.rs/event_log.rs.)
+  const backendCodes = new Map(); // code -> first file it was seen in
+  for await (const file of walkRust(TAURI_SRC)) {
+    const source = await readFile(file, "utf8");
+    for (const code of extractFindingCodeLiterals(source)) {
+      if (!backendCodes.has(code)) backendCodes.set(code, file.slice(ROOT.length + 1));
+    }
+  }
+  for (const [code, file] of backendCodes) {
+    if (!ftKeys.has(code)) {
+      errors.push(`[backend coverage] ${file}: "${code}" not found in findings.tr.ts`);
+    }
+  }
+
   console.log(`Scanned ${tCalls.length} t() calls`);
   console.log(`TR dict: ${trKeys.size} keys, EN dict: ${enKeys.size} keys`);
   console.log(`Findings TR: ${ftKeys.size}, Findings EN: ${feKeys.size}`);
+  console.log(`Backend literal finding-code references: ${backendCodes.size}`);
   console.log();
 
   if (warnings.length > 0) {

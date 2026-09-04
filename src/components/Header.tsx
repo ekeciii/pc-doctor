@@ -23,20 +23,10 @@ export function Header({ elevated, onOpenSettings, onOpenHistory, onOpenChat }: 
             {t("adminBadge")}
           </Badge>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onOpenChat}
-          aria-label={t("aiTitle")}
-        >
+        <Button variant="ghost" size="icon" onClick={onOpenChat} aria-label={t("aiTitle")}>
           <Sparkles className="w-5 h-5" />
         </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onOpenHistory}
-          aria-label={t("historyTitle")}
-        >
+        <Button variant="ghost" size="icon" onClick={onOpenHistory} aria-label={t("historyTitle")}>
           <History className="w-5 h-5" />
         </Button>
         <Button

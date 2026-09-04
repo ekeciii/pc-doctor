@@ -15,8 +15,8 @@ use crate::models::{
     FixItemResult, FixSpec, PendingChkdsk, ScanReport, SfcDismSummary,
 };
 use crate::remediation::{
-    chkdsk as chkdsk_remediation, chkdsk_boot_result, chkntfs, cleanup, defender_scan,
-    file_delete, reboot, system_file_check, system_tweaks, volume as vol_util,
+    chkdsk as chkdsk_remediation, chkdsk_boot_result, chkntfs, cleanup, defender_scan, file_delete,
+    reboot, system_file_check, system_tweaks, volume as vol_util,
 };
 use crate::safety::{pending_state, restore_point};
 use chrono::Utc;
@@ -53,7 +53,7 @@ static ALLOWED_HTTPS_HOSTS: Lazy<HashSet<&'static str>> = Lazy::new(|| {
         "www.intel.com",
         "www.realtek.com",
         "www.google.com", // driver fallback aramaları için
-        "github.com", // Faz 2 — Ayarlar'daki Gizlilik/KVKK/EULA linkleri (proje deposu)
+        "github.com",     // Faz 2 — Ayarlar'daki Gizlilik/KVKK/EULA linkleri (proje deposu)
     ])
 });
 
@@ -251,9 +251,9 @@ pub async fn crash_history() -> Result<crate::models::CrashHistory, String> {
 /// Sprint 14 — Windows Güvenilirlik İzleyici'yi (perfmon /rel) aç.
 #[tauri::command]
 pub fn open_reliability_monitor() -> Result<(), String> {
-    use std::process::Command;
     #[cfg(windows)]
     use std::os::windows::process::CommandExt;
+    use std::process::Command;
     let mut cmd = Command::new("perfmon.exe");
     cmd.arg("/rel");
     #[cfg(windows)]
@@ -331,9 +331,9 @@ pub async fn recent_event_summaries(days: i64) -> Result<Vec<crate::models::Even
 /// Sprint 14 — Windows Olay Görüntüleyici'yi (eventvwr.msc) aç.
 #[tauri::command]
 pub fn open_event_viewer() -> Result<(), String> {
-    use std::process::Command;
     #[cfg(windows)]
     use std::os::windows::process::CommandExt;
+    use std::process::Command;
     let mut cmd = Command::new("eventvwr.exe");
     #[cfg(windows)]
     cmd.creation_flags(0x0800_0000); // CREATE_NO_WINDOW
@@ -508,13 +508,17 @@ fn run_one_fix(app: &tauri::AppHandle, spec: &FixSpec) -> FixItemResult {
             let any_err = per.iter().any(|r| r.error.is_some());
             fix_item(id, !any_err, reboot_required)
         }
-        FixSpec::EnableFirewall => {
-            fix_item(id, system_tweaks::enable_firewall().is_ok(), reboot_required)
-        }
+        FixSpec::EnableFirewall => fix_item(
+            id,
+            system_tweaks::enable_firewall().is_ok(),
+            reboot_required,
+        ),
         FixSpec::EnableUac => fix_item(id, system_tweaks::enable_uac().is_ok(), reboot_required),
-        FixSpec::SetPagefileManaged => {
-            fix_item(id, system_tweaks::set_pagefile_managed().is_ok(), reboot_required)
-        }
+        FixSpec::SetPagefileManaged => fix_item(
+            id,
+            system_tweaks::set_pagefile_managed().is_ok(),
+            reboot_required,
+        ),
         FixSpec::RunDefenderQuickScan => {
             // scan_ok=false (tarama çalıştı ama tehdit kaldı vb.) yine de "çalıştı" sayılır;
             // yalnız komutun kendisi patlarsa (Err) başarısız.
@@ -615,8 +619,7 @@ pub async fn run_chkdsk_scan(
 /// döner; pending_state::remove(volume) yapılır (clear DEĞİL).
 #[tauri::command]
 pub fn cancel_chkdsk_scan(app: tauri::AppHandle) -> ChkdskCancelOutcome {
-    let (schedule_cleared, reboot_abort, cancelled_volume) =
-        chkdsk_remediation::cancel_session();
+    let (schedule_cleared, reboot_abort, cancelled_volume) = chkdsk_remediation::cancel_session();
     if schedule_cleared {
         if let Some(v) = cancelled_volume.as_ref() {
             let _ = pending_state::remove(&app, v);
@@ -701,10 +704,11 @@ pub async fn run_chkdsk_fix(
         // Non-system live /f
         let app2 = app.clone();
         let vol2 = volume.clone();
-        let live_res =
-            tauri::async_runtime::spawn_blocking(move || chkdsk_remediation::run_nonsystem_fix(app2, vol2))
-                .await
-                .map_err(|e| format!("Tarama görevi başarısız: {}", e))?;
+        let live_res = tauri::async_runtime::spawn_blocking(move || {
+            chkdsk_remediation::run_nonsystem_fix(app2, vol2)
+        })
+        .await
+        .map_err(|e| format!("Tarama görevi başarısız: {}", e))?;
         match live_res {
             Ok(mut r) => {
                 r.restore_point_created = restore_point_created;
@@ -730,8 +734,7 @@ pub async fn run_chkdsk_fix(
 /// multi-volume (Sprint 11 H6) invariantı ihlal etmiyor. Diğer pending volumes KORUNUR.
 #[tauri::command]
 pub fn cancel_chkdsk_session(app: tauri::AppHandle) -> ChkdskCancelOutcome {
-    let (schedule_cleared, reboot_abort, cancelled_volume) =
-        chkdsk_remediation::cancel_session();
+    let (schedule_cleared, reboot_abort, cancelled_volume) = chkdsk_remediation::cancel_session();
     if schedule_cleared {
         if let Some(v) = cancelled_volume.as_ref() {
             let _ = pending_state::remove(&app, v);
@@ -929,7 +932,11 @@ mod tests {
     #[test]
     fn summarize_counts_applied_and_failed() {
         let out = summarize_fix_all(
-            vec![item("a", true, false), item("b", false, false), item("c", true, false)],
+            vec![
+                item("a", true, false),
+                item("b", false, false),
+                item("c", true, false),
+            ],
             true,
             None,
         );
@@ -952,9 +959,16 @@ mod tests {
 
     #[test]
     fn summarize_carries_restore_skip_reason() {
-        let out = summarize_fix_all(vec![item("a", true, false)], false, Some("VSS kapalı".into()));
+        let out = summarize_fix_all(
+            vec![item("a", true, false)],
+            false,
+            Some("VSS kapalı".into()),
+        );
         assert!(!out.restore_point_created);
-        assert_eq!(out.restore_point_skipped_reason.as_deref(), Some("VSS kapalı"));
+        assert_eq!(
+            out.restore_point_skipped_reason.as_deref(),
+            Some("VSS kapalı")
+        );
     }
 
     // Regression: frontend `targetIds` (camelCase) gönd_erir; enum-level rename_all
@@ -962,7 +976,8 @@ mod tests {
     #[test]
     fn fixspec_cleanup_deserializes_camelcase_target_ids() {
         let json = r#"{"type":"cleanup","targetIds":["x","y"]}"#;
-        let spec: crate::models::FixSpec = serde_json::from_str(json).expect("camelCase deserialize");
+        let spec: crate::models::FixSpec =
+            serde_json::from_str(json).expect("camelCase deserialize");
         match spec {
             crate::models::FixSpec::Cleanup { target_ids } => {
                 assert_eq!(target_ids, vec!["x".to_string(), "y".to_string()]);
@@ -1003,7 +1018,9 @@ mod tests {
     fn allow_known_https() {
         assert!(is_allowed_url("https://www.nvidia.com/Download/index.aspx"));
         assert!(is_allowed_url("https://www.google.com/search?q=foo"));
-        assert!(is_allowed_url("https://github.com/ekeciii/pc-doctor/blob/main/PRIVACY.md"));
+        assert!(is_allowed_url(
+            "https://github.com/ekeciii/pc-doctor/blob/main/PRIVACY.md"
+        ));
     }
 
     #[test]

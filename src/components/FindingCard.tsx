@@ -23,11 +23,7 @@ interface SeverityMeta {
   border: string;
   /** durum LED'i + parlama rengi (CSS var) */
   glow: string;
-  badge:
-    | "destructive-soft"
-    | "warning-soft"
-    | "info-soft"
-    | "success-soft";
+  badge: "destructive-soft" | "warning-soft" | "info-soft" | "success-soft";
 }
 
 const meta: Record<Severity, SeverityMeta> = {
@@ -118,7 +114,10 @@ export function FindingCard({
     >
       <div className="flex gap-4 p-5 pl-6">
         <div
-          className={cn("shrink-0 w-10 h-10 rounded-md flex items-center justify-center", s.iconWrap)}
+          className={cn(
+            "shrink-0 w-10 h-10 rounded-md flex items-center justify-center",
+            s.iconWrap
+          )}
           style={{ boxShadow: `0 0 14px -4px ${s.glow}` }}
         >
           {s.icon}
@@ -148,9 +147,7 @@ export function FindingCard({
               </Badge>
             )}
           </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {resolved.description}
-          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">{resolved.description}</p>
           {resolved.recommendedAction && (
             <p className="text-sm mt-2.5 italic border-l-2 border-primary/50 pl-3 text-foreground/85">
               {resolved.recommendedAction}

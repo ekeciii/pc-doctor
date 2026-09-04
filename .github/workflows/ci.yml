@@ -1,8 +1,9 @@
 name: CI
 
 # PR ve main push'unda tüm doğrulama ağını çalıştırır:
-# i18n parity + güvenlik invariant testleri + cargo lib testleri + frontend build.
-# Bu sayede kırık bir invariant veya bozuk i18n main'e merge edilemez.
+# i18n parity + rustfmt + clippy (-D warnings) + prettier + güvenlik invariant
+# testleri + cargo lib testleri + vitest + frontend build.
+# Bu sayede kırık bir invariant, bozuk i18n veya lint uyarısı main'e merge edilemez.
 on:
   pull_request:
   push:
@@ -33,7 +34,7 @@ jobs:
       - name: Setup Rust (stable + msvc)
         uses: dtolnay/rust-toolchain@stable
         with:
-          components: clippy
+          components: clippy, rustfmt
 
       - name: Cache cargo registry + target
         uses: Swatinem/rust-cache@v2
@@ -43,7 +44,8 @@ jobs:
       - name: Install npm deps
         run: npm ci --no-audit --no-fund
 
-      # check:all = i18n + security_invariants + cargo lib + vitest + frontend build
+      # check:all = i18n + fmt + clippy + prettier + security_invariants + cargo lib
+      #             + vitest + frontend build
       - name: Run composite check
         run: npm run check:all
 
@@ -58,6 +60,12 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: Install cargo-audit
         run: cargo install cargo-audit --locked
+      # RUSTSEC-2026-0194/0195 (quick-xml <0.41, DoS parsing untrusted XML) ignore edilir:
+      # transitive via tauri-utils -> plist (macOS Info.plist parsing) -> quick-xml ^0.39,
+      # `plist` crate'inin kendisi pinliyor, elimizde değil. PC Doctor yalnız Windows'a
+      # derleniyor; bu kod yolu çalışan uygulamada hiç tetiklenmiyor (güvenilmeyen XML girdisi
+      # yok). Her `cargo update`/Tauri sürüm atlamasında tekrar kontrol et; `plist` (veya
+      # Tauri) quick-xml >=0.41'e geçince kaldır.
       - name: Run cargo audit
         working-directory: src-tauri
-        run: cargo audit
+        run: cargo audit --ignore RUSTSEC-2026-0194 --ignore RUSTSEC-2026-0195

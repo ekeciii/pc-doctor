@@ -42,9 +42,21 @@ jobs:
       - name: Install npm deps
         run: npm ci --no-audit --no-fund
 
-      # Kırmızı invariant/test ile release YAYINLANMASIN — build'den önce doğrula.
-      - name: Verify (i18n + invariants + lib tests + frontend build)
+      # Kırmızı invariant/test/lint ile release YAYINLANMASIN — build'den önce doğrula.
+      # (i18n + rustfmt + clippy -D warnings + prettier + invariants + lib tests + vitest + build)
+      - name: Verify (check:all)
         run: npm run check:all
+
+      # Faz 3 — bilinen-güvenlik-açığı olan bağımlılıkla tag YAYINLANMASIN.
+      # ci.yml'deki ayrı `audit` job'ı yalnız PR/push'ta görünür; release gate'i
+      # ayrıca kendi kopyasını çalıştırır ki bir tag audit'siz asla geçmesin.
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+
+      # RUSTSEC-2026-0194/0195 ignore gerekçesi: ci.yml'deki `audit` job'ına bkz.
+      - name: Dependency audit (cargo audit)
+        working-directory: src-tauri
+        run: cargo audit --ignore RUSTSEC-2026-0194 --ignore RUSTSEC-2026-0195
 
       - name: Build + bundle MSI/NSIS
         env:

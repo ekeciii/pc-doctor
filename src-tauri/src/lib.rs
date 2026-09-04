@@ -33,7 +33,9 @@ pub fn run() {
                     // Startup retention enforcement (secondary trigger; primary is in record_scan)
                     let snap = app.state::<SettingsState>().snapshot();
                     if let Ok(guard) = db.conn.lock() {
-                        if let Err(e) = history::retention::enforce(&guard, snap.history_retention_days) {
+                        if let Err(e) =
+                            history::retention::enforce(&guard, snap.history_retention_days)
+                        {
                             eprintln!("[history] startup retention skip: {e}");
                         }
                         // PRAGMA optimize: hint SQLite to reorganize stats once per session

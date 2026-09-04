@@ -14,7 +14,7 @@ import { Alert, AlertDescription } from "./ui/Alert";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { useI18n, useT, type Locale } from "@/lib/i18n";
 import { getSettings, saveSettings, type AppSettings } from "@/lib/settings";
-import { clearHistory, openOemLink } from "@/lib/api";
+import { clearHistory, openOemLink, toError } from "@/lib/api";
 
 const PRIVACY_URL = "https://github.com/ekeciii/pc-doctor/blob/main/PRIVACY.md";
 const EULA_URL = "https://github.com/ekeciii/pc-doctor/blob/main/EULA.md";
@@ -41,7 +41,7 @@ export function SettingsDialog({ open, onClose, onShowHistory }: Props) {
     setClearedOk(false);
     getSettings()
       .then(setSettings)
-      .catch((e) => setError(`${t("settingsSaveFailed")}: ${String(e)}`));
+      .catch((e) => setError(`${t("settingsSaveFailed")}: ${toError(e).message}`));
   }, [open, t]);
 
   const update = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
@@ -60,7 +60,7 @@ export function SettingsDialog({ open, onClose, onShowHistory }: Props) {
       applyTheme(saved.theme);
       onClose();
     } catch (e) {
-      setError(`${t("settingsSaveFailed")}: ${String(e)}`);
+      setError(`${t("settingsSaveFailed")}: ${toError(e).message}`);
     } finally {
       setSaving(false);
     }
@@ -77,7 +77,7 @@ export function SettingsDialog({ open, onClose, onShowHistory }: Props) {
       await clearHistory();
       setClearedOk(true);
     } catch (e) {
-      setError(String(e));
+      setError(toError(e).message);
     } finally {
       setClearing(false);
     }
@@ -97,9 +97,7 @@ export function SettingsDialog({ open, onClose, onShowHistory }: Props) {
           <DialogHeader>
             <div className="flex-1">
               <DialogTitle>{t("settingsTitle")}</DialogTitle>
-              <DialogDescription className="mt-1">
-                {t("settingsAboutBody")}
-              </DialogDescription>
+              <DialogDescription className="mt-1">{t("settingsAboutBody")}</DialogDescription>
             </div>
           </DialogHeader>
           <DialogBody className="space-y-6">
@@ -170,9 +168,7 @@ export function SettingsDialog({ open, onClose, onShowHistory }: Props) {
                       className="w-4 h-4 accent-primary cursor-pointer"
                     />
                   </label>
-                  <p className="text-xs text-muted-foreground">
-                    {t("settingsHistoryExplain")}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t("settingsHistoryExplain")}</p>
                   <div className="flex items-center gap-2 pt-2">
                     <label className="text-sm text-muted-foreground">
                       {t("settingsHistoryRetention")}
@@ -186,9 +182,7 @@ export function SettingsDialog({ open, onClose, onShowHistory }: Props) {
                       className="w-20 px-2 py-1 rounded-md border border-border bg-background text-sm"
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {t("historyRetentionHelper")}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t("historyRetentionHelper")}</p>
                   <div className="flex gap-2 pt-2">
                     <Button
                       variant="outline"
@@ -217,9 +211,7 @@ export function SettingsDialog({ open, onClose, onShowHistory }: Props) {
                   <label className="text-sm font-semibold text-foreground">
                     {t("settingsPrivacyHeading")}
                   </label>
-                  <p className="text-xs text-muted-foreground">
-                    {t("settingsPrivacyExplain")}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t("settingsPrivacyExplain")}</p>
                   <div className="flex flex-wrap gap-2 pt-1">
                     <Button
                       variant="outline"
