@@ -1,4 +1,4 @@
-//! Persistent app settings — locale, theme, telemetry opt-in, history flags.
+//! Persistent app settings — locale, theme, history flags, disclosure acks.
 //!
 //! Storage: `tauri-plugin-store` (debounced autosave, JSON file at
 //! `%APPDATA%/com.egeyu.pcdoctor/settings.json`). In-memory state:
@@ -21,13 +21,25 @@ pub struct Settings {
     pub locale: String,
     #[serde(default = "default_theme")]
     pub theme: String,
-    #[serde(default)]
-    pub telemetry_enabled: bool, // PRD invariant: default OFF
     #[serde(default = "default_true")]
     pub history_enabled: bool,
     #[serde(default = "default_retention_days")]
     pub history_retention_days: u32,
+    /// Faz 2 — ilk-açılış veri-okuma bildirimi hangi sürümüne kadar onaylandı.
+    /// `0` = hiç onaylanmadı (yeni kurulum + telemetry_enabled alanı silinen eski
+    /// settings.json'lar `#[serde(default)]` ile buraya düşer). `CURRENT_DISCLOSURE_VERSION`
+    /// ile karşılaştırılır; bildirim metni değişirse sabiti artır, kullanıcı tekrar görür.
+    #[serde(default)]
+    pub disclosure_ack_version: u32,
+    /// Faz 2 — AI çekmecesindeki "veriniz yerel Ollama'ya gider" notu onaylandı mı.
+    #[serde(default)]
+    pub ai_disclosure_ack: bool,
 }
+
+/// Mevcut ilk-açılış bildirim metninin sürümü. Metni değiştirirsen artır —
+/// eski kurulumlar `disclosure_ack_version < CURRENT_DISCLOSURE_VERSION` olduğu için
+/// bildirimi bir daha görür.
+pub const CURRENT_DISCLOSURE_VERSION: u32 = 1;
 
 fn default_schema_version() -> u32 { 1 }
 fn default_locale() -> String { "tr".into() }
@@ -41,9 +53,10 @@ impl Default for Settings {
             schema_version: default_schema_version(),
             locale: default_locale(),
             theme: default_theme(),
-            telemetry_enabled: false,
             history_enabled: true,
             history_retention_days: default_retention_days(),
+            disclosure_ack_version: 0,
+            ai_disclosure_ack: false,
         }
     }
 }

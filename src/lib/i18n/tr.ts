@@ -116,9 +116,6 @@ export const tr = {
   settingsThemeAuto: "Sistem",
   settingsThemeLight: "Açık",
   settingsThemeDark: "Koyu",
-  settingsTelemetry: "Telemetri (kapalı)",
-  settingsTelemetryExplain:
-    "PC Doctor cihazından dışarı veri göndermez. Bu sprint'te telemetri opt-in kapalı kalır.",
   settingsHistory: "Tarama geçmişi",
   settingsHistoryExplain:
     "Her tarama özet sayıları yerel bir SQLite dosyasına kaydedilir. Kişisel veri yazılmaz.",
@@ -128,6 +125,31 @@ export const tr = {
   settingsAbout: "Hakkında",
   settingsAboutBody: "PC Doctor — Tauri 2 + React + Rust ile geliştirildi.",
   settingsSaveFailed: "Ayarlar kaydedilemedi",
+  // Faz 2 — Ayarlar: gizlilik/hukuk linkleri
+  settingsPrivacyHeading: "Gizlilik ve koşullar",
+  settingsPrivacyExplain:
+    "PC Doctor'ın hangi verileri neden okuduğu, nerede sakladığı ve yerel AI özelliğinin nasıl çalıştığı Gizlilik Politikası'nda ayrıntılı anlatılır.",
+  settingsPrivacyLink: "Gizlilik Politikası",
+  settingsEulaLink: "Kullanım Koşulları",
+  // Faz 2 — ilk açılış veri-okuma bildirimi
+  disclosureTitle: "PC Doctor neye erişir?",
+  disclosureIntro:
+    "Taramaya başlamadan önce PC Doctor'ın ne yaptığını kısaca özetleyelim:",
+  disclosureBullet1:
+    "Disk, sürücü, güvenlik ayarı, olay günlüğü gibi ~13 kategoride sistem bilgisi okur — hepsi cihazında kalır.",
+  disclosureBullet2:
+    "Hiçbir veri PC Doctor'ın kendi sunucusuna gönderilmez; telemetri yoktur.",
+  disclosureBullet3:
+    "Tarama geçmişi (yalnız özet sayılar, kişisel veri değil) yerel bir dosyada saklanır; istediğin an silebilirsin.",
+  disclosureBullet4:
+    "Tek ağ trafiği: güncelleme kontrolü (GitHub). Yönetici yetkisi gerektiren işlemler öncesi her zaman onayını istenir.",
+  disclosureLinkPrefix: "Ayrıntılar: ",
+  disclosureAck: "Anladım, devam et",
+  // Faz 2 — AI çekmecesi ilk açılış veri bildirimi
+  aiConsentTitle: "Bu sohbet nasıl çalışır?",
+  aiConsentBody:
+    "Sorularını yanıtlamak için tarama özetin (sağlık skoru, bulgu başlıkları, sürücü kullanım oranları) cihazında ayrı kurulu olan yerel Ollama modeline gönderilir. İnternete hiçbir veri çıkmaz.",
+  aiConsentAck: "Anladım",
   // Sprint 5: History
   historyTitle: "Tarama geçmişi",
   historyEmpty: "Henüz tarama kaydı yok. İlk taramayı çalıştır.",

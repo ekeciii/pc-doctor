@@ -14,7 +14,10 @@ import { Alert, AlertDescription } from "./ui/Alert";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { useI18n, useT, type Locale } from "@/lib/i18n";
 import { getSettings, saveSettings, type AppSettings } from "@/lib/settings";
-import { clearHistory } from "@/lib/api";
+import { clearHistory, openOemLink } from "@/lib/api";
+
+const PRIVACY_URL = "https://github.com/ekeciii/pc-doctor/blob/main/PRIVACY.md";
+const EULA_URL = "https://github.com/ekeciii/pc-doctor/blob/main/EULA.md";
 
 interface Props {
   open: boolean;
@@ -156,22 +159,6 @@ export function SettingsDialog({ open, onClose, onShowHistory }: Props) {
                   </div>
                 </section>
 
-                {/* Telemetry */}
-                <section className="space-y-1.5">
-                  <label className="flex items-center justify-between text-sm font-semibold text-foreground">
-                    <span>{t("settingsTelemetry")}</span>
-                    <input
-                      type="checkbox"
-                      checked={settings.telemetryEnabled}
-                      onChange={(e) => update("telemetryEnabled", e.target.checked)}
-                      className="w-4 h-4 accent-primary cursor-pointer"
-                    />
-                  </label>
-                  <p className="text-xs text-muted-foreground">
-                    {t("settingsTelemetryExplain")}
-                  </p>
-                </section>
-
                 {/* History */}
                 <section className="space-y-2 border-t border-border pt-5">
                   <label className="flex items-center justify-between text-sm font-semibold text-foreground">
@@ -221,6 +208,36 @@ export function SettingsDialog({ open, onClose, onShowHistory }: Props) {
                     >
                       <Trash2 className="w-4 h-4" />
                       {t("settingsClearHistory")}
+                    </Button>
+                  </div>
+                </section>
+
+                {/* Privacy / legal */}
+                <section className="space-y-2 border-t border-border pt-5">
+                  <label className="text-sm font-semibold text-foreground">
+                    {t("settingsPrivacyHeading")}
+                  </label>
+                  <p className="text-xs text-muted-foreground">
+                    {t("settingsPrivacyExplain")}
+                  </p>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        openOemLink(PRIVACY_URL).catch(() => {});
+                      }}
+                    >
+                      {t("settingsPrivacyLink")}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        openOemLink(EULA_URL).catch(() => {});
+                      }}
+                    >
+                      {t("settingsEulaLink")}
                     </Button>
                   </div>
                 </section>

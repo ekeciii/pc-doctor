@@ -26,6 +26,7 @@ import { FixAllSummaryDialog } from "./components/FixAllSummaryDialog";
 import { SettingsDialog, applyTheme } from "./components/SettingsDialog";
 import { HistoryDialog } from "./components/HistoryDialog";
 import { AiChatDrawer } from "./components/AiChatDrawer";
+import { FirstRunDisclosure } from "./components/FirstRunDisclosure";
 import { Alert, AlertDescription, AlertTitle } from "./components/ui/Alert";
 import { Button } from "./components/ui/Button";
 import {
@@ -41,7 +42,7 @@ import {
   scan,
   VolumeLockedError,
 } from "./lib/api";
-import { getSettings } from "./lib/settings";
+import { CURRENT_DISCLOSURE_VERSION, getSettings, saveSettings, type AppSettings } from "./lib/settings";
 import type {
   ChkdskFixResult,
   CleanupResult,
@@ -124,6 +125,10 @@ export default function App() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [historyEnabled, setHistoryEnabled] = useState(true);
+  // Faz 2 — ilk açılış veri-okuma bildirimi. Ayarların tamamını tutuyoruz ki onay
+  // sadece disclosureAckVersion alanını değiştirip geri yazsın (diğer alanlara dokunmaz).
+  const [settingsSnapshot, setSettingsSnapshot] = useState<AppSettings | null>(null);
+  const [disclosureOpen, setDisclosureOpen] = useState(false);
   // Faz 1 M4 — Guided (Rehberli) bulgu için açık drawer.
   const [guidedFinding, setGuidedFinding] = useState<Finding | null>(null);
   // Yandan-kayan detay: seçili kategori (null = ana ekran).
@@ -146,6 +151,8 @@ export default function App() {
       .then((s) => {
         applyTheme(s.theme);
         setHistoryEnabled(s.historyEnabled);
+        setSettingsSnapshot(s);
+        setDisclosureOpen(s.disclosureAckVersion < CURRENT_DISCLOSURE_VERSION);
       })
       .catch(() => {
         applyTheme("auto");
@@ -537,12 +544,29 @@ export default function App() {
     [pendingDefender, locale]
   );
 
+  // Faz 2 — ilk açılış bildirimi kapatıldığında (buton veya Escape/backdrop) onayı
+  // kaydet. Ayarlar hiç okunamadıysa (offline/hata) modalı yine de kapat — sadece
+  // bir sonraki açılışta tekrar görünür, engelleyici bir akış değil.
+  const handleDisclosureAck = async () => {
+    setDisclosureOpen(false);
+    if (!settingsSnapshot) return;
+    try {
+      const next = { ...settingsSnapshot, disclosureAckVersion: CURRENT_DISCLOSURE_VERSION };
+      const saved = await saveSettings(next);
+      setSettingsSnapshot(saved);
+    } catch (e) {
+      console.warn("[disclosure] ack save failed:", e);
+    }
+  };
+
   const handleSettingsClose = async () => {
     setSettingsOpen(false);
-    // Re-read settings (history flag may have changed)
+    // Re-read settings (history flag may have changed) — snapshot da tazelenir ki
+    // handleDisclosureAck ileride eski değerlerin üstüne yazmasın.
     try {
       const s = await getSettings();
       setHistoryEnabled(s.historyEnabled);
+      setSettingsSnapshot(s);
     } catch {
       /* ignore */
     }
@@ -931,6 +955,8 @@ export default function App() {
         />
 
         <FixAllProgressDialog open={fixingAll} />
+
+        <FirstRunDisclosure open={disclosureOpen} onAck={handleDisclosureAck} />
 
         <FixAllSummaryDialog
           outcome={fixAllOutcome}

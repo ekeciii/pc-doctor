@@ -11,6 +11,7 @@ import {
 } from "@/lib/i18n";
 import { Button } from "./ui/Button";
 import { cn } from "@/lib/utils";
+import { getSettings, saveSettings, type AppSettings } from "@/lib/settings";
 
 interface Props {
   open: boolean;
@@ -41,6 +42,10 @@ export function AiChatDrawer({ open, onClose, report }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const streamRef = useRef("");
 
+  // Faz 2 — "verileriniz yerel Ollama'ya gider" bildirimi ilk açılışta bir kez.
+  const [showAiConsent, setShowAiConsent] = useState(false);
+  const aiSettingsRef = useRef<AppSettings | null>(null);
+
   // Ollama durumunu kontrol et (drawer açılınca).
   useEffect(() => {
     if (!open) return;
@@ -53,7 +58,27 @@ export function AiChatDrawer({ open, onClose, report }: Props) {
         setStatus(m.length > 0 ? "ready" : "noOllama");
       })
       .catch(() => setStatus("noOllama"));
+    getSettings()
+      .then((s) => {
+        aiSettingsRef.current = s;
+        setShowAiConsent(!s.aiDisclosureAck);
+      })
+      .catch(() => {
+        /* ayarlar okunamazsa bildirimi zorlamıyoruz — akışı bloklamaz */
+      });
   }, [open]);
+
+  const ackAiConsent = () => {
+    setShowAiConsent(false);
+    const base = aiSettingsRef.current;
+    if (!base) return;
+    const next = { ...base, aiDisclosureAck: true };
+    saveSettings(next)
+      .then((saved) => {
+        aiSettingsRef.current = saved;
+      })
+      .catch((e) => console.warn("[ai] consent ack save failed:", e));
+  };
 
   // Stream event dinleyicileri (bir kez).
   useEffect(() => {
@@ -171,6 +196,16 @@ export function AiChatDrawer({ open, onClose, report }: Props) {
 
         {/* gövde */}
         <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-4">
+          {showAiConsent && (
+            <div className="rounded-lg border border-info/30 bg-info-soft/40 p-3.5 space-y-2 text-sm">
+              <p className="font-semibold text-info-strong">{t("aiConsentTitle")}</p>
+              <p className="text-xs text-foreground/80 leading-relaxed">{t("aiConsentBody")}</p>
+              <Button size="sm" variant="outline" onClick={ackAiConsent}>
+                {t("aiConsentAck")}
+              </Button>
+            </div>
+          )}
+
           {status === "checking" && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
