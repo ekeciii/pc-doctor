@@ -4,7 +4,7 @@ Windows için **tek tıkla** tanı ve onarım uygulaması. Tauri 2 + React 18 + 
 
 Hedef kullanıcı: teknik olmayan bir Windows kullanıcısı. "TARA → sorunları gör → güvenle DÜZELT" akışı. Türkçe-öncelikli arayüz (i18n SSoT TR), tam İngilizce locale.
 
-> Günlük geliştirme akışı için [DEVELOPMENT.md](./DEVELOPMENT.md), mimari + güvenlik invariantları için [CLAUDE.md](./CLAUDE.md), sürüm yayınlama için [docs/RELEASING.md](./docs/RELEASING.md).
+> Günlük geliştirme akışı için [DEVELOPMENT.md](./DEVELOPMENT.md), mimari + güvenlik invariantları için [CLAUDE.md](./CLAUDE.md), sürüm yayınlama için [docs/RELEASING.md](./docs/RELEASING.md), katkı için [CONTRIBUTING.md](./CONTRIBUTING.md), gizlilik için [PRIVACY.md](./PRIVACY.md), sürüm geçmişi için [CHANGELOG.md](./CHANGELOG.md).
 
 ## Mevcut özellikler
 
@@ -35,11 +35,23 @@ Hedef kullanıcı: teknik olmayan bir Windows kullanıcısı. "TARA → sorunlar
 - Defender Quick Scan
 - Her DÜZELT için onay modali; elevation banner + "Yönetici olarak yeniden başlat"
 
+**AI asistanı (opsiyonel):**
+
+- Yerel [Ollama](https://ollama.com) ile sohbet — yalnız `127.0.0.1:11434`'e bağlanır, veri internete çıkmaz.
+- Tarama özetini (sağlık skoru + bulgu başlıkları/kategori/şiddet + sürücü kullanım oranları) açıklar; hiçbir eylem çalıştırmaz.
+- Ollama kurulu değilse özellik pasif kalır, kurulum adımlarını gösterir.
+
+**Büyük/kullanılmayan dosya bulucusu:**
+
+- Sürücü başına en büyük ve uzun süredir açılmamış dosyaları listeler (tam yol yalnız ekranda — geçmişe yazılmaz).
+- Seçilen dosyalar **Geri Dönüşüm Kutusu'na** taşınır (kalıcı silmez) — yanlış seçim geri alınabilir.
+
 **Platform & UX:**
 
 - Tarama geçmişi (SQLite) + detay çekmecesi + trend sekmesi (sparkline)
-- TR/EN i18n (TR SSoT, derleme-zamanı parite kontrolü), karanlık/açık tema (sistem tercihini takip eder)
+- TR/EN i18n (TR SSoT, derleme-zamanı parite kontrolü + backend kod-kapsama testi), karanlık/açık tema (sistem tercihini takip eder)
 - Ayarlar ekranı, otomatik güncelleme (tauri-plugin-updater)
+- İlk açılışta veri-okuma bildirimi (bkz. [PRIVACY.md](./PRIVACY.md))
 - OKLCH semantic token tabanlı tasarım sistemi (`components/ui/` primitive katmanı)
 
 ## Ön koşullar
@@ -67,10 +79,11 @@ npm run tauri dev
 ## Doğrulama
 
 ```powershell
-npm run check:i18n   # TR/EN sözlük paritesi + t() çağrı doğrulaması
-npm run check:all    # i18n + cargo invariants + cargo lib + frontend build
-cargo test --lib                      # src-tauri/ içinde — birim testler
-cargo test --test security_invariants # Güvenlik invariant CI bekçileri (10 test)
+npm run check:version # 4 sürüm kaynağı (+ Cargo.lock) tutarlı mı
+npm run check:i18n    # TR/EN sözlük paritesi + t() çağrı doğrulaması + backend kod-kapsama
+npm run check:all     # version + i18n + fmt + clippy + prettier + cargo invariants + cargo lib + vitest + frontend build
+cargo test --lib                      # src-tauri/ içinde — birim testler (75+)
+cargo test --test security_invariants # Güvenlik invariant CI bekçileri (11 test)
 ```
 
 ## Üretim derlemesi
@@ -97,6 +110,7 @@ src-tauri/
   src/
     lib.rs / main.rs       App entry, plugin kaydı, RunEvent::Exit hook
     admin.rs               is_elevated + relaunch_as_admin + sentinel sabitleri
+    ai.rs                  Yerel AI sohbeti (Ollama, 127.0.0.1:11434) — yalnız açıklar
     commands.rs            Tauri komutları (history hariç)
     models.rs              Finding, MetricCode, ChkdskStatus, ... DTO'lar
     collectors/<kat>.rs    Saf veri toplama (WMI/PowerShell), tanı mantığı YOK
@@ -107,8 +121,9 @@ src-tauri/
     history/               SQLite (rusqlite bundled): schema, commands, retention
     util/                  powershell (zaman aşımlı PS spawn) + system (is_laptop OnceCell)
   tests/security_invariants.rs   Kaynak-tabanlı güvenlik CI bekçileri
-docs/                      PRD.md, RELEASING.md, CODESIGN.md, sprints/
-scripts/                   check-i18n.mjs, check-all.mjs
+docs/                      PRD.md, RELEASING.md, CODESIGN.md, KVKK-AYDINLATMA.md, sprints/
+scripts/                   check-i18n.mjs, check-version.mjs, check-all.mjs, bump-version.mjs
+PRIVACY.md, EULA.md        Veri işleme açıklaması + kullanım koşulları (kurulumda gösterilir)
 ```
 
 ## Güvenlik notları

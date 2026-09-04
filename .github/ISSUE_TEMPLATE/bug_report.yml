@@ -1,0 +1,92 @@
+name: Bug report
+description: Something isn't working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please check
+        [existing issues](https://github.com/ekeciii/pc-doctor/issues) first.
+        For security vulnerabilities, use [SECURITY.md](../../SECURITY.md)
+        instead of this form.
+
+  - type: input
+    id: version
+    attributes:
+      label: PC Doctor version
+      description: Settings → About, or the installer filename (e.g. PC Doctor_0.2.0_x64-setup.exe)
+      placeholder: "0.2.0"
+    validations:
+      required: true
+
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      description: Output of `winver`
+      placeholder: "Windows 11 23H2 (Build 22631.xxxx)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: elevated
+    attributes:
+      label: Was the app running as administrator?
+      options:
+        - "Yes (elevated)"
+        - "No (normal user)"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Which category or action was involved?
+      options:
+        - Disk doluluğu (disk full)
+        - Disk sağlığı / SMART
+        - Disk bütünlüğü / chkdsk
+        - Olay günlüğü (event log)
+        - Sürücüler (drivers)
+        - Virüs/Defender
+        - Donanım sıcaklığı (thermal)
+        - Güvenlik konfigürasyonu (firewall/UAC/BitLocker/DNS/hosts)
+        - Bekleyen güncellemeler (Windows Update / winget)
+        - Başlangıç performansı (startup)
+        - Çökme/donma geçmişi (crash history)
+        - Sanal bellek / pagefile
+        - Temizlik (cleanup)
+        - Büyük dosya bulucu (large file finder)
+        - AI sohbet asistanı
+        - Ayarlar / Geçmiş / Güncelleme
+        - Diğer / genel
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. TARA'ya bas
+        2. ... kategorisine git
+        3. DÜZELT'e bas
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs. actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: detail
+    attributes:
+      label: Technical detail (if any)
+      description: >
+        If an error banner appeared, paste the collapsed "Technical detail" /
+        "Teknik detay" text — it's already stripped of personal info.
+      render: text

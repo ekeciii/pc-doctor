@@ -2,7 +2,25 @@
 
 Windows kullanıcısı imzasız bir MSI/EXE açtığında **SmartScreen** "bilinmeyen yayıncı" uyarısı verir. Bunu kaldırmak için **code-signing certificate** lazım. PC Doctor'ı dağıtıyorsan bu adım kritik.
 
-## Seçenekler — karşılaştırma
+## Karar: SignPath.io OSS (lansman planı, Faz 4b)
+
+Proje MIT lisansına geçtiğinden (bkz. [LICENSE](../LICENSE)) **SignPath.io OSS**
+kesin karar — ücretsiz, en az kurulum, en hızlı SmartScreen kabulü. Aşağıdaki
+"SignPath.io" bölümündeki adımları GitHub hesabınla sen yapman gerekiyor
+(başvuru + onay); geri kalan diğer seçenekler (DigiCert/Sectigo/Azure) bu
+karar geçersiz kalırsa yedek olarak aşağıda referans için duruyor.
+
+**Önemli sıralama notu** (release.yml'e bağlanırken unutma): SignPath, `tauri
+build`'in ürettiği MSI/NSIS'i **sonradan** Authenticode ile imzalıyor —
+imza byte'ları değiştiriyor. Tauri'nin kendi minisign updater imzası
+(`.sig`) ise `tauri build` sırasında **imzasız** haldeki dosya üzerinden
+üretiliyor. Bu yüzden SignPath'ten imzalı dosya geri geldikten SONRA
+`npx @tauri-apps/cli signer sign` ile `.sig`'i **imzalı** dosya üzerinden
+yeniden üretmek şart — aksi halde updater, indirdiği (imzalı) dosyanın
+imzasını (imzasız dosya için üretilmiş) `.sig` ile doğrulayamaz ve
+güncellemeyi reddeder.
+
+## Seçenekler — karşılaştırma (referans; karar yukarıda)
 
 | Seçenek | Yıllık maliyet | Hızlı SmartScreen kabul | Donanım token | Notlar |
 |---|---|---|---|---|
@@ -120,4 +138,7 @@ Get-ChildItem Cert:\CurrentUser\My | Select-Object Thumbprint, Subject
 
 ## Sonraki adım
 
-Şu an PC Doctor imzasız. Sürüm yayınlarken users "bilinmeyen yayıncı" uyarısı görür ama yine de kurabilir. Trafik artmaya başlayınca SignPath.io OSS başvurusu yap.
+Şu an PC Doctor imzasız. Sürüm yayınlarken kullanıcılar "bilinmeyen yayıncı"
+uyarısı görür ama yine de kurabilir. Faz 4b: SignPath.io OSS başvurusunu
+yap (GitHub hesabınla — bu adımı otomasyon yapamaz), onay gelince
+`release.yml`'i yukarıdaki sıralamayla güncelle.

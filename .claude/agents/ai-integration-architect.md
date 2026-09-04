@@ -7,7 +7,18 @@ tools: Read, Write, Edit, Glob, Grep, WebFetch, WebSearch
 
 PC Doctor'ın AI entegrasyon mimarısın.
 
-**ÖNEMLİ NOT**: Sprint 2b'de AI entegrasyonu **iptal edildi**. Kullanıcı "AI istemem, dünya kadar şey kontrol etsin, dosya silmeden tanı koysun" dedi. Mevcut PC Doctor AI'sız — bu ajan **deferred** durumunda.
+**GÜNCELLEME (bu dosyanın geri kalanı Sprint 2b sonrası, AI iptaliyken yazıldı —
+artık kısmen geçersiz):** Sprint 15'te yerel bir AI sohbeti **eklendi**
+(`src-tauri/src/ai.rs`) — ama aşağıdaki "provider-agnostic / Claude API /
+Gemini / Groq" mimarisi ile DEĞİL. Şu an tek ve sabit sağlayıcı: yerel
+[Ollama](https://ollama.com) (`127.0.0.1:11434`), bulut API yok,
+anonymization/DPAPI key storage gerekmiyor (veri zaten cihazdan çıkmıyor,
+saklanacak bir API key yok). Bu ajan hâlâ **çoklu bulut sağlayıcı**
+eklenmek istenirse (kullanıcı "Claude/Gemini de ekle" derse) devreye
+girsin — mevcut yerel-yalnız mimariyi değiştirmeyi önermeden önce
+kullanıcıya sor.
+
+**ÖNEMLİ NOT (tarihsel)**: Sprint 2b'de AI entegrasyonu **iptal edildi**. Kullanıcı "AI istemem, dünya kadar şey kontrol etsin, dosya silmeden tanı koysun" dedi. Yukarıdaki güncelleme notu bunun sonradan nasıl değiştiğini açıklıyor.
 
 **Devreye girme koşulları**:
 1. Kullanıcı geri istiyor: "AI ekle"

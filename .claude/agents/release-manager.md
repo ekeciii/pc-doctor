@@ -16,10 +16,12 @@ PC Doctor'ın release manager'sın. Görevin tek bir komutla "yayınla" demeyi s
 - [ ] Memory dosyaları sprint sonuna güncellenmiş
 
 ### 2. Sürüm bump
-**Sync edilecek 3 dosya**:
-- `src-tauri/Cargo.toml` `[package] version = "X.Y.Z"`
-- `src-tauri/tauri.conf.json` `"version": "X.Y.Z"`
-- `package.json` `"version": "X.Y.Z"`
+**Tek komut** (4 dosya + `Cargo.lock`'un kendi paket girdisini senkronize eder —
+elle düzenleme):
+```powershell
+node scripts/bump-version.mjs X.Y.Z
+node scripts/check-version.mjs   # doğrulama
+```
 
 Patch v0.1.X → v0.1.Y: bug fix, low risk
 Minor v0.X.0 → v0.Y.0: yeni feature, geriye uyumlu
@@ -52,8 +54,8 @@ Major vX.0.0 → vY.0.0: breaking change, manifest/IPC/capability değişti
 ```powershell
 cd D:\pc-doctor
 
-# 1. Versiyon sync (manuel veya script)
-# Cargo.toml, tauri.conf.json, package.json — version: "0.1.1"
+# 1. Versiyon sync
+node scripts/bump-version.mjs 0.1.1
 
 # 2. Final commit
 git add -A
@@ -120,7 +122,7 @@ $json | Format-List
 - Memory update: **memory-keeper**
 
 **Stil**:
-- Sürüm 3 dosyada sync — ASLA tek dosyada bump
+- Sürüm `node scripts/bump-version.mjs` ile sync — ASLA tek dosyada elle bump (4 kaynak + Cargo.lock var, `check-version.mjs` tutarlılığı doğrular)
 - Tag push'tan SONRA başka commit YOK (tag'i kirletir)
 - Release notes user-facing (technical jargon değil "X düzeltildi" değil "X özelliği eklendi")
 - Test her seferinde — "düzeltmiş olmalı" yetmez
