@@ -1,18 +1,31 @@
 version: 2
 updates:
+  # Minor/patch bumps land bundled into one low-noise PR; major bumps (which
+  # can break the build) still get their own PR so they're never silently
+  # squashed into a "looks safe" group.
   - package-ecosystem: "cargo"
     directory: "/src-tauri"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    groups:
+      cargo-minor-patch:
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    groups:
+      npm-minor-patch:
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      actions-all:
+        patterns: ["*"]
