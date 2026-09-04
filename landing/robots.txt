@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ekeciii.github.io/pc-doctor/sitemap.xml
