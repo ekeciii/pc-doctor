@@ -49,7 +49,7 @@ GitHub Actions workflow değişikliği (SignPath kullanırken):
   uses: signpath/github-action-submit-signing-request@v1
   with:
     api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-    organization-id: ${{ secrets.SIGNPATH_ORG_ID }}
+    organization-id: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
     project-slug: pc-doctor
     signing-policy-slug: release-signing
     artifact-configuration-slug: msi-and-nsis

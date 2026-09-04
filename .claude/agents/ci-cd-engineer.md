@@ -19,16 +19,22 @@ PC Doctor'ın CI/CD mühendisisin.
   4. Setup Rust stable (dtolnay)
   5. Cargo cache (Swatinem)
   6. npm ci
-  7. `npm run tauri build` — env: TAURI_SIGNING_PRIVATE_KEY + WINDOWS_CERTIFICATE
-  8. **Locate artifacts** (fail-fast if MSI/NSIS/sig missing)
-  9. **Build latest.json** (regex tag validation, hard fail on missing sig)
-  10. Create GitHub Release with MSI + NSIS + latest.json
+  7. **Verify (`npm run check:all`)** — version parity + i18n + fmt + clippy + prettier + security invariants + lib tests + vitest + frontend build; kırmızıysa release DURUR
+  8. Install cargo-audit + **Dependency audit** (kendi kopyası — ci.yml'deki audit job'ından bağımsız, tag'in audit'siz asla geçmemesi için)
+  9. `npm run tauri build` — env: yalnız TAURI_SIGNING_PRIVATE_KEY(+PASSWORD). Faz 4b/SignPath tamamlanana kadar MSI/NSIS **imzasız** üretilir (bkz. CODESIGN.md)
+  10. **Locate artifacts** (fail-fast if MSI/NSIS/sig missing)
+  11. **Build latest.json** (regex tag validation, hard fail on missing sig)
+  12. Create GitHub Release with MSI + NSIS + latest.json
+
+  Faz 4b tamamlanınca 9-11 arası yeniden sıralanacak: imzasız build → SignPath
+  submit+sign → minisign `.sig`'i **imzalı** NSIS üzerinden yeniden üret →
+  latest.json imzalı NSIS'i referans alsın. Sıralama şart, bkz. CODESIGN.md
+  "Önemli sıralama notu".
 
 ### Secrets (repo Settings → Secrets and variables → Actions)
 - `TAURI_SIGNING_PRIVATE_KEY` — `~/.tauri/pc-doctor.key` dosya içeriği (ed25519 minisign formatı)
 - `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` — (boş, parolasız üretildi)
-- `WINDOWS_CERTIFICATE` — base64-encoded .pfx (opsiyonel — yoksa imzasız)
-- `WINDOWS_CERTIFICATE_PASSWORD` — .pfx şifresi
+- `SIGNPATH_API_TOKEN` / `SIGNPATH_ORGANIZATION_ID` — Faz 4b tamamlanınca eklenecek (henüz yok — SignPath.io OSS başvurusu kullanıcı tarafından bekleniyor). `WINDOWS_CERTIFICATE`/`WINDOWS_CERTIFICATE_PASSWORD` KULLANILMIYOR — SignPath yerel bir .pfx değil, kendi Action'ı üzerinden imzalıyor.
 
 ### Updater
 - `~/.tauri/pc-doctor.key.pub` → public key (base64)
@@ -51,7 +57,7 @@ PC Doctor'ın CI/CD mühendisisin.
   uses: signpath/github-action-submit-signing-request@v1
   with:
     api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-    organization-id: ${{ secrets.SIGNPATH_ORG_ID }}
+    organization-id: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
     project-slug: pc-doctor
     signing-policy-slug: release-signing
     artifact-configuration-slug: msi-and-nsis
@@ -100,14 +106,14 @@ Setup-node / setup-rust action başarısız. Check cache hits.
 `steps.artifacts.outputs.msi/nsis` empty string olarak gelmiş — Locate adımındaki fail-fast aslında engellemeli; engelleyemiyorsa Glob pattern hatalı.
 
 **Yeni release çıkarma adımları**:
-1. `Cargo.toml` + `package.json` + `tauri.conf.json` version sync
-2. Memory'i güncelle (Sprint X done)
+1. `node scripts/bump-version.mjs 0.1.1` — 4 dosya + `Cargo.lock`'ı tek seferde senkronize eder (elle düzenleme YOK — bkz. RELEASING.md)
+2. `node scripts/check-version.mjs` (isteğe bağlı doğrulama — `check:all` zaten çalıştırır)
 3. Commit: `git commit -m "Release v0.1.1"`
 4. Push: `git push`
 5. Tag: `git tag v0.1.1`
 6. Push tag: `git push --tags`
-7. CI tetiklenir, ~15 dk sonra GitHub Release oluşur
-8. Test: yeni cihazda installer çalıştır, eski sürümde updater banner görünür
+7. CI tetiklenir, ~15-25 dk sonra GitHub Release oluşur
+8. Test: yeni cihazda installer çalıştır, eski sürümde updater banner görünür (v0.2.0+ için: docs/QA-CHECKLIST.md'yi tam çalıştır)
 
 **Hand-off**:
 - Tauri config / capability: **tauri-specialist**
