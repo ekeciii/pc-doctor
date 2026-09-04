@@ -14,12 +14,12 @@ use std::path::Path;
 #[cfg(windows)]
 fn send_to_recycle_bin(path: &Path) -> std::io::Result<()> {
     use std::os::windows::ffi::OsStrExt;
+    use windows::core::PCWSTR;
     use windows::Win32::Foundation::HWND;
     use windows::Win32::UI::Shell::{
         SHFileOperationW, FOF_ALLOWUNDO, FOF_NOCONFIRMATION, FOF_NOERRORUI, FOF_SILENT, FO_DELETE,
         SHFILEOPSTRUCTW,
     };
-    use windows::core::PCWSTR;
 
     // pFrom, bir veya daha fazla yolun çift-null-sonlandırılmış listesidir (tek dosya için
     // de aynı kural geçerli: yolun sonuna bir null, listenin sonuna ikinci bir null).
@@ -152,7 +152,10 @@ mod tests {
         assert_eq!(res.deleted, 1);
         assert_eq!(res.failed, 0);
         assert_eq!(res.reclaimed_bytes, 10);
-        assert!(!f.exists(), "dosya orijinal konumdan kalkmış olmalı (Geri Dönüşüm Kutusu'na taşındı)");
+        assert!(
+            !f.exists(),
+            "dosya orijinal konumdan kalkmış olmalı (Geri Dönüşüm Kutusu'na taşındı)"
+        );
         let _ = std::fs::remove_dir_all(&dir);
     }
 

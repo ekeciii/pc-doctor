@@ -42,9 +42,7 @@ export function ChkdskBootResultBanner() {
     <Alert variant={variant} className="mb-4 items-start animate-fade-in">
       <CheckCircle2 />
       <div className="flex-1 min-w-0">
-        <AlertTitle>
-          {t("chkdskPostRebootBannerTitle", { volume: result.volume })}
-        </AlertTitle>
+        <AlertTitle>{t("chkdskPostRebootBannerTitle", { volume: result.volume })}</AlertTitle>
         <AlertDescription className="mt-1">
           {t(`chkdskPostRebootStatus_${result.status}` as never)}
         </AlertDescription>

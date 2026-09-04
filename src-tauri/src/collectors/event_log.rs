@@ -56,7 +56,11 @@ $grouped | Sort-Object count -Descending | Select-Object -First 40 | ConvertTo-J
         .filter_map(|v| {
             let provider = v.get("provider")?.as_str().unwrap_or("").to_string();
             let event_id = v.get("eventId").and_then(|x| x.as_u64()).unwrap_or(0) as u32;
-            let level = v.get("level").and_then(|x| x.as_str()).unwrap_or("Error").to_string();
+            let level = v
+                .get("level")
+                .and_then(|x| x.as_str())
+                .unwrap_or("Error")
+                .to_string();
             let count = v.get("count").and_then(|x| x.as_u64()).unwrap_or(0) as u32;
             let last = v.get("lastOccurred").and_then(|x| x.as_str()).unwrap_or("");
             if provider.is_empty() {
@@ -151,4 +155,3 @@ $grouped | ConvertTo-Json -Compress -Depth 3"#,
         .filter_map(|v| serde_json::from_value::<EventLogSignature>(v).ok())
         .collect()
 }
-

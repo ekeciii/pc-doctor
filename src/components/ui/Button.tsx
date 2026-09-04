@@ -17,15 +17,11 @@ export const buttonVariants = cva(
           "bg-primary text-primary-foreground hover:bg-primary-strong shadow-sm hover:shadow-md",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border",
-        outline:
-          "border border-border bg-background hover:bg-secondary text-foreground",
+        outline: "border border-border bg-background hover:bg-secondary text-foreground",
         ghost: "hover:bg-secondary text-foreground",
-        destructive:
-          "bg-destructive text-destructive-foreground hover:brightness-110 shadow-sm",
-        warning:
-          "bg-warning text-warning-foreground hover:brightness-110 shadow-sm",
-        success:
-          "bg-success text-success-foreground hover:brightness-110 shadow-sm",
+        destructive: "bg-destructive text-destructive-foreground hover:brightness-110 shadow-sm",
+        warning: "bg-warning text-warning-foreground hover:brightness-110 shadow-sm",
+        success: "bg-success text-success-foreground hover:brightness-110 shadow-sm",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
@@ -45,16 +41,11 @@ export const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {}
+  extends ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {}
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, ...props }, ref) => (
-    <button
-      ref={ref}
-      className={cn(buttonVariants({ variant, size }), className)}
-      {...props}
-    />
+    <button ref={ref} className={cn(buttonVariants({ variant, size }), className)} {...props} />
   )
 );
 Button.displayName = "Button";

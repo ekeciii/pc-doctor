@@ -15,8 +15,7 @@ export const en: Record<TKey, string> = {
   fix: "FIX",
   fixAll: "Clean all",
   confirmTitle: "Confirm",
-  confirmIntro:
-    "The following steps will run. A system restore point is created first.",
+  confirmIntro: "The following steps will run. A system restore point is created first.",
   confirmRestoreFailed: "System restore point could not be created.",
   proceedAnyway: "Proceed anyway",
   cancel: "Cancel",
@@ -45,7 +44,7 @@ export const en: Record<TKey, string> = {
   hide: "Hide",
   drives: "Drives",
   scanHealthyTitle: "Scan complete; system looks healthy.",
-  scanHealthyBody: "11 categories checked; no issues found.",
+  scanHealthyBody: "13 categories checked; no issues found.",
   technicalDetail: "Technical detail",
   updateInstallFailed: "Update install failed",
   adminBadge: "Administrator",
@@ -138,8 +137,7 @@ export const en: Record<TKey, string> = {
   disclosureIntro: "Before you scan, a quick summary of what PC Doctor does:",
   disclosureBullet1:
     "It reads system information across ~13 categories — disk, drivers, security settings, event logs, and more — all of it stays on your device.",
-  disclosureBullet2:
-    "No data is ever sent to a PC Doctor server; there is no telemetry.",
+  disclosureBullet2: "No data is ever sent to a PC Doctor server; there is no telemetry.",
   disclosureBullet3:
     "Scan history (summary counts only, no personal data) is stored in a local file; you can clear it anytime.",
   disclosureBullet4:
@@ -182,8 +180,7 @@ export const en: Record<TKey, string> = {
   chkdskCancelledBody: "You stopped the scan. You can restart it anytime.",
   chkdskDuration: "Duration",
   // Sprint 6: history retention helper text
-  historyRetentionHelper:
-    "Records are auto-purged daily. Min 1 day, max 3650 days (10 years).",
+  historyRetentionHelper: "Records are auto-purged daily. Min 1 day, max 3650 days (10 years).",
   // Sprint 8: chkdsk /f
   chkdskFixConfirmTitleSystem: "Repair system drive ({volume}:) — reboot required",
   chkdskFixConfirmTitleData: "Repair {volume}: drive",
@@ -200,8 +197,7 @@ export const en: Record<TKey, string> = {
   chkdskFixForceWithoutRestore:
     "Continue even if a restore point can't be created (not recommended).",
   chkdskRebootCountdownTitle: "Rebooting to repair {volume}:",
-  chkdskRebootCountdownBody:
-    "Save your open files now. The PC will restart when the timer ends.",
+  chkdskRebootCountdownBody: "Save your open files now. The PC will restart when the timer ends.",
   chkdskRebootCountdownHint: "Cancelling also clears the schedule.",
   chkdskRebootCountdownAnnounce: "{seconds} seconds remaining",
   chkdskRebootAbort: "Cancel and clear the schedule",
@@ -269,7 +265,8 @@ export const en: Record<TKey, string> = {
   scanNow: "Scan now",
   // Sprint 14 — large/unused file finder
   fileFinderHeading: "Large & unused files",
-  fileFinderIntro: "Scan each drive: largest files over {size} and files not opened in {days} days. Select and permanently delete.",
+  fileFinderIntro:
+    "Scan each drive: largest files over {size} and files not opened in {days} days. Select and permanently delete.",
   fileFinderScanCta: "Scan",
   fileFinderScanning: "Scanning {drive}…",
   fileFinderTabLarge: "Large files ({count})",
@@ -285,7 +282,8 @@ export const en: Record<TKey, string> = {
   fileFinderDeleteFailed: "{count} could not be deleted",
   fileFinderConfirmTitle: "Move files to the Recycle Bin",
   fileFinderConfirmIntro: "{count} files ({size}) will be moved to the Recycle Bin.",
-  fileFinderConfirmWarn: "Files are moved to the Recycle Bin — you can restore them from there if you picked the wrong ones. Emptying the Recycle Bin deletes them permanently.",
+  fileFinderConfirmWarn:
+    "Files are moved to the Recycle Bin — you can restore them from there if you picked the wrong ones. Emptying the Recycle Bin deletes them permanently.",
   fileFinderConfirmDelete: "Move to Recycle Bin",
   // Sprint 14 — disk health panel (SMART)
   diskHealthHeading: "Physical disk health",
@@ -304,17 +302,21 @@ export const en: Record<TKey, string> = {
   diskHealthStatusUnhealthy: "Unhealthy",
   diskPowerOnYears: "{years}y {days}d",
   diskPowerOnDays: "{days} days",
-  diskAdviceWatch: "Keep an eye on this disk. Back up important data and watch temperature/wear trends.",
-  diskAdviceRisk: "This disk is at risk. Back up ALL data NOW and plan to replace it; run the manufacturer's diagnostic tool.",
+  diskAdviceWatch:
+    "Keep an eye on this disk. Back up important data and watch temperature/wear trends.",
+  diskAdviceRisk:
+    "This disk is at risk. Back up ALL data NOW and plan to replace it; run the manufacturer's diagnostic tool.",
   // Sprint 14 — disk integrity (chkdsk) panel
   integrityHeading: "Drive integrity (chkdsk)",
-  integrityIntro: "Check file-system consistency on NTFS drives. The scan is read-only and safe; apply a repair separately if needed.",
+  integrityIntro:
+    "Check file-system consistency on NTFS drives. The scan is read-only and safe; apply a repair separately if needed.",
   integrityLoading: "Reading drives…",
   integrityNone: "No scannable fixed NTFS drives found.",
   integritySystemBadge: "System",
   integrityScanCta: "Scan",
   integrityRepairCta: "Repair (/f)",
-  integrityFootnote: "The scan (chkdsk /scan) runs online and read-only — you can keep using the PC. Repair (/f) runs at reboot (autochk) on the system drive and requires administrator rights.",
+  integrityFootnote:
+    "The scan (chkdsk /scan) runs online and read-only — you can keep using the PC. Repair (/f) runs at reboot (autochk) on the system drive and requires administrator rights.",
   // Sprint 14 — event log panel
   eventPanelHeading: "Recent events (Critical/Error)",
   eventPanelIntro: "Critical and Error events from recent days, grouped by provider.",
@@ -326,7 +328,8 @@ export const en: Record<TKey, string> = {
   eventPanelEventId: "Event ID {id}",
   eventPanelLastSeen: "last: {date}",
   eventPanelCount: "{count}×",
-  eventPanelFootnote: "For privacy, event message contents are not shown — only provider, event ID and counts. Open Event Viewer for details.",
+  eventPanelFootnote:
+    "For privacy, event message contents are not shown — only provider, event ID and counts. Open Event Viewer for details.",
   // Sprint 14 — drivers panel
   driversHeading: "Drivers needing attention",
   driversIntro: "Unsigned or long-outdated (≥2 years) drivers. Updates arrive via Windows Update.",
@@ -334,14 +337,17 @@ export const en: Record<TKey, string> = {
   driversEmpty: "No unsigned or outdated drivers found. Drivers look up to date.",
   driversUpdateCta: "Windows Update",
   driversUnsignedTitle: "Unsigned ({count})",
-  driversUnsignedHint: "Drivers whose digital signature couldn't be verified. Consider updating from the vendor/Windows Update.",
+  driversUnsignedHint:
+    "Drivers whose digital signature couldn't be verified. Consider updating from the vendor/Windows Update.",
   driversOutdatedTitle: "Long outdated ({count})",
-  driversOutdatedHint: "Drivers older than 2 years. Not necessarily a problem, but current drivers improve stability/performance.",
+  driversOutdatedHint:
+    "Drivers older than 2 years. Not necessarily a problem, but current drivers improve stability/performance.",
   driversAgeYears: "{years}y",
   // Sprint 14 — Defender status dashboard
   defenderHeading: "Defender protection status",
   defenderLoading: "Reading Defender status…",
-  defenderUnavailable: "Couldn't read Microsoft Defender status. A third-party antivirus may be active, or administrator rights are required.",
+  defenderUnavailable:
+    "Couldn't read Microsoft Defender status. A third-party antivirus may be active, or administrator rights are required.",
   defenderRtProtection: "Real-time protection",
   defenderTamper: "Tamper protection",
   defenderAntivirus: "Antivirus",
@@ -363,11 +369,13 @@ export const en: Record<TKey, string> = {
   thermalBattery: "On battery",
   thermalCpuPerf: "CPU performance",
   thermalCpuLoad: "CPU load",
-  thermalThrottlingNote: "The CPU is running below its base speed under load — possible thermal/power throttling. Check the power plan and clean out dust.",
+  thermalThrottlingNote:
+    "The CPU is running below its base speed under load — possible thermal/power throttling. Check the power plan and clean out dust.",
   thermalZones: "Thermal zones",
   thermalZone: "Zone {n}",
   thermalMax: "Max",
-  thermalNoSensors: "No ACPI temperature sensors found. This is normal on many desktops (motherboard sensors aren't exposed via ACPI). For detailed temperatures, use HWiNFO or a vendor tool.",
+  thermalNoSensors:
+    "No ACPI temperature sensors found. This is normal on many desktops (motherboard sensors aren't exposed via ACPI). For detailed temperatures, use HWiNFO or a vendor tool.",
   // Sprint 14 — security config dashboard
   securityHeading: "Security posture",
   securityLoading: "Reading security settings…",
@@ -388,12 +396,14 @@ export const en: Record<TKey, string> = {
   securityBitlockerOn: "C: drive is encrypted.",
   securityBitlockerOff: "C: not encrypted — recommended for laptops.",
   securityDns: "DNS servers",
-  securityDnsHint: "Review any unfamiliar DNS servers in network settings. (Shown on this device only, never saved.)",
+  securityDnsHint:
+    "Review any unfamiliar DNS servers in network settings. (Shown on this device only, never saved.)",
   securityHosts: "hosts file",
   securityHostsClean: "{count} entries · no suspicious lines.",
   securityHostsSuspicious: "{count} suspicious lines",
   securityHostsShow: "Show suspicious lines",
-  securityHostsHint: "Remove unfamiliar lines from C:\\Windows\\System32\\drivers\\etc\\hosts (open Notepad as administrator).",
+  securityHostsHint:
+    "Remove unfamiliar lines from C:\\Windows\\System32\\drivers\\etc\\hosts (open Notepad as administrator).",
   // Sprint 14 — updates panel
   updatesHeading: "Pending updates",
   updatesOpenWu: "Windows Update",
@@ -415,9 +425,11 @@ export const en: Record<TKey, string> = {
   startupBootTime: "Last boot time",
   startupItemCount: "Startup items",
   startupSeconds: "{s}s",
-  startupBootUnknown: "Couldn't read boot time (the Diagnostics-Performance log may be unavailable).",
+  startupBootUnknown:
+    "Couldn't read boot time (the Diagnostics-Performance log may be unavailable).",
   startupItemsTitle: "Runs at startup",
-  startupFootnote: "Disable unnecessary items from 'Startup apps' settings. If you don't recognize an item, look up its name; don't disable it if unsure.",
+  startupFootnote:
+    "Disable unnecessary items from 'Startup apps' settings. If you don't recognize an item, look up its name; don't disable it if unsure.",
   // Sprint 14 — crash history panel
   crashHeading: "Crash & hang history (30 days)",
   crashLoading: "Reading reliability records…",
@@ -430,7 +442,8 @@ export const en: Record<TKey, string> = {
   crashNoSignatures: "No reliability records found (the service may be disabled).",
   crashLastSeen: "last: {date}",
   crashCount: "{count}×",
-  crashFootnote: "For recurring crashes the first step is 'Repair system files' (sfc/DISM) — it fixes corrupted system files (15-30 min, needs admin). If a specific app/service crashes often, update/remove it; if it's a driver, visit the OEM page. Open Reliability Monitor for details.",
+  crashFootnote:
+    "For recurring crashes the first step is 'Repair system files' (sfc/DISM) — it fixes corrupted system files (15-30 min, needs admin). If a specific app/service crashes often, update/remove it; if it's a driver, visit the OEM page. Open Reliability Monitor for details.",
   // Sprint 14 — virtual memory panel
   pagefileHeading: "Virtual memory (page file)",
   pagefileLoading: "Reading virtual memory info…",
@@ -445,23 +458,27 @@ export const en: Record<TKey, string> = {
   pagefileUsage: "Page file usage (peak/allocated)",
   pagefileConfigured: "Configured page files",
   pagefileSystemManagedSize: "System managed",
-  pagefileFootnote: "For most users 'system managed' is best. Manual sizing is only needed for special cases. Changes require a reboot.",
+  pagefileFootnote:
+    "For most users 'system managed' is best. Manual sizing is only needed for special cases. Changes require a reboot.",
   // Sprint 15 — local AI chat (Ollama)
   aiTitle: "PC Doctor Assistant",
   aiSubtitle: "Local · private · offline",
   aiClose: "Close",
   aiChecking: "Checking Ollama…",
   aiNoOllamaTitle: "Local AI not found",
-  aiNoOllamaBody: "The chat uses Ollama running on your machine — data never leaves your computer. To use it, install Ollama and pull a model:",
+  aiNoOllamaBody:
+    "The chat uses Ollama running on your machine — data never leaves your computer. To use it, install Ollama and pull a model:",
   aiSetupStep1: "Download and install Ollama from ollama.com.",
   aiSetupStep2: "Pull a model (terminal):",
   aiSetupStep3: "With Ollama running, click 'Retry' in this panel.",
   aiRetry: "Retry",
-  aiGreeting: "Hi! I can see your scan results. Ask me to explain a finding, prioritize risks, or whether a step is safe.",
+  aiGreeting:
+    "Hi! I can see your scan results. Ask me to explain a finding, prioritize risks, or whether a step is safe.",
   aiPlaceholder: "Ask something… (Enter to send)",
   aiDisabledPlaceholder: "Start Ollama first…",
   aiSend: "Send",
-  aiDisclaimer: "Local model answers can be wrong; verify critical steps. The assistant never runs actions, it only explains.",
+  aiDisclaimer:
+    "Local model answers can be wrong; verify critical steps. The assistant never runs actions, it only explains.",
   aiSuggestExplain: "Explain the most critical finding",
   aiSuggestPriority: "What should I fix first?",
   aiSuggestSafe: "Is disk cleanup safe?",

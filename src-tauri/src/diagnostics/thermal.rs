@@ -10,9 +10,14 @@ pub fn evaluate(snap: &ThermalSnapshot) -> Vec<Finding> {
     let mut out = Vec::new();
 
     // === Sıcaklık ===
-    if let Some(max_temp) = snap.zones_celsius.iter().cloned().fold(None, |acc: Option<f64>, t| {
-        Some(acc.map_or(t, |m| m.max(t)))
-    }) {
+    if let Some(max_temp) = snap
+        .zones_celsius
+        .iter()
+        .cloned()
+        .fold(None, |acc: Option<f64>, t| {
+            Some(acc.map_or(t, |m| m.max(t)))
+        })
+    {
         let zone_count = snap.zones_celsius.len();
         if max_temp >= 85.0 {
             out.push(make_temp_finding(
@@ -21,8 +26,6 @@ pub fn evaluate(snap: &ThermalSnapshot) -> Vec<Finding> {
                 Severity::Critical,
                 max_temp,
                 zone_count,
-                "Kasayı aç, fanları/havalandırmayı temizle; termal macunu kontrol et. \
-                 Laptop ise yükseltici stand + soğutma pedi.",
             ));
         } else if max_temp >= 75.0 {
             out.push(make_temp_finding(
@@ -31,7 +34,6 @@ pub fn evaluate(snap: &ThermalSnapshot) -> Vec<Finding> {
                 Severity::Warning,
                 max_temp,
                 zone_count,
-                "Toz temizliği ve hava akışı kontrolü öner.",
             ));
         }
     }
@@ -61,9 +63,8 @@ pub fn evaluate(snap: &ThermalSnapshot) -> Vec<Finding> {
                     "perfPercent": format!("{:.0}", p),
                     "loadPercent": format!("{:.0}", l),
                 }));
-                f.recommended_action = Some(
-                    "Güç planını 'En iyi performans' yap; soğutma kontrolü; BIOS güncelle.".into(),
-                );
+                f.recommendation_code =
+                    Some("finding.thermal.throttling_critical.recommendation".into());
                 out.push(f);
             } else if p < 90.0 {
                 let mut f = Finding::code_only(
@@ -83,7 +84,8 @@ pub fn evaluate(snap: &ThermalSnapshot) -> Vec<Finding> {
                     "perfPercent": format!("{:.0}", p),
                     "loadPercent": format!("{:.0}", l),
                 }));
-                f.recommended_action = Some("Güç planı kontrolü; toz temizliği.".into());
+                f.recommendation_code =
+                    Some("finding.thermal.throttling_warning.recommendation".into());
                 out.push(f);
             }
         }
@@ -98,7 +100,6 @@ fn make_temp_finding(
     severity: Severity,
     max_temp: f64,
     zone_count: usize,
-    action_text: &str,
 ) -> Finding {
     let mut f = Finding::code_only(
         id,
@@ -116,6 +117,6 @@ fn make_temp_finding(
         "maxTempPrecise": format!("{:.1}", max_temp),
         "zoneCount": zone_count,
     }));
-    f.recommended_action = Some(action_text.into());
+    f.recommendation_code = Some(format!("finding.thermal.{code_id}.recommendation"));
     f
 }

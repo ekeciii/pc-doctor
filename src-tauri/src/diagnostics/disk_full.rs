@@ -16,29 +16,27 @@ pub fn evaluate(volumes: &[VolumeInfo]) -> Vec<Finding> {
             let free_percent = (100.0 - v.used_percent).clamp(0.0, 100.0);
             let mount = v.mount_point.trim_end_matches('\\').to_string();
             let is_system_drive = mount.eq_ignore_ascii_case(&system_drive);
-            let (severity, code_id, action_text) = if free_percent < 5.0 {
+            let (severity, code_id, recommendation_code) = if free_percent < 10.0 {
                 (
                     Severity::Critical,
                     "full",
-                    "Hemen Temp ve Update önbelleğini temizle, gereksiz programları kaldır.",
+                    Some("finding.disk_full.full.recommendation"),
                 )
-            } else if free_percent < 10.0 {
-                (Severity::Critical, "full", "Tüm temizlik hedeflerini çalıştır.")
             } else if free_percent < 15.0 {
                 (
                     Severity::Warning,
                     "warning",
-                    "Geçici dosyaları ve güncelleme önbelleğini temizle.",
+                    Some("finding.disk_full.warning.recommendation"),
                 )
             } else if free_percent < 20.0 {
-                (Severity::Info, "info", "")
+                (Severity::Info, "info", None)
             } else {
                 return None;
             };
             // `severity` Finding'e taşınmadan önce, temizlik aksiyonu sunulup
             // sunulmayacağını hesapla (Info bandı yalnız bilgi).
-            let offer_cleanup = is_system_drive
-                && matches!(severity, Severity::Critical | Severity::Warning);
+            let offer_cleanup =
+                is_system_drive && matches!(severity, Severity::Critical | Severity::Warning);
             // used_bytes total'ı aşarsa (reserved/overprovisioned/stale) underflow olmasın.
             let free_bytes = v.total_bytes.saturating_sub(v.used_bytes);
             let mut f = Finding::code_only(
@@ -49,14 +47,16 @@ pub fn evaluate(volumes: &[VolumeInfo]) -> Vec<Finding> {
                 format!("finding.disk_full.{code_id}.description"),
             )
             .with_metric(format!("{:.1}%", free_percent))
-            .with_metric_code(MetricCode::Percentage { value: free_percent })
+            .with_metric_code(MetricCode::Percentage {
+                value: free_percent,
+            })
             .with_params(json!({
                 "mount": mount,
                 "freePercent": format!("{:.1}", free_percent),
                 "freeFormatted": fmt_bytes(free_bytes),
             }));
-            if !action_text.is_empty() {
-                f.recommended_action = Some(action_text.to_string());
+            if let Some(code) = recommendation_code {
+                f.recommendation_code = Some(code.to_string());
             }
             // Sistem sürücüsü + gerçekten düşük yer → tek tık temizlik aksiyonu.
             // fix_tier scan'de FixTier::from_action ile merkezi atanır (RunCleanup → Auto).

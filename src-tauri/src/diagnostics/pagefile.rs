@@ -17,7 +17,11 @@ pub fn evaluate(snap: &PagefileSnapshot) -> Vec<Finding> {
 
     // === F1: manuel pagefile + max < 1.5×RAM + RAM < 16 GB → Warning
     if !snap.automatic_managed {
-        let max_total: u64 = snap.configured.iter().map(|e| e.maximum_size_mb as u64).sum();
+        let max_total: u64 = snap
+            .configured
+            .iter()
+            .map(|e| e.maximum_size_mb as u64)
+            .sum();
         let recommended_min = (ram_mb as f64 * 1.5) as u64;
         if ram_mb < RAM_16GB_THRESHOLD_MB && max_total < recommended_min {
             out.push(
@@ -29,7 +33,9 @@ pub fn evaluate(snap: &PagefileSnapshot) -> Vec<Finding> {
                     "finding.pagefile.undersized.description",
                 )
                 .with_metric(format!("{} MB / {} MB", max_total, recommended_min))
-                .with_metric_code(MetricCode::Bytes { value: max_total.saturating_mul(1024 * 1024) })
+                .with_metric_code(MetricCode::Bytes {
+                    value: max_total.saturating_mul(1024 * 1024),
+                })
                 .with_action(FindingAction::SetPagefileManaged)
                 .with_action_code("finding.pagefile.undersized.action")
                 .with_params(json!({
@@ -52,7 +58,9 @@ pub fn evaluate(snap: &PagefileSnapshot) -> Vec<Finding> {
                 "finding.pagefile.consider_managed.description",
             )
             .with_metric(format!("{} GB RAM", ram_mb / 1024))
-            .with_metric_code(MetricCode::Bytes { value: ram_mb.saturating_mul(1024 * 1024) })
+            .with_metric_code(MetricCode::Bytes {
+                value: ram_mb.saturating_mul(1024 * 1024),
+            })
             .with_action(FindingAction::SetPagefileManaged)
             .with_action_code("finding.pagefile.consider_managed.action")
             .with_params(json!({ "ramGb": ram_mb / 1024 })),
@@ -75,7 +83,9 @@ pub fn evaluate(snap: &PagefileSnapshot) -> Vec<Finding> {
                 )
                 // Nötr metric — frontend resolveFinding değil Badge direkt basıyor.
                 .with_metric(format!("{:.0}%", ratio * 100.0))
-                .with_metric_code(MetricCode::Percentage { value: ratio * 100.0 })
+                .with_metric_code(MetricCode::Percentage {
+                    value: ratio * 100.0,
+                })
                 .with_action(FindingAction::OpenSystemPropertiesPerformance)
                 .with_action_code("finding.pagefile.high_usage.action")
                 .with_params(json!({
@@ -109,7 +119,9 @@ pub fn evaluate(snap: &PagefileSnapshot) -> Vec<Finding> {
                 "finding.pagefile.hibernation_disk_pressure.description",
             )
             .with_metric(format!("hiberfil: {} MB", snap.hiberfil_mb))
-            .with_metric_code(MetricCode::Bytes { value: snap.hiberfil_mb.saturating_mul(1024 * 1024) })
+            .with_metric_code(MetricCode::Bytes {
+                value: snap.hiberfil_mb.saturating_mul(1024 * 1024),
+            })
             .with_action_code("finding.pagefile.hibernation_disk_pressure.action")
             .with_params(json!({
                 "hiberfilMb": snap.hiberfil_mb,
@@ -124,8 +136,8 @@ pub fn evaluate(snap: &PagefileSnapshot) -> Vec<Finding> {
 
 #[cfg(test)]
 mod tests {
-    use crate::models::{PagefileEntry, PagefileSnapshot};
     use super::evaluate;
+    use crate::models::{PagefileEntry, PagefileSnapshot};
 
     fn snap_with_ram(ram_mb: u64, configured_max_mb: u32, automatic: bool) -> PagefileSnapshot {
         PagefileSnapshot {

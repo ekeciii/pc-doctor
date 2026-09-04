@@ -51,9 +51,7 @@ pub fn is_protected_file_name(name: &str) -> bool {
 
 /// Bir yol korumalı bir kökün altında mı? (silme öncesi nihai kontrol)
 pub fn is_within_protected(path: &Path) -> bool {
-    let canonical = path
-        .canonicalize()
-        .unwrap_or_else(|_| normalize(path));
+    let canonical = path.canonicalize().unwrap_or_else(|_| normalize(path));
     for root in protected_roots() {
         let nr = root.canonicalize().unwrap_or_else(|_| normalize(&root));
         if canonical.starts_with(&nr) {
@@ -115,14 +113,20 @@ mod tests {
             .unwrap_or_else(|| PathBuf::from(r"C:\Windows"));
         let kernel = win.join("System32").join("kernel32.dll");
         if kernel.exists() {
-            assert!(is_within_protected(&kernel), "System32 altı korumalı olmalı");
+            assert!(
+                is_within_protected(&kernel),
+                "System32 altı korumalı olmalı"
+            );
         }
     }
 
     #[test]
     fn is_within_protected_allows_plain_temp_file() {
         let f = std::env::temp_dir().join("pcdoctor_plain.txt");
-        assert!(!is_within_protected(&f), "sıradan temp dosyası korumalı olmamalı");
+        assert!(
+            !is_within_protected(&f),
+            "sıradan temp dosyası korumalı olmamalı"
+        );
     }
 
     #[test]

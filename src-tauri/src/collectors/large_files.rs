@@ -109,7 +109,7 @@ pub fn scan_drive(drive: &str, min_size_bytes: u64, unused_days: i64) -> DriveFi
         .iter()
         .filter(|c| c.size >= min_size_bytes)
         .collect();
-    large.sort_by(|a, b| b.size.cmp(&a.size));
+    large.sort_by_key(|c| std::cmp::Reverse(c.size));
     large.truncate(MAX_RESULTS);
 
     // Kullanılmayan: unused_days günden uzun erişilmemiş (last-access yoksa modified fallback).
@@ -120,7 +120,7 @@ pub fn scan_drive(drive: &str, min_size_bytes: u64, unused_days: i64) -> DriveFi
             matches!(idle, Some(d) if d >= unused_days)
         })
         .collect();
-    unused.sort_by(|a, b| b.size.cmp(&a.size));
+    unused.sort_by_key(|c| std::cmp::Reverse(c.size));
     unused.truncate(MAX_RESULTS);
 
     DriveFileScan {

@@ -16,15 +16,15 @@ export function ScanButton({ scanning, hasReport, onClick }: Props) {
       onClick={onClick}
       disabled={scanning}
       size="hero"
-      className={cn(
-        "shadow-lg hover:shadow-xl",
-        !scanning && !hasReport && "animate-breathe"
-      )}
+      className={cn("shadow-lg hover:shadow-xl", !scanning && !hasReport && "animate-breathe")}
     >
       {scanning ? (
         <Loader2 className="w-6 h-6 animate-spin" />
       ) : (
-        <Activity className="w-6 h-6 transition-transform group-hover:scale-110" strokeWidth={2.4} />
+        <Activity
+          className="w-6 h-6 transition-transform group-hover:scale-110"
+          strokeWidth={2.4}
+        />
       )}
       {scanning ? t("scanning") : hasReport ? t("rescan") : t("scanCta")}
     </Button>

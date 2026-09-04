@@ -16,9 +16,7 @@ export function SectionTitle({ index, eyebrow, children, className }: Props) {
           {eyebrow ?? String(index).padStart(2, "0")}
         </span>
       )}
-      <h2 className="font-display text-xl font-bold tracking-tight text-foreground">
-        {children}
-      </h2>
+      <h2 className="font-display text-xl font-bold tracking-tight text-foreground">{children}</h2>
       <div className="flex-1 h-px bg-border" />
     </div>
   );

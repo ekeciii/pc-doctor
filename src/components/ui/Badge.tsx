@@ -11,8 +11,7 @@ export const badgeVariants = cva(
         secondary: "bg-secondary text-secondary-foreground border-border",
         soft: "bg-primary-soft text-primary-strong border-primary/20",
         destructive: "bg-destructive text-destructive-foreground border-transparent",
-        "destructive-soft":
-          "bg-destructive-soft text-destructive-strong border-destructive/20",
+        "destructive-soft": "bg-destructive-soft text-destructive-strong border-destructive/20",
         warning: "bg-warning text-warning-foreground border-transparent",
         "warning-soft": "bg-warning-soft text-warning-strong border-warning/20",
         success: "bg-success text-success-foreground border-transparent",
@@ -35,8 +34,7 @@ export const badgeVariants = cva(
 );
 
 export interface BadgeProps
-  extends HTMLAttributes<HTMLSpanElement>,
-    VariantProps<typeof badgeVariants> {}
+  extends HTMLAttributes<HTMLSpanElement>, VariantProps<typeof badgeVariants> {}
 
 export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
   ({ className, variant, size, ...props }, ref) => (

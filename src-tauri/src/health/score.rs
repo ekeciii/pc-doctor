@@ -20,9 +20,9 @@ const CATEGORY_CAP: u32 = 30;
 pub enum ScoreBand {
     #[default]
     Excellent, // 90-100
-    Good,      // 70-89
-    Warning,   // 40-69
-    Critical,  // 0-39
+    Good,     // 70-89
+    Warning,  // 40-69
+    Critical, // 0-39
 }
 
 /// Bir kategorinin skordan götürdüğü (tavan uygulanmış) puan. "Neden bu skor?" kırılımı için.
@@ -120,7 +120,11 @@ pub fn compute_health(findings: &[Finding]) -> HealthScore {
         .filter(|c| c.penalty > 0)
         .collect();
     // Azalan ceza; eşitlikte kategori adına göre (deterministik).
-    breakdown.sort_by(|a, b| b.penalty.cmp(&a.penalty).then_with(|| a.category.cmp(&b.category)));
+    breakdown.sort_by(|a, b| {
+        b.penalty
+            .cmp(&a.penalty)
+            .then_with(|| a.category.cmp(&b.category))
+    });
 
     let total: u32 = breakdown.iter().map(|c| c.penalty).sum();
     let score = 100u32.saturating_sub(total).min(100) as u8;
@@ -164,7 +168,10 @@ mod tests {
 
     #[test]
     fn good_findings_do_not_penalize() {
-        let h = compute_health(&[finding("disk", Severity::Good), finding("smart", Severity::Good)]);
+        let h = compute_health(&[
+            finding("disk", Severity::Good),
+            finding("smart", Severity::Good),
+        ]);
         assert_eq!(h.score, 100);
         assert!(h.breakdown.is_empty());
     }

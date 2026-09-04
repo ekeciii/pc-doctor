@@ -29,9 +29,7 @@ export function ScoreBreakdown({ breakdown }: Props) {
         )}
       >
         {t("scoreBreakdownTitle")}
-        <ChevronDown
-          className={cn("w-3.5 h-3.5 transition-transform", open && "rotate-180")}
-        />
+        <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", open && "rotate-180")} />
       </button>
 
       {open && (

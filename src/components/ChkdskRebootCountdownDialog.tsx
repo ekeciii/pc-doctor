@@ -94,9 +94,7 @@ export function ChkdskRebootCountdownDialog({
           </div>
           <div className="flex-1">
             <DialogTitle>{t("chkdskRebootCountdownTitle", { volume })}</DialogTitle>
-            <DialogDescription className="mt-1">
-              {t("chkdskRebootCountdownBody")}
-            </DialogDescription>
+            <DialogDescription className="mt-1">{t("chkdskRebootCountdownBody")}</DialogDescription>
           </div>
         </DialogHeader>
         <DialogBody>
@@ -118,9 +116,7 @@ export function ChkdskRebootCountdownDialog({
               : ""}
           </div>
           <div className="sr-only" aria-live="assertive" aria-atomic="true">
-            {isCritical
-              ? t("chkdskRebootCountdownAnnounce", { seconds: remaining })
-              : ""}
+            {isCritical ? t("chkdskRebootCountdownAnnounce", { seconds: remaining }) : ""}
           </div>
           <p className="text-sm text-muted-foreground text-center">
             {t("chkdskRebootCountdownHint")}

@@ -90,7 +90,9 @@ export function FixAllProgressDialog({ open }: Props) {
     linesEnd.current?.scrollIntoView({ behavior: "smooth" });
   }, [lines]);
 
-  const stepLabel = stepId ? t(STEP_LABEL[stepId] ?? "fixAllProgressWorking") : t("fixAllProgressWorking");
+  const stepLabel = stepId
+    ? t(STEP_LABEL[stepId] ?? "fixAllProgressWorking")
+    : t("fixAllProgressWorking");
   const isHeavy = stepId === "systemFileCheck" || stepId === "defenderQuickScan";
 
   return (

@@ -17,9 +17,8 @@ const MAX_NAME_LEN: usize = 40;
 
 /// `C:\Users\<X>\...` ya da `D:\Users\<X>\...` → `<DRIVE>:\Users\<USER>\...`
 /// USERPROFILE env-var kontrolüne EK olarak çalışır.
-static USERS_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"(?i)([A-Z]:\\Users\\)[^\\/:*?\x22<>|]+").unwrap()
-});
+static USERS_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(?i)([A-Z]:\\Users\\)[^\\/:*?\x22<>|]+").unwrap());
 
 pub fn truncate_safe(s: &str, n: usize) -> String {
     s.chars().take(n).collect::<String>().trim().to_string()
@@ -76,7 +75,13 @@ pub fn short_date(iso: &str) -> String {
 fn category_allow_list(category: &str) -> &'static [&'static str] {
     match category {
         "Disk" => &["mount", "freePercent", "freeFormatted"],
-        "Sürücü" => &["count", "deviceName", "manufacturer", "driverClass", "years"],
+        "Sürücü" => &[
+            "count",
+            "deviceName",
+            "manufacturer",
+            "driverClass",
+            "years",
+        ],
         "Temizlik" => &["sizeGb"],
         "Virüs" => &["threatCount", "ageDays"],
         "Disk sağlığı" => &[
@@ -88,7 +93,13 @@ fn category_allow_list(category: &str) -> &'static [&'static str] {
             "readErrors",
             "writeErrors",
         ],
-        "Donanım" => &["maxTemp", "maxTempPrecise", "zoneCount", "perfPercent", "loadPercent"],
+        "Donanım" => &[
+            "maxTemp",
+            "maxTempPrecise",
+            "zoneCount",
+            "perfPercent",
+            "loadPercent",
+        ],
         "Güvenlik" => &["profiles", "vendor", "unknownCount", "suspiciousCount"],
         "Güncelleme" => &["count"],
         "Başlangıç" => &["seconds", "milliseconds", "count"],
@@ -121,8 +132,18 @@ pub fn sanitize_params(category: &str, params: &Value) -> Value {
     // `source` DENY listesinde DEĞİL — "Çökme geçmişi" kategorisinde whitelist'te ve
     // aşağıda normalize+truncate ile geçer. Diğer kategorilerde allow list zaten yutuyor.
     const DENY: &[&str] = &[
-        "sample", "path", "hostname", "userName", "email", "message",
-        "threatName", "filePath", "url", "ip", "domain", "fqdn",
+        "sample",
+        "path",
+        "hostname",
+        "userName",
+        "email",
+        "message",
+        "threatName",
+        "filePath",
+        "url",
+        "ip",
+        "domain",
+        "fqdn",
     ];
     // Bilinmeyen kategori → boş allow-list → tüm params düşer. Bu KASITLI fail-safe
     // (deny-by-default; bkz. sanitize_unknown_category_drops_all testi). Bir KNOWN
@@ -222,7 +243,10 @@ mod tests {
 
     #[test]
     fn safe_disk_name_strips_unsafe_chars() {
-        assert_eq!(safe_disk_name("Samsung 990 PRO NVMe"), "Samsung 990 PRO NVMe");
+        assert_eq!(
+            safe_disk_name("Samsung 990 PRO NVMe"),
+            "Samsung 990 PRO NVMe"
+        );
         assert_eq!(safe_disk_name("Drive<>|name"), "Drivename");
         let truncated = safe_disk_name("A really really really really really long disk name");
         assert!(truncated.len() <= 40, "got: {truncated:?}");

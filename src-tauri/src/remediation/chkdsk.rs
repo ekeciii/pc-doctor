@@ -174,9 +174,9 @@ pub fn cancel_live_only() -> bool {
     }
 }
 
-/// Sprint 13 — `cancel_scan` shim KALDIRILDI; caller'lar artık doğrudan `cancel_session()`
-/// kullanır (tuple Option ile volume bilgisi alır, multi-volume aware).
-/// App exit hook için `cancel_live_only` kullan.
+// Sprint 13 — `cancel_scan` shim KALDIRILDI; caller'lar artık doğrudan `cancel_session()`
+// kullanır (tuple Option ile volume bilgisi alır, multi-volume aware).
+// App exit hook için `cancel_live_only` kullan.
 
 // =====================================================
 // Stream helper — run_scan ve run_nonsystem_fix paylaşır
@@ -236,7 +236,8 @@ fn spawn_chkdsk_child(args: &[&str]) -> Result<Child, String> {
     cmd.args(args).stdout(Stdio::piped()).stderr(Stdio::piped());
     #[cfg(windows)]
     cmd.creation_flags(CREATE_NO_WINDOW);
-    cmd.spawn().map_err(|e| format!("chkdsk başlatılamadı: {e}"))
+    cmd.spawn()
+        .map_err(|e| format!("chkdsk başlatılamadı: {e}"))
 }
 
 // =====================================================
@@ -321,7 +322,9 @@ pub fn run_scan(app: AppHandle, volume: String) -> Result<ChkdskResult, String> 
 pub fn run_nonsystem_fix(app: AppHandle, volume: String) -> Result<ChkdskFixResult, String> {
     vol_util::validate_volume(&volume)?;
     if vol_util::is_system_drive(&volume) {
-        return Err("System drive için live /f desteklenmiyor — schedule_system_fix kullan.".into());
+        return Err(
+            "System drive için live /f desteklenmiyor — schedule_system_fix kullan.".into(),
+        );
     }
     if !try_reserve() {
         return Err("Bir chkdsk işlemi zaten çalışıyor".into());

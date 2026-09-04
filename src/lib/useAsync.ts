@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type DependencyList } from "react";
+import { toError } from "./api";
 
 export interface AsyncState<T> {
   data: T | null;
@@ -33,7 +34,7 @@ export function useAsync<T>(fn: () => Promise<T>, deps: DependencyList = []): As
         if (!ignore) setData(d);
       })
       .catch((e) => {
-        if (!ignore) setError(String(e));
+        if (!ignore) setError(toError(e).message);
       })
       .finally(() => {
         if (!ignore) setLoading(false);

@@ -61,8 +61,24 @@ export function ScanningReactor({ size = 268 }: Props) {
 
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="relative">
         {/* crosshair */}
-        <line x1={c} y1={28} x2={c} y2={size - 28} stroke="currentColor" strokeWidth={1} className="opacity-20" />
-        <line x1={28} y1={c} x2={size - 28} y2={c} stroke="currentColor" strokeWidth={1} className="opacity-20" />
+        <line
+          x1={c}
+          y1={28}
+          x2={c}
+          y2={size - 28}
+          stroke="currentColor"
+          strokeWidth={1}
+          className="opacity-20"
+        />
+        <line
+          x1={28}
+          y1={c}
+          x2={size - 28}
+          y2={c}
+          stroke="currentColor"
+          strokeWidth={1}
+          className="opacity-20"
+        />
         {/* tick'ler */}
         {ticks.map((tk, i) => (
           <line
@@ -77,8 +93,24 @@ export function ScanningReactor({ size = 268 }: Props) {
           />
         ))}
         {/* sabit halkalar */}
-        <circle cx={c} cy={c} r={c - 38} fill="none" stroke="var(--color-border)" strokeWidth={1} className="opacity-50" />
-        <circle cx={c} cy={c} r={c - 74} fill="none" stroke="var(--color-border)" strokeWidth={1} className="opacity-40" />
+        <circle
+          cx={c}
+          cy={c}
+          r={c - 38}
+          fill="none"
+          stroke="var(--color-border)"
+          strokeWidth={1}
+          className="opacity-50"
+        />
+        <circle
+          cx={c}
+          cy={c}
+          r={c - 74}
+          fill="none"
+          stroke="var(--color-border)"
+          strokeWidth={1}
+          className="opacity-40"
+        />
       </svg>
 
       {/* merkez */}

@@ -55,17 +55,23 @@ export function DiskIntegrityPanel({ onScan, onRepair }: Props) {
       )}
 
       {vols?.map((v, i) => {
-        const usedPct =
-          v.sizeBytes > 0 ? ((v.sizeBytes - v.freeBytes) / v.sizeBytes) * 100 : 0;
+        const usedPct = v.sizeBytes > 0 ? ((v.sizeBytes - v.freeBytes) / v.sizeBytes) * 100 : 0;
         return (
-          <Card key={v.driveLetter} variant="default" className="overflow-hidden animate-rise-in" style={{ animationDelay: `${i * 50}ms` }}>
+          <Card
+            key={v.driveLetter}
+            variant="default"
+            className="overflow-hidden animate-rise-in"
+            style={{ animationDelay: `${i * 50}ms` }}
+          >
             <div className="flex items-center gap-3 p-4">
               <span className="shrink-0 w-9 h-9 rounded-md bg-primary-soft text-primary-strong flex items-center justify-center">
                 <HardDrive className="w-[18px] h-[18px]" />
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline gap-2">
-                  <span className="font-display font-semibold text-foreground">{v.driveLetter}:</span>
+                  <span className="font-display font-semibold text-foreground">
+                    {v.driveLetter}:
+                  </span>
                   <span className="text-xs text-muted-foreground">{v.fileSystem}</span>
                   {v.isSystem && (
                     <span className="text-[10px] font-mono uppercase tracking-wide px-1.5 py-0.5 rounded bg-info-soft text-info-strong">
@@ -74,7 +80,8 @@ export function DiskIntegrityPanel({ onScan, onRepair }: Props) {
                   )}
                 </div>
                 <div className="text-[11px] font-mono text-muted-foreground tabular-nums">
-                  {fmtBytes(v.sizeBytes - v.freeBytes)} / {fmtBytes(v.sizeBytes)} · %{usedPct.toFixed(0)}
+                  {fmtBytes(v.sizeBytes - v.freeBytes)} / {fmtBytes(v.sizeBytes)} · %
+                  {usedPct.toFixed(0)}
                 </div>
               </div>
               <div className="shrink-0 flex items-center gap-2">
@@ -82,7 +89,11 @@ export function DiskIntegrityPanel({ onScan, onRepair }: Props) {
                   <FileSearch className="w-4 h-4" />
                   {t("integrityScanCta")}
                 </Button>
-                <Button size="sm" variant="warning" onClick={() => onRepair(v.driveLetter, v.isSystem)}>
+                <Button
+                  size="sm"
+                  variant="warning"
+                  onClick={() => onRepair(v.driveLetter, v.isSystem)}
+                >
                   <Wrench className="w-4 h-4" />
                   {t("integrityRepairCta")}
                 </Button>

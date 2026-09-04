@@ -83,8 +83,14 @@ fn collect_third_party_firewall() -> Option<String> {
     };
     for item in items {
         let obj = item.as_object()?;
-        let name = obj.get("displayName").and_then(|n| n.as_str()).unwrap_or("");
-        let state = obj.get("productState").and_then(|n| n.as_u64()).unwrap_or(0);
+        let name = obj
+            .get("displayName")
+            .and_then(|n| n.as_str())
+            .unwrap_or("");
+        let state = obj
+            .get("productState")
+            .and_then(|n| n.as_u64())
+            .unwrap_or(0);
         // productState alt 8 bit subState; 0x1000 = enabled bit ailesi
         let enabled = (state & 0x1000) != 0;
         let up_to_date = (state & 0x00F0) == 0;

@@ -2,12 +2,7 @@ import { LayoutGrid } from "lucide-react";
 import type { ScanReport } from "@/lib/types";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import {
-  CATEGORIES,
-  categoryStat,
-  type CategoryDef,
-  type CategoryStatus,
-} from "./categoryDefs";
+import { CATEGORIES, categoryStat, type CategoryDef, type CategoryStatus } from "./categoryDefs";
 
 interface Props {
   /** `null` → henüz taranmadı; kartlar 'bekliyor' (idle) görünür ama yine tıklanabilir. */
@@ -79,7 +74,10 @@ export function CategoryGrid({ report, onSelect }: Props) {
                   "absolute top-2 right-2 w-1.5 h-1.5 rounded-full",
                   stat.status === "critical" && "animate-pulse-glow"
                 )}
-                style={{ background: glow, boxShadow: stat.status === "idle" ? "none" : `0 0 7px ${glow}` }}
+                style={{
+                  background: glow,
+                  boxShadow: stat.status === "idle" ? "none" : `0 0 7px ${glow}`,
+                }}
               />
               <span
                 aria-hidden
@@ -97,7 +95,9 @@ export function CategoryGrid({ report, onSelect }: Props) {
                 <Icon className="w-[18px] h-[18px]" />
               </span>
               <span className="relative min-w-0 flex-1">
-                <span className="block text-sm font-medium text-foreground truncate">{cat.label}</span>
+                <span className="block text-sm font-medium text-foreground truncate">
+                  {cat.label}
+                </span>
                 <span className="block text-[11px] font-mono tabular-nums text-foreground/70">
                   {stat.status === "idle"
                     ? t("categoryIdle")

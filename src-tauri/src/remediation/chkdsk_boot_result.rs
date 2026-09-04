@@ -61,10 +61,7 @@ pub fn fetch_last(volume: &str) -> Result<Option<ChkdskBootResult>, String> {
         .and_then(|v| v.as_str())
         .unwrap_or("")
         .to_string();
-    let message = bundle
-        .get("message")
-        .and_then(|v| v.as_str())
-        .unwrap_or("");
+    let message = bundle.get("message").and_then(|v| v.as_str()).unwrap_or("");
     Ok(Some(parse_wininit_event_message(
         volume.to_string(),
         occurred_at,
@@ -108,11 +105,14 @@ fn scrub_line(line: &str) -> String {
     // Windows path-illegal karakterleri haricini tut: <>:"|?* + kontrol.
     // Bu over-scrub yapabilir (cümle sonu noktalama'yı da yutar) ama PII için
     // under-scrub'dan iyidir.
-    static PATH_RE: Lazy<Regex> = Lazy::new(|| {
-        Regex::new(r#"[A-Za-z]:\\[^\r\n<>"|?*]*"#).unwrap()
-    });
+    static PATH_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r#"[A-Za-z]:\\[^\r\n<>"|?*]*"#).unwrap());
     let scrubbed = PATH_RE.replace_all(line, "<path>").to_string();
-    scrubbed.chars().take(80).collect::<String>().trim().to_string()
+    scrubbed
+        .chars()
+        .take(80)
+        .collect::<String>()
+        .trim()
+        .to_string()
 }
 
 #[cfg(test)]
@@ -171,7 +171,8 @@ mod tests {
     #[test]
     fn scrub_handles_paths_with_spaces() {
         // Sprint 9 review H2: "C:\Program Files\..." artık tamamen yutuluyor
-        let s = scrub_line("Repaired C:\\Program Files\\Ege\\Documents\\Vergi 2026.docx successfully.");
+        let s =
+            scrub_line("Repaired C:\\Program Files\\Ege\\Documents\\Vergi 2026.docx successfully.");
         assert!(!s.contains("Program Files"));
         assert!(!s.contains("Ege"));
         assert!(!s.contains("Vergi"));

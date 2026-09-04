@@ -12,8 +12,10 @@ export function StartupPanel() {
   const t = useT();
   const { data: info, loading, error, reload: load } = useAsync(startupInfo);
 
-  const bootSecs = info?.lastBootDurationMs != null ? Math.round(info.lastBootDurationMs / 1000) : null;
-  const bootTone = bootSecs == null ? "muted" : bootSecs >= 120 ? "bad" : bootSecs >= 60 ? "warn" : "ok";
+  const bootSecs =
+    info?.lastBootDurationMs != null ? Math.round(info.lastBootDurationMs / 1000) : null;
+  const bootTone =
+    bootSecs == null ? "muted" : bootSecs >= 120 ? "bad" : bootSecs >= 60 ? "warn" : "ok";
   const count = info?.items.length ?? 0;
   const countTone = count >= 25 ? "warn" : count >= 15 ? "info" : "ok";
 
@@ -24,7 +26,11 @@ export function StartupPanel() {
           {t("startupHeading")}
         </h3>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={() => openOemLink("ms-settings:startupapps").catch(() => {})}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => openOemLink("ms-settings:startupapps").catch(() => {})}
+          >
             <ExternalLink className="w-3.5 h-3.5" />
             {t("startupManageCta")}
           </Button>
@@ -48,7 +54,9 @@ export function StartupPanel() {
       )}
 
       {error && (
-        <div className="rounded-md bg-destructive-soft/60 text-destructive-strong text-xs p-3">{error}</div>
+        <div className="rounded-md bg-destructive-soft/60 text-destructive-strong text-xs p-3">
+          {error}
+        </div>
       )}
 
       {info && (
@@ -85,7 +93,9 @@ export function StartupPanel() {
             </div>
           )}
 
-          <p className="text-[11px] text-muted-foreground px-1 leading-relaxed">{t("startupFootnote")}</p>
+          <p className="text-[11px] text-muted-foreground px-1 leading-relaxed">
+            {t("startupFootnote")}
+          </p>
         </>
       )}
     </div>
@@ -121,7 +131,9 @@ function MetricTile({
         {icon}
         {label}
       </div>
-      <div className={cn("text-xl font-display font-bold tabular-nums mt-0.5", toneClass)}>{value}</div>
+      <div className={cn("text-xl font-display font-bold tabular-nums mt-0.5", toneClass)}>
+        {value}
+      </div>
     </Card>
   );
 }
@@ -137,13 +149,19 @@ function StartupRow({ item }: { item: StartupItem }) {
           {item.name}
         </div>
         {item.command && (
-          <div className="text-[11px] font-mono text-muted-foreground truncate" title={item.command}>
+          <div
+            className="text-[11px] font-mono text-muted-foreground truncate"
+            title={item.command}
+          >
             {item.command}
           </div>
         )}
       </div>
       {item.location && (
-        <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-mono bg-muted text-muted-foreground max-w-[40%] truncate" title={item.location}>
+        <span
+          className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-mono bg-muted text-muted-foreground max-w-[40%] truncate"
+          title={item.location}
+        >
           {item.location}
         </span>
       )}

@@ -6,7 +6,8 @@ dist-ssr
 
 # Rust / Tauri
 src-tauri/target
-src-tauri/Cargo.lock
+# Cargo.lock TAKİP EDİLİR (Faz 3) — reproducible build + anlamlı `cargo audit`
+# için bir uygulama crate'inde lockfile commit edilmeli (kütüphane değil, bu bir bin/app).
 src-tauri/WixTools
 
 # Logs

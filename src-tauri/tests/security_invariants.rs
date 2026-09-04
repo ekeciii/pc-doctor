@@ -172,11 +172,11 @@ fn invariant_4_exe_paths_hardcoded_system32() {
     for (module, expected_path) in required {
         let mut found = false;
         for (path, body) in collect_rust_sources() {
-            if path.to_string_lossy().replace('\\', "/").ends_with(module) {
-                if body.contains(expected_path) {
-                    found = true;
-                    break;
-                }
+            if path.to_string_lossy().replace('\\', "/").ends_with(module)
+                && body.contains(expected_path)
+            {
+                found = true;
+                break;
             }
         }
         assert!(

@@ -1,0 +1,15 @@
+# Faz 3 — CI (windows-latest) ve yerel Windows makineler arasında satır sonu tutarsızlığı
+# prettier/rustfmt --check'i kırıyordu (repo autocrlf'e göre CRLF/LF karışık checkout
+# ediyordu). Tüm metin dosyalarını LF'e sabitle; binary'leri dokunmadan bırak.
+* text=auto eol=lf
+
+*.ico binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.svg text eol=lf
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary

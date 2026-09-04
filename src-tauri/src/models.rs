@@ -43,10 +43,10 @@ pub enum FixTier {
 }
 
 impl FixTier {
-    /// Bir bulgunun aksiyonundan varsayılan düzeltme katmanını türetir (Faz 1 merkezi atama).
+    /// Bir bulgunun aksiyonundan varsayılan düzeltme katmanını türetir (Faz 1 merkezi atama,
+    /// `action`'a göre — tek başına açık bir override mekanizması yok).
     /// App'in kendisinin uyguladığı aksiyonlar `Auto`; kullanıcıyı bir yere yönlendirenler
-    /// `Guided`; aksiyonsuz bulgular `Advisory`. Faz 2'de bulgular `with_fix_tier` ile bunu
-    /// açıkça geçersiz kılabilir (örn. firewall'u `Auto`'ya yükseltme).
+    /// `Guided`; aksiyonsuz bulgular `Advisory`.
     pub fn from_action(action: Option<&FindingAction>) -> FixTier {
         match action {
             Some(FindingAction::RunSystemFileCheck)
@@ -87,6 +87,8 @@ pub struct Finding {
     pub description: String,
     pub severity: Severity,
     pub metric: Option<String>,
+    /// Faz 3 öncesi legacy TR string. `recommendation_code` varsa frontend onu tercih eder;
+    /// bu alan yalnız fallback (code'un dict'te olmadığı çok eski/tarayıcı-dışı senaryo için).
     pub recommended_action: Option<String>,
     pub action: Option<FindingAction>,
     /// Sprint 6: i18n code (dot-namespaced: `finding.<cat>.<id>.title`).
@@ -97,6 +99,11 @@ pub struct Finding {
     pub description_code: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub action_code: Option<String>,
+    /// Faz 3 — `recommended_action`'ın locale-aware karşılığı (dot-namespaced:
+    /// `finding.<cat>.<id>.recommendation`). `action_code` (buton etiketi) ile
+    /// KARIŞTIRMA — bu, "önerilen adım" serbest metni içindir.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recommendation_code: Option<String>,
     /// Param map: `{drive}` gibi placeholder'lar için. PII-clean.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub params: Option<serde_json::Value>,
@@ -131,6 +138,7 @@ impl Finding {
             title_code: Some(title_code.into()),
             description_code: Some(description_code.into()),
             action_code: None,
+            recommendation_code: None,
             params: None,
             metric_code: None,
             fix_tier: FixTier::Advisory,
@@ -139,15 +147,6 @@ impl Finding {
 
     pub fn with_metric(mut self, metric: impl Into<String>) -> Self {
         self.metric = Some(metric.into());
-        self
-    }
-
-    /// Faz 1 — düzeltme katmanını set et (Auto/Guided/Advisory).
-    /// Faz 2'de bulgular bunu açıkça çağıracak (örn. firewall'u Auto'ya yükseltme);
-    /// Faz 1'de katman `scan`'de merkezi türetildiği için henüz kullanılmıyor.
-    #[allow(dead_code)]
-    pub fn with_fix_tier(mut self, tier: FixTier) -> Self {
-        self.fix_tier = tier;
         self
     }
 
@@ -315,7 +314,7 @@ pub struct FirewallProfile {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PendingUpdate {
-    pub source: String,           // "WindowsUpdate" | "winget"
+    pub source: String, // "WindowsUpdate" | "winget"
     pub title: String,
     pub severity: Option<String>, // "Critical" | "Important" | "Moderate" | "Low"
     pub is_security: bool,

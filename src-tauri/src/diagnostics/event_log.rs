@@ -34,7 +34,7 @@ fn classify(sig: &EventLogSignature) -> Option<Finding> {
             severity,
             "finding.event_log.kernel_power_41",
             json!({ "count": n, "lastOccurredDate": last_date }),
-            Some("Sistem dosyalarını sfc/DISM ile onar."),
+            true,
             action,
         ));
     }
@@ -55,41 +55,41 @@ fn classify(sig: &EventLogSignature) -> Option<Finding> {
                 "count": n,
                 "lastOccurredDate": last_date,
             }),
-            Some("sfc/DISM çalıştır; sorun sürerse RAM ve disk SMART testi."),
+            true,
             Some(FindingAction::RunSystemFileCheck),
         ));
     }
 
     // GPU driver
-    if provider.contains("nvlddmkm") || provider.contains("amdkmdag") || provider.contains("igfx") {
-        if n >= 3 {
-            let severity = if n >= 10 {
-                Severity::Critical
-            } else {
-                Severity::Warning
-            };
-            // Sprint 7 review M4: gpu_driver_error.action dict'te tanımlı — vendor-specific
-            // URL üret (drivers.rs OEM mapping pattern'iyle uyumlu).
-            let url = if provider.contains("nvlddmkm") {
-                "https://www.nvidia.com/Download/index.aspx"
-            } else if provider.contains("amdkmdag") {
-                "https://www.amd.com/en/support"
-            } else {
-                "https://www.intel.com/content/www/us/en/support/detect.html"
-            };
-            return Some(make_finding(
-                sig,
-                severity,
-                "finding.event_log.gpu_driver_error",
-                json!({
-                    "gpuVendor": sig.provider.clone(),
-                    "count": n,
-                    "lastOccurredDate": last_date,
-                }),
-                Some("GPU sürücüsünü OEM sayfasından güncelle."),
-                Some(FindingAction::OpenUrl { url: url.into() }),
-            ));
-        }
+    if (provider.contains("nvlddmkm") || provider.contains("amdkmdag") || provider.contains("igfx"))
+        && n >= 3
+    {
+        let severity = if n >= 10 {
+            Severity::Critical
+        } else {
+            Severity::Warning
+        };
+        // Sprint 7 review M4: gpu_driver_error.action dict'te tanımlı — vendor-specific
+        // URL üret (drivers.rs OEM mapping pattern'iyle uyumlu).
+        let url = if provider.contains("nvlddmkm") {
+            "https://www.nvidia.com/Download/index.aspx"
+        } else if provider.contains("amdkmdag") {
+            "https://www.amd.com/en/support"
+        } else {
+            "https://www.intel.com/content/www/us/en/support/detect.html"
+        };
+        return Some(make_finding(
+            sig,
+            severity,
+            "finding.event_log.gpu_driver_error",
+            json!({
+                "gpuVendor": sig.provider.clone(),
+                "count": n,
+                "lastOccurredDate": last_date,
+            }),
+            true,
+            Some(FindingAction::OpenUrl { url: url.into() }),
+        ));
     }
 
     // Disk / Ntfs
@@ -108,7 +108,7 @@ fn classify(sig: &EventLogSignature) -> Option<Finding> {
                 "count": n,
                 "lastOccurredDate": last_date,
             }),
-            Some("sfc/DISM ile sistem dosyalarını onar; chkdsk taraması çalıştır."),
+            true,
             Some(FindingAction::RunSystemFileCheck),
         ));
     }
@@ -129,7 +129,7 @@ fn classify(sig: &EventLogSignature) -> Option<Finding> {
                 "eventKind": event_kind,
                 "lastOccurredDate": last_date,
             }),
-            None,
+            false,
             None,
         ));
     }
@@ -142,7 +142,7 @@ fn make_finding(
     severity: Severity,
     code_prefix: &str,
     params: serde_json::Value,
-    recommended: Option<&str>,
+    has_recommendation: bool,
     action: Option<FindingAction>,
 ) -> Finding {
     let mut f = Finding::code_only(
@@ -161,9 +161,8 @@ fn make_finding(
         f = f.with_action(a);
         f = f.with_action_code(format!("{code_prefix}.action"));
     }
-    if let Some(r) = recommended {
-        f.recommended_action = Some(r.to_string());
+    if has_recommendation {
+        f.recommendation_code = Some(format!("{code_prefix}.recommendation"));
     }
     f
 }
-

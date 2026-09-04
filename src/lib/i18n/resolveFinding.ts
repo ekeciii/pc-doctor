@@ -10,10 +10,7 @@ const DICTS: Record<Locale, Record<FindingCode, string>> = {
   en: findingsEn,
 };
 
-function interpolate(
-  template: string,
-  params?: Record<string, string | number> | null
-): string {
+function interpolate(template: string, params?: Record<string, string | number> | null): string {
   if (!params) return template;
   return template.replace(/\{(\w+)\}/g, (match, key: string) => {
     if (Object.prototype.hasOwnProperty.call(params, key)) {
@@ -62,20 +59,20 @@ export function resolveFinding(finding: Finding, locale: Locale): ResolvedFindin
   const params = (finding.params ?? null) as Record<string, string | number> | null;
 
   const title = lookup(dict, finding.titleCode, finding.title || "", params);
-  const description = lookup(
-    dict,
-    finding.descriptionCode,
-    finding.description || "",
-    params
-  );
+  const description = lookup(dict, finding.descriptionCode, finding.description || "", params);
   const actionLabel = finding.actionCode
     ? lookup(dict, finding.actionCode, "", params) || null
     : null;
+  // Faz 3 — recommendationCode varsa locale'e göre çözülür; yoksa (eski/sentetik Finding)
+  // legacy recommendedAction TR string'ine düşer.
+  const recommendedAction = finding.recommendationCode
+    ? lookup(dict, finding.recommendationCode, finding.recommendedAction || "", params) || null
+    : (finding.recommendedAction ?? null);
 
   return {
     title,
     description,
-    recommendedAction: finding.recommendedAction ?? null,
+    recommendedAction,
     actionLabel: actionLabel && actionLabel.length > 0 ? actionLabel : null,
   };
 }

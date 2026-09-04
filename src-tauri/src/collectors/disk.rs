@@ -16,9 +16,14 @@ pub fn list_volumes() -> Vec<VolumeInfo> {
             let mount = d.mount_point().to_string_lossy().to_string();
             let label = {
                 let raw = d.name().to_string_lossy().to_string();
-                if raw.is_empty() { None } else { Some(raw) }
+                if raw.is_empty() {
+                    None
+                } else {
+                    Some(raw)
+                }
             };
-            let file_system = String::from_utf8_lossy(d.file_system().as_encoded_bytes()).to_string();
+            let file_system =
+                String::from_utf8_lossy(d.file_system().as_encoded_bytes()).to_string();
             Some(VolumeInfo {
                 mount_point: mount,
                 label,

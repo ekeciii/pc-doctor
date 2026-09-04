@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Clock,
-  FileWarning,
-  HardDrive,
-  Loader2,
-  Search,
-  Trash2,
-} from "lucide-react";
+import { Clock, FileWarning, HardDrive, Loader2, Search, Trash2 } from "lucide-react";
 import type { DriveFileScan, FileDeleteResult, LargeFile, VolumeInfo } from "@/lib/types";
-import { deleteUserFiles, listVolumes, NeedsElevationError, scanLargeFiles } from "@/lib/api";
+import {
+  deleteUserFiles,
+  listVolumes,
+  NeedsElevationError,
+  scanLargeFiles,
+  toError,
+} from "@/lib/api";
 import { useByteFmt, useT } from "@/lib/i18n";
 import { Button } from "./ui/Button";
 import { Card } from "./ui/Card";
@@ -109,7 +108,7 @@ function DrivePanel({ volume }: { volume: VolumeInfo }) {
       if (r.error) setErrorMsg(r.error);
     } catch (e) {
       setStatus("error");
-      setErrorMsg(String(e));
+      setErrorMsg(toError(e).message);
     }
   };
 
@@ -161,7 +160,7 @@ function DrivePanel({ volume }: { volume: VolumeInfo }) {
       if (e instanceof NeedsElevationError) {
         setErrorMsg(t("elevationRequired"));
       } else {
-        setErrorMsg(String(e));
+        setErrorMsg(toError(e).message);
       }
     } finally {
       setDeleting(false);
@@ -234,7 +233,8 @@ function DrivePanel({ volume }: { volume: VolumeInfo }) {
             count: deleteResult.deleted,
             size: fmtBytes(deleteResult.reclaimedBytes),
           })}
-          {deleteResult.failed > 0 && ` · ${t("fileFinderDeleteFailed", { count: deleteResult.failed })}`}
+          {deleteResult.failed > 0 &&
+            ` · ${t("fileFinderDeleteFailed", { count: deleteResult.failed })}`}
         </div>
       )}
 
@@ -416,11 +416,19 @@ function FileRow({
       <span
         className={cn(
           "shrink-0 w-4 h-4 rounded border flex items-center justify-center transition-colors",
-          checked ? "bg-primary border-primary text-primary-foreground" : "border-border bg-background"
+          checked
+            ? "bg-primary border-primary text-primary-foreground"
+            : "border-border bg-background"
         )}
       >
         {checked && (
-          <svg viewBox="0 0 12 12" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            viewBox="0 0 12 12"
+            className="w-3 h-3"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <path d="M2.5 6.5l2.5 2.5 4.5-5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         )}

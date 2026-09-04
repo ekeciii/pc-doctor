@@ -35,7 +35,11 @@ export function ThermalPanel() {
           {t("thermalHeading")}
         </h3>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={() => openOemLink("ms-settings:powersleep").catch(() => {})}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => openOemLink("ms-settings:powersleep").catch(() => {})}
+          >
             <ExternalLink className="w-3.5 h-3.5" />
             {t("thermalPowerCta")}
           </Button>
@@ -55,12 +59,24 @@ export function ThermalPanel() {
       {snap && (
         <div className="flex flex-wrap gap-2 px-1">
           <ContextChip
-            icon={snap.isLaptop ? <Laptop className="w-3.5 h-3.5" /> : <Monitor className="w-3.5 h-3.5" />}
+            icon={
+              snap.isLaptop ? (
+                <Laptop className="w-3.5 h-3.5" />
+              ) : (
+                <Monitor className="w-3.5 h-3.5" />
+              )
+            }
             label={snap.isLaptop ? t("thermalLaptop") : t("thermalDesktop")}
           />
           {snap.onAcPower != null && (
             <ContextChip
-              icon={snap.onAcPower ? <Plug className="w-3.5 h-3.5" /> : <BatteryCharging className="w-3.5 h-3.5" />}
+              icon={
+                snap.onAcPower ? (
+                  <Plug className="w-3.5 h-3.5" />
+                ) : (
+                  <BatteryCharging className="w-3.5 h-3.5" />
+                )
+              }
               label={snap.onAcPower ? t("thermalAc") : t("thermalBattery")}
             />
           )}
@@ -75,7 +91,9 @@ export function ThermalPanel() {
       )}
 
       {error && (
-        <div className="rounded-md bg-destructive-soft/60 text-destructive-strong text-xs p-3">{error}</div>
+        <div className="rounded-md bg-destructive-soft/60 text-destructive-strong text-xs p-3">
+          {error}
+        </div>
       )}
 
       {snap && (
@@ -134,7 +152,12 @@ export function ThermalPanel() {
                       tone={c >= 85 ? "destructive" : c >= 75 ? "warning" : "primary"}
                     />
                   </div>
-                  <span className={cn("text-sm font-mono font-semibold tabular-nums w-14 text-right", tempClass(c))}>
+                  <span
+                    className={cn(
+                      "text-sm font-mono font-semibold tabular-nums w-14 text-right",
+                      tempClass(c)
+                    )}
+                  >
                     {c.toFixed(0)}°C
                   </span>
                 </Card>

@@ -7,24 +7,44 @@ pub const CATEGORY: &str = "Güvenlik";
 
 /// Bilinen güvenilir public DNS sunucuları. RFC1918 + loopback'i ayrı kontrol ediyoruz.
 const KNOWN_PUBLIC_DNS: &[&str] = &[
-    "8.8.8.8", "8.8.4.4",
-    "1.1.1.1", "1.0.0.1",
-    "1.1.1.2", "1.0.0.2",
-    "1.1.1.3", "1.0.0.3",
-    "9.9.9.9", "149.112.112.112",
-    "9.9.9.10", "149.112.112.10",
-    "9.9.9.11", "149.112.112.11",
-    "208.67.222.222", "208.67.220.220",
-    "208.67.222.123", "208.67.220.123",
-    "94.140.14.14", "94.140.15.15",
-    "94.140.14.15", "94.140.15.16",
-    "77.88.8.8", "77.88.8.1",
-    "77.88.8.88", "77.88.8.2",
-    "77.88.8.7", "77.88.8.3",
-    "185.228.168.9", "185.228.169.9",
-    "8.26.56.26", "8.20.247.20",
-    "4.2.2.1", "4.2.2.2", "4.2.2.3", "4.2.2.4",
-    "76.76.2.0", "76.76.10.0",
+    "8.8.8.8",
+    "8.8.4.4",
+    "1.1.1.1",
+    "1.0.0.1",
+    "1.1.1.2",
+    "1.0.0.2",
+    "1.1.1.3",
+    "1.0.0.3",
+    "9.9.9.9",
+    "149.112.112.112",
+    "9.9.9.10",
+    "149.112.112.10",
+    "9.9.9.11",
+    "149.112.112.11",
+    "208.67.222.222",
+    "208.67.220.220",
+    "208.67.222.123",
+    "208.67.220.123",
+    "94.140.14.14",
+    "94.140.15.15",
+    "94.140.14.15",
+    "94.140.15.16",
+    "77.88.8.8",
+    "77.88.8.1",
+    "77.88.8.88",
+    "77.88.8.2",
+    "77.88.8.7",
+    "77.88.8.3",
+    "185.228.168.9",
+    "185.228.169.9",
+    "8.26.56.26",
+    "8.20.247.20",
+    "4.2.2.1",
+    "4.2.2.2",
+    "4.2.2.3",
+    "4.2.2.4",
+    "76.76.2.0",
+    "76.76.10.0",
 ];
 
 pub fn evaluate(cfg: &SecurityConfig) -> Vec<Finding> {
@@ -42,8 +62,8 @@ pub fn evaluate(cfg: &SecurityConfig) -> Vec<Finding> {
             )
             .with_metric("?")
             .with_metric_code(MetricCode::BareString { text: "?".into() });
-            f.recommended_action =
-                Some("Yönetici PowerShell'de `Start-Service MpsSvc` çalıştır.".into());
+            f.recommendation_code =
+                Some("finding.security.firewall_query_failed.recommendation".into());
             out.push(f);
         }
         Some(profiles) => {
@@ -82,14 +102,16 @@ pub fn evaluate(cfg: &SecurityConfig) -> Vec<Finding> {
                         "finding.security.firewall_off.description",
                     )
                     .with_metric(disabled.len().to_string())
-                    .with_metric_code(MetricCode::Count { value: disabled.len() as u64 })
+                    .with_metric_code(MetricCode::Count {
+                        value: disabled.len() as u64,
+                    })
                     .with_action(FindingAction::EnableFirewall)
                     .with_action_code("finding.security.firewall_off.action")
                     .with_params(json!({
                         "profiles": names,
                     }));
-                    f.recommended_action =
-                        Some("Windows Güvenlik → Güvenlik Duvarı'ndan tüm profilleri aç.".into());
+                    f.recommendation_code =
+                        Some("finding.security.firewall_off.recommendation".into());
                     out.push(f);
                 }
             }
@@ -109,10 +131,7 @@ pub fn evaluate(cfg: &SecurityConfig) -> Vec<Finding> {
         .with_metric_code(MetricCode::BareString { text: "!".into() })
         .with_action(FindingAction::EnableUac)
         .with_action_code("finding.security.uac_off.action");
-        f.recommended_action = Some(
-            "Başlat menüsüne 'UAC' yaz ve 'Kullanıcı Hesabı Denetimi ayarlarını değiştir' sonucunu seç."
-                .into(),
-        );
+        f.recommendation_code = Some("finding.security.uac_off.recommendation".into());
         out.push(f);
     }
     if cfg.uac_consent_level == Some(0) && cfg.uac_enabled == Some(true) {
@@ -125,8 +144,7 @@ pub fn evaluate(cfg: &SecurityConfig) -> Vec<Finding> {
         )
         .with_metric("!")
         .with_metric_code(MetricCode::BareString { text: "!".into() });
-        f.recommended_action =
-            Some("Varsayılan UAC seviyesini geri al (ConsentPromptBehaviorAdmin=5).".into());
+        f.recommendation_code = Some("finding.security.uac_no_prompt.recommendation".into());
         out.push(f);
     }
 
@@ -146,9 +164,7 @@ pub fn evaluate(cfg: &SecurityConfig) -> Vec<Finding> {
                 url: "ms-settings:deviceencryption".into(),
             })
             .with_action_code("finding.security.bitlocker_off.action");
-            f.recommended_action = Some(
-                "Sistem Ayarları → Cihaz şifrelemesi (Home) veya BitLocker (Pro) ile etkinleştir.".into(),
-            );
+            f.recommendation_code = Some("finding.security.bitlocker_off.recommendation".into());
             out.push(f);
         }
     }
@@ -170,7 +186,9 @@ pub fn evaluate(cfg: &SecurityConfig) -> Vec<Finding> {
             "finding.security.dns_unknown.description",
         )
         .with_metric(unknown_count.to_string())
-        .with_metric_code(MetricCode::Count { value: unknown_count as u64 })
+        .with_metric_code(MetricCode::Count {
+            value: unknown_count as u64,
+        })
         .with_action(FindingAction::OpenUrl {
             url: "ms-settings:network-status".into(),
         })
@@ -178,7 +196,7 @@ pub fn evaluate(cfg: &SecurityConfig) -> Vec<Finding> {
         .with_params(json!({
             "unknownCount": unknown_count,
         }));
-        f.recommended_action = Some("Ağ ayarlarında DNS sunucularını gözden geçir.".into());
+        f.recommendation_code = Some("finding.security.dns_unknown.recommendation".into());
         out.push(f);
     }
 
@@ -202,13 +220,13 @@ pub fn evaluate(cfg: &SecurityConfig) -> Vec<Finding> {
             "finding.security.hosts_suspicious.description",
         )
         .with_metric(suspicious_count.to_string())
-        .with_metric_code(MetricCode::Count { value: suspicious_count as u64 })
+        .with_metric_code(MetricCode::Count {
+            value: suspicious_count as u64,
+        })
         .with_params(json!({
             "suspiciousCount": suspicious_count,
         }));
-        f.recommended_action = Some(
-            "Tanımadığın satırları C:\\Windows\\System32\\drivers\\etc\\hosts'tan kaldır (Notepad'i yönetici olarak aç).".into(),
-        );
+        f.recommendation_code = Some("finding.security.hosts_suspicious.recommendation".into());
         out.push(f);
     }
 

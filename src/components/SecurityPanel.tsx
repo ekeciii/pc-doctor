@@ -57,7 +57,9 @@ export function SecurityPanel({ onEnableFirewall, onEnableUac }: Props) {
       )}
 
       {error && (
-        <div className="rounded-md bg-destructive-soft/60 text-destructive-strong text-xs p-3">{error}</div>
+        <div className="rounded-md bg-destructive-soft/60 text-destructive-strong text-xs p-3">
+          {error}
+        </div>
       )}
 
       {cfg && (
@@ -105,7 +107,13 @@ export function SecurityPanel({ onEnableFirewall, onEnableUac }: Props) {
             <PostureCard
               icon={<LockKeyhole className="w-4 h-4" />}
               title={t("securityBitlocker")}
-              tone={cfg.bitlockerCProtected === false ? "warn" : cfg.bitlockerCProtected ? "ok" : "muted"}
+              tone={
+                cfg.bitlockerCProtected === false
+                  ? "warn"
+                  : cfg.bitlockerCProtected
+                    ? "ok"
+                    : "muted"
+              }
               value={
                 cfg.bitlockerCProtected == null
                   ? t("securityUnknown")
@@ -115,7 +123,11 @@ export function SecurityPanel({ onEnableFirewall, onEnableUac }: Props) {
               }
               action={
                 cfg.bitlockerCProtected === false ? (
-                  <Button size="sm" variant="outline" onClick={() => openOemLink("ms-settings:deviceencryption").catch(() => {})}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openOemLink("ms-settings:deviceencryption").catch(() => {})}
+                  >
                     <ExternalLink className="w-4 h-4" />
                     {t("securityOpenSettings")}
                   </Button>
@@ -132,7 +144,11 @@ export function SecurityPanel({ onEnableFirewall, onEnableUac }: Props) {
                   <Globe className="w-4 h-4 text-primary" />
                   {t("securityDns")}
                 </span>
-                <Button size="sm" variant="ghost" onClick={() => openOemLink("ms-settings:network-status").catch(() => {})}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => openOemLink("ms-settings:network-status").catch(() => {})}
+                >
                   <ExternalLink className="w-3.5 h-3.5" />
                   {t("securityOpenSettings")}
                 </Button>
@@ -195,15 +211,32 @@ function firewallValue(cfg: SecurityConfig, t: ReturnType<typeof useT>): string 
   if (cfg.firewallProfiles == null) return t("securityFirewallQueryFailed");
   const disabled = cfg.firewallProfiles.filter((p) => !p.enabled);
   if (disabled.length === 0) return t("securityFirewallAllOn");
-  if (cfg.thirdPartyFirewall) return t("securityFirewallThirdParty", { vendor: cfg.thirdPartyFirewall });
+  if (cfg.thirdPartyFirewall)
+    return t("securityFirewallThirdParty", { vendor: cfg.thirdPartyFirewall });
   return t("securityFirewallOff", { names: disabled.map((p) => p.name).join(", ") });
 }
 
 const TONE_STYLE: Record<Tone, { border: string; tint: string; text: string }> = {
-  ok: { border: "border-success/30", tint: "bg-success-soft text-success-strong", text: "text-success-strong" },
-  warn: { border: "border-warning/40", tint: "bg-warning-soft text-warning-strong", text: "text-warning-strong" },
-  bad: { border: "border-destructive/40", tint: "bg-destructive-soft text-destructive-strong", text: "text-destructive-strong" },
-  muted: { border: "border-border", tint: "bg-muted text-muted-foreground", text: "text-muted-foreground" },
+  ok: {
+    border: "border-success/30",
+    tint: "bg-success-soft text-success-strong",
+    text: "text-success-strong",
+  },
+  warn: {
+    border: "border-warning/40",
+    tint: "bg-warning-soft text-warning-strong",
+    text: "text-warning-strong",
+  },
+  bad: {
+    border: "border-destructive/40",
+    tint: "bg-destructive-soft text-destructive-strong",
+    text: "text-destructive-strong",
+  },
+  muted: {
+    border: "border-border",
+    tint: "bg-muted text-muted-foreground",
+    text: "text-muted-foreground",
+  },
 };
 
 function PostureCard({
@@ -224,7 +257,13 @@ function PostureCard({
   return (
     <Card variant="default" className={cn("flex items-center gap-3 p-4", s.border)}>
       <span className={cn("shrink-0 w-9 h-9 rounded-md flex items-center justify-center", s.tint)}>
-        {ok ? <CheckCircle2 className="w-4 h-4" /> : tone === "muted" ? icon : <ShieldX className="w-4 h-4" />}
+        {ok ? (
+          <CheckCircle2 className="w-4 h-4" />
+        ) : tone === "muted" ? (
+          icon
+        ) : (
+          <ShieldX className="w-4 h-4" />
+        )}
       </span>
       <div className="min-w-0 flex-1">
         <div className="text-sm font-semibold text-foreground">{title}</div>

@@ -9,7 +9,11 @@ pub const CATEGORY: &str = "Disk bütünlüğü";
 pub fn evaluate(volumes: &[ChkdskVolume]) -> Vec<Finding> {
     let mut out = Vec::new();
     // Kolektör tüm fixed NTFS volume'lere aynı sayıyı atar — sum() çoğaltır, max() doğru.
-    let total_errors: u32 = volumes.iter().map(|v| v.recent_error_count).max().unwrap_or(0);
+    let total_errors: u32 = volumes
+        .iter()
+        .map(|v| v.recent_error_count)
+        .max()
+        .unwrap_or(0);
 
     // Tek bir özet Finding — her volume için ayrı kart UI'ı şişirir.
     if total_errors >= 3 {
@@ -34,8 +38,12 @@ pub fn evaluate(volumes: &[ChkdskVolume]) -> Vec<Finding> {
             )
             // Nötr metric — Badge'e direkt basıldığı için locale-agnostik tut.
             .with_metric(total_errors.to_string())
-            .with_metric_code(MetricCode::Count { value: total_errors as u64 })
-            .with_action(FindingAction::RunChkdskScan { volume: target.clone() })
+            .with_metric_code(MetricCode::Count {
+                value: total_errors as u64,
+            })
+            .with_action(FindingAction::RunChkdskScan {
+                volume: target.clone(),
+            })
             .with_action_code("finding.chkdsk.errors_detected.action")
             .with_params(json!({
                 "volume": target,

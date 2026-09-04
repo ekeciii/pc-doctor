@@ -128,12 +128,16 @@ pub fn parse_query(out: &str) -> ChkntfsState {
         || lower.contains("kirli")
     {
         // "is not dirty" / "kirli değil" — bu Scheduled değildir
-        if lower.contains("not dirty") || lower.contains("kirli değil") || lower.contains("kirli degil") {
+        if lower.contains("not dirty")
+            || lower.contains("kirli değil")
+            || lower.contains("kirli degil")
+        {
             return ChkntfsState::NotDirty;
         }
         return ChkntfsState::Scheduled;
     }
-    if lower.contains("not dirty") || lower.contains("kirli değil") || lower.contains("kirli degil") {
+    if lower.contains("not dirty") || lower.contains("kirli değil") || lower.contains("kirli degil")
+    {
         return ChkntfsState::NotDirty;
     }
     ChkntfsState::Unknown

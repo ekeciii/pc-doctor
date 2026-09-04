@@ -18,6 +18,7 @@ import {
   onChkdskComplete,
   onChkdskProgress,
   runChkdskScan,
+  toError,
 } from "@/lib/api";
 import type { ChkdskProgress, ChkdskResult } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -111,12 +112,12 @@ export function ChkdskProgressDialog({ open, volume, onClose, onNeedsElevation }
             onClose();
             return;
           }
-          setError(String(e));
+          setError(toError(e).message);
           setPhase("error");
         }
       } catch (e) {
         if (cancelled) return;
-        setError(`Listener kurulamadı: ${String(e)}`);
+        setError(`Listener kurulamadı: ${toError(e).message}`);
         setPhase("error");
       }
     })();
@@ -226,7 +227,9 @@ export function ChkdskProgressDialog({ open, volume, onClose, onNeedsElevation }
             aria-atomic="false"
           >
             {lines.length === 0 && (
-              <div className="text-background/40">{t("chkdskRunning", { volume: volume ?? "" })}…</div>
+              <div className="text-background/40">
+                {t("chkdskRunning", { volume: volume ?? "" })}…
+              </div>
             )}
             {lines.map((l, i) => (
               <div key={i} className="whitespace-pre-wrap break-words">
@@ -239,9 +242,7 @@ export function ChkdskProgressDialog({ open, volume, onClose, onNeedsElevation }
           {result && phase === "done" && (
             <Alert variant={result.errorsFound ? "warning" : "success"}>
               <AlertTitle>
-                {result.errorsFound
-                  ? t("chkdskErrorsFound")
-                  : t("chkdskNoErrors")}
+                {result.errorsFound ? t("chkdskErrorsFound") : t("chkdskNoErrors")}
               </AlertTitle>
             </Alert>
           )}
@@ -261,11 +262,7 @@ export function ChkdskProgressDialog({ open, volume, onClose, onNeedsElevation }
 
         <DialogFooter>
           {running ? (
-            <Button
-              variant="destructive"
-              onClick={handleCancel}
-              disabled={cancelling}
-            >
+            <Button variant="destructive" onClick={handleCancel} disabled={cancelling}>
               {cancelling ? t("chkdskCancelling") : t("chkdskCancel")}
             </Button>
           ) : (

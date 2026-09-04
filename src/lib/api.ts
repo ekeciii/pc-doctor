@@ -95,9 +95,7 @@ export function toError(e: unknown): Error {
     return new RestoreFailedError(msg.slice(RESTORE_FAILED_SENTINEL.length + 2));
   }
   if (msg.startsWith(SCHEDULE_INCONSISTENT_SENTINEL)) {
-    return new ScheduleInconsistentError(
-      msg.slice(SCHEDULE_INCONSISTENT_SENTINEL.length + 2)
-    );
+    return new ScheduleInconsistentError(msg.slice(SCHEDULE_INCONSISTENT_SENTINEL.length + 2));
   }
   if (msg.startsWith(VOLUME_LOCKED_SENTINEL)) {
     return new VolumeLockedError(msg.slice(VOLUME_LOCKED_SENTINEL.length + 2));
@@ -106,11 +104,15 @@ export function toError(e: unknown): Error {
 }
 
 export function scan(): Promise<ScanReport> {
-  return invoke<ScanReport>("scan").catch((e) => { throw toError(e); });
+  return invoke<ScanReport>("scan").catch((e) => {
+    throw toError(e);
+  });
 }
 
 export function listCleanupTargets(): Promise<CleanupTarget[]> {
-  return invoke<CleanupTarget[]>("list_cleanup_targets").catch((e) => { throw toError(e); });
+  return invoke<CleanupTarget[]>("list_cleanup_targets").catch((e) => {
+    throw toError(e);
+  });
 }
 
 /** Sprint 14 — sürücü listesi (tam tarama olmadan disk kategorisi için). */
@@ -262,11 +264,15 @@ export function deleteUserFiles(paths: string[]): Promise<FileDeleteResult> {
 }
 
 export function isSystemRestoreEnabled(): Promise<boolean> {
-  return invoke<boolean>("is_system_restore_enabled").catch((e) => { throw toError(e); });
+  return invoke<boolean>("is_system_restore_enabled").catch((e) => {
+    throw toError(e);
+  });
 }
 
 export function createRestorePoint(description: string): Promise<void> {
-  return invoke<void>("create_restore_point", { description }).catch((e) => { throw toError(e); });
+  return invoke<void>("create_restore_point", { description }).catch((e) => {
+    throw toError(e);
+  });
 }
 
 export function executeCleanup(
@@ -276,17 +282,16 @@ export function executeCleanup(
   return invoke<CleanupResult>("execute_cleanup", {
     targetIds,
     forceWithoutRestore,
-  }).catch((e) => { throw toError(e); });
+  }).catch((e) => {
+    throw toError(e);
+  });
 }
 
 /**
  * Faz 1 — "Hepsini Düzelt": bir FixSpec listesini tek restore point + tek
  * elevation altında uygular. RestoreFailedError yakalanıp force ile retry edilebilir.
  */
-export function runFixAll(
-  fixes: FixSpec[],
-  forceWithoutRestore = false
-): Promise<FixAllOutcome> {
+export function runFixAll(fixes: FixSpec[], forceWithoutRestore = false): Promise<FixAllOutcome> {
   return invoke<FixAllOutcome>("run_fix_all", { fixes, forceWithoutRestore }).catch((e) => {
     throw toError(e);
   });
@@ -297,24 +302,28 @@ export function isElevated(): Promise<boolean> {
 }
 
 export function relaunchAsAdmin(): Promise<void> {
-  return invoke<void>("relaunch_as_admin").catch((e) => { throw toError(e); });
+  return invoke<void>("relaunch_as_admin").catch((e) => {
+    throw toError(e);
+  });
 }
 
 export function runSystemFileCheck(): Promise<SfcDismSummary> {
-  return invoke<SfcDismSummary>("run_system_file_check").catch((e) => { throw toError(e); });
+  return invoke<SfcDismSummary>("run_system_file_check").catch((e) => {
+    throw toError(e);
+  });
 }
 
 export function openOemLink(url: string): Promise<void> {
-  return invoke<void>("open_oem_link", { url }).catch((e) => { throw toError(e); });
+  return invoke<void>("open_oem_link", { url }).catch((e) => {
+    throw toError(e);
+  });
 }
 
 export function onSfcDismProgress(handler: (line: ProgressLine) => void): Promise<UnlistenFn> {
   return listen<ProgressLine>("sfc-dism-progress", (e) => handler(e.payload));
 }
 
-export function onFixAllProgress(
-  handler: (p: FixAllProgress) => void
-): Promise<UnlistenFn> {
+export function onFixAllProgress(handler: (p: FixAllProgress) => void): Promise<UnlistenFn> {
   return listen<FixAllProgress>("fix-all-progress", (e) => handler(e.payload));
 }
 
@@ -387,15 +396,11 @@ export function runChkdskScan(volume: string): Promise<ChkdskResult> {
   });
 }
 
-export function onChkdskProgress(
-  handler: (p: ChkdskProgress) => void
-): Promise<UnlistenFn> {
+export function onChkdskProgress(handler: (p: ChkdskProgress) => void): Promise<UnlistenFn> {
   return listen<ChkdskProgress>("chkdsk-progress", (e) => handler(e.payload));
 }
 
-export function onChkdskComplete(
-  handler: (r: ChkdskResult) => void
-): Promise<UnlistenFn> {
+export function onChkdskComplete(handler: (r: ChkdskResult) => void): Promise<UnlistenFn> {
   return listen<ChkdskResult>("chkdsk-complete", (e) => handler(e.payload));
 }
 
@@ -453,9 +458,7 @@ export function cancelPendingChkdsk(volume: string): Promise<void> {
 }
 
 export function fetchLastChkdskResult(volume: string): Promise<ChkdskBootResult | null> {
-  return invoke<ChkdskBootResult | null>("fetch_last_chkdsk_result", { volume }).catch(
-    () => null
-  );
+  return invoke<ChkdskBootResult | null>("fetch_last_chkdsk_result", { volume }).catch(() => null);
 }
 
 export function checkChkdskScheduledVolumes(): Promise<string[]> {
@@ -472,8 +475,6 @@ export async function recoverPendingChkdskFromRegistry(): Promise<string[]> {
   return scheduled;
 }
 
-export function onChkdskFixComplete(
-  handler: (r: ChkdskFixResult) => void
-): Promise<UnlistenFn> {
+export function onChkdskFixComplete(handler: (r: ChkdskFixResult) => void): Promise<UnlistenFn> {
   return listen<ChkdskFixResult>("chkdsk-fix-complete", (e) => handler(e.payload));
 }

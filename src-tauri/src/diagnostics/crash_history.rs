@@ -23,10 +23,7 @@ pub fn evaluate(history: &CrashHistory) -> Vec<Finding> {
         .with_metric_code(MetricCode::Count { value: wer as u64 })
         .with_action(FindingAction::RunSystemFileCheck)
         .with_params(json!({ "werCount": wer }));
-        f.recommended_action = Some(
-            "Sistem dosyalarını sfc/DISM ile onar; Güvenilirlik İzleyici'de hangi uygulamaların çöktüğüne bak."
-                .into(),
-        );
+        f.recommendation_code = Some("finding.crash.wer_many.recommendation".into());
         out.push(f);
     } else if wer >= 5 {
         let mut f = Finding::code_only(
@@ -40,8 +37,7 @@ pub fn evaluate(history: &CrashHistory) -> Vec<Finding> {
         .with_metric_code(MetricCode::Count { value: wer as u64 })
         .with_action(FindingAction::RunSystemFileCheck)
         .with_params(json!({ "werCount": wer }));
-        f.recommended_action =
-            Some("Sistem dosyalarını sfc/DISM ile onar; Güvenilirlik İzleyici'den pattern'leri incele.".into());
+        f.recommendation_code = Some("finding.crash.wer_some.recommendation".into());
         out.push(f);
     }
 
@@ -63,17 +59,16 @@ pub fn evaluate(history: &CrashHistory) -> Vec<Finding> {
                 "finding.crash.top_signature.description",
             )
             .with_metric(top.count.to_string())
-            .with_metric_code(MetricCode::Count { value: top.count as u64 })
+            .with_metric_code(MetricCode::Count {
+                value: top.count as u64,
+            })
             .with_action(FindingAction::RunSystemFileCheck)
             .with_params(json!({
                 "source": safe_source,
                 "signatureCount": top.count,
                 "lastOccurred": safe_last,
             }));
-            f.recommended_action = Some(
-                "Sistem dosyalarını sfc/DISM ile onar; sorun süren bir uygulama/sürücüyse güncelle, kaldır veya OEM sayfasını ziyaret et."
-                    .into(),
-            );
+            f.recommendation_code = Some("finding.crash.top_signature.recommendation".into());
             out.push(f);
         }
     }

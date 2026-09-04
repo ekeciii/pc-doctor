@@ -39,7 +39,7 @@ fn classify(d: &SmartDisk) -> Vec<Finding> {
             "healthStatus": d.health_status.clone(),
             "operationalStatus": d.operational_status.clone(),
         }));
-        f.recommended_action = Some("Hemen veri yedeği al; üretici tanı aracını çalıştır.".into());
+        f.recommendation_code = Some("finding.smart.health.recommendation".into());
         out.push(f);
     }
 
@@ -70,11 +70,14 @@ fn classify(d: &SmartDisk) -> Vec<Finding> {
                 "diskName": disk_name.clone(),
                 "wearPercent": w,
             }));
-            f.recommended_action = Some(if w >= 80 {
-                "Önemli dosyalarını hemen yedekle ve SSD değişimini planla.".into()
-            } else {
-                "Önemli dosyaların düzenli yedeğini al; aşınma ilerledikçe değişimi planla.".into()
-            });
+            f.recommendation_code = Some(
+                if w >= 80 {
+                    "finding.smart.wear_urgent.recommendation"
+                } else {
+                    "finding.smart.wear_routine.recommendation"
+                }
+                .into(),
+            );
             out.push(f);
         }
     }
@@ -102,9 +105,7 @@ fn classify(d: &SmartDisk) -> Vec<Finding> {
                 "diskName": disk_name.clone(),
                 "temperatureC": t,
             }));
-            f.recommended_action = Some(
-                "Kasanın hava akışını ve disk konumunu kontrol et; cihaz NVMe ise heatsink önerilir.".into(),
-            );
+            f.recommendation_code = Some("finding.smart.temperature.recommendation".into());
             out.push(f);
         }
     }
@@ -131,8 +132,7 @@ fn classify(d: &SmartDisk) -> Vec<Finding> {
             "readErrors": read_err,
             "writeErrors": write_err,
         }));
-        f.recommended_action =
-            Some("Hemen yedek al; chkdsk taraması çalıştır.".into());
+        f.recommendation_code = Some("finding.smart.io_errors.recommendation".into());
         out.push(f);
     }
 

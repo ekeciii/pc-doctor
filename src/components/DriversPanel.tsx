@@ -29,7 +29,11 @@ export function DriversPanel() {
           {t("driversHeading")}
         </h3>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={() => openOemLink("ms-settings:windowsupdate").catch(() => {})}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => openOemLink("ms-settings:windowsupdate").catch(() => {})}
+          >
             <ExternalLink className="w-3.5 h-3.5" />
             {t("driversUpdateCta")}
           </Button>
@@ -54,7 +58,9 @@ export function DriversPanel() {
       )}
 
       {error && (
-        <div className="rounded-md bg-destructive-soft/60 text-destructive-strong text-xs p-3">{error}</div>
+        <div className="rounded-md bg-destructive-soft/60 text-destructive-strong text-xs p-3">
+          {error}
+        </div>
       )}
 
       {drivers && drivers.length === 0 && !loading && (
@@ -129,7 +135,10 @@ function DriverRow({ driver, unsigned = false }: { driver: DriverInfo; unsigned?
   return (
     <Card
       variant="default"
-      className={cn("flex items-center gap-3 p-3", unsigned ? "border-warning/30" : "border-border")}
+      className={cn(
+        "flex items-center gap-3 p-3",
+        unsigned ? "border-warning/30" : "border-border"
+      )}
     >
       <span
         className={cn(
@@ -150,7 +159,9 @@ function DriverRow({ driver, unsigned = false }: { driver: DriverInfo; unsigned?
         </div>
       </div>
       <div className="shrink-0 text-right">
-        <div className="text-[11px] font-mono text-foreground/80 tabular-nums">{driver.driverDate}</div>
+        <div className="text-[11px] font-mono text-foreground/80 tabular-nums">
+          {driver.driverDate}
+        </div>
         <div className="text-[10px] font-mono text-muted-foreground tabular-nums">
           {t("driversAgeYears", { years })}
         </div>

@@ -11,8 +11,7 @@ export function VolumeGrid({ volumes }: { volumes: VolumeInfo[] }) {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {volumes.map((v, i) => {
         const usedPct = Math.min(100, Math.max(0, v.usedPercent));
-        const tone =
-          usedPct >= 90 ? "destructive" : usedPct >= 85 ? "warning" : "primary";
+        const tone = usedPct >= 90 ? "destructive" : usedPct >= 85 ? "warning" : "primary";
         return (
           <Card
             key={v.mountPoint}
@@ -26,23 +25,17 @@ export function VolumeGrid({ volumes }: { volumes: VolumeInfo[] }) {
                 <div className="font-display font-semibold text-base text-foreground">
                   {v.mountPoint.replace(/\\$/, "")}
                 </div>
-                {v.label && (
-                  <span className="text-xs text-muted-foreground">({v.label})</span>
-                )}
+                {v.label && <span className="text-xs text-muted-foreground">({v.label})</span>}
               </div>
               <Progress value={usedPct} tone={tone} />
               <div className="mt-2 flex justify-between text-xs text-muted-foreground">
                 <span>
                   {t("used")}:{" "}
-                  <span className="font-medium text-foreground/90">
-                    {fmtBytes(v.usedBytes)}
-                  </span>
+                  <span className="font-medium text-foreground/90">{fmtBytes(v.usedBytes)}</span>
                 </span>
                 <span>
                   {t("freeSpace")}:{" "}
-                  <span className="font-medium text-foreground/90">
-                    {fmtBytes(v.freeBytes)}
-                  </span>
+                  <span className="font-medium text-foreground/90">{fmtBytes(v.freeBytes)}</span>
                 </span>
               </div>
             </CardContent>
