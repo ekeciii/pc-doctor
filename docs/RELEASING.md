@@ -82,6 +82,11 @@ npm run tauri build
 
 Çıktı `src-tauri/target/release/bundle/{msi,nsis}/` altında. MSI'yı bir test makinesinde çift tıkla, kurulum çalışıyor mu doğrula.
 
+Bir sürümü (özellikle `v0.2.0` gibi büyük bir lansmanı) etiketlemeden önce
+tam elle test betiğini çalıştır: [QA-CHECKLIST.md](./QA-CHECKLIST.md) —
+temiz VM kurulumu, ilk-açılış bildirimi, 13 kategori tarama, tekil düzeltme
+akışları, chkdsk, Geri Dönüşüm Kutusu silme, AI sohbet, updater ve kaldırma.
+
 ## Updater nasıl çalışır?
 
 1. Uygulama açılırken `checkForUpdate()` çağrılır (sessiz, ağ hatası UI'da görünmez).
