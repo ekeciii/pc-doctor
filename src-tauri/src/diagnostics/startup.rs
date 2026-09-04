@@ -3,7 +3,7 @@
 use crate::models::{Finding, FindingAction, MetricCode, Severity, StartupInfo};
 use serde_json::json;
 
-const CATEGORY: &str = "Başlangıç";
+pub const CATEGORY: &str = "Başlangıç";
 
 pub fn evaluate(info: &StartupInfo) -> Vec<Finding> {
     let mut out = Vec::new();

@@ -4,7 +4,7 @@
 use crate::models::{DefenderStatus, Finding, FindingAction, MetricCode, Severity, ThreatDetection};
 use serde_json::json;
 
-const CATEGORY: &str = "Virüs";
+pub const CATEGORY: &str = "Virüs";
 
 pub fn evaluate(status: &DefenderStatus, threats: &[ThreatDetection]) -> Vec<Finding> {
     let mut out = Vec::new();
@@ -56,8 +56,16 @@ pub fn evaluate(status: &DefenderStatus, threats: &[ThreatDetection]) -> Vec<Fin
             "finding.defender.av_off.description",
         )
         .with_metric("!")
-        .with_metric_code(MetricCode::BareString { text: "!".into() });
-        out.push(f);
+        .with_metric_code(MetricCode::BareString { text: "!".into() })
+        .with_action(FindingAction::OpenUrl {
+            url: "ms-settings:windowsdefender".into(),
+        })
+        .with_action_code("finding.defender.av_off.action");
+        out.push(with_recommend(
+            f,
+            "Windows Güvenlik → Virüs ve tehdit koruması bölümünden antivirüs motorunu aç \
+             (başka bir AV kuruluysa onu güncel tut).",
+        ));
     }
 
     if !status.tamper_protection {

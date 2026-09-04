@@ -1,7 +1,7 @@
 //! NTFS fixed volume enumeration + Event Log Ntfs/Disk hata cross-reference.
 //! Sprint 6 — chkdsk /scan suggestion.
 
-use crate::models::ChkdskVolume;
+use crate::models::{ChkdskVolume, IntegrityVolume};
 use crate::util::powershell;
 use serde::Deserialize;
 
@@ -109,6 +109,58 @@ pub fn list_fixed_ntfs_drive_letters() -> Vec<String> {
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|s| s.to_uppercase())
+        .collect()
+}
+
+/// Sprint 14 — disk bütünlüğü paneli için sabit NTFS sürücüler (boyut + sistem bayrağı).
+/// Event Log sorgusu YOK → hızlı. Tarama/onarım kullanıcı tarafından tetiklenir.
+pub fn list_integrity_volumes() -> Vec<IntegrityVolume> {
+    let system_letter = std::env::var("SystemDrive")
+        .ok()
+        .and_then(|d| d.chars().next())
+        .map(|c| c.to_ascii_uppercase())
+        .unwrap_or('C');
+
+    let script = r#"
+        $ErrorActionPreference = 'SilentlyContinue'
+        $vols = Get-Volume | Where-Object {
+            $_.DriveType -eq 'Fixed' -and
+            $_.FileSystem -eq 'NTFS' -and
+            $_.DriveLetter
+        } | Select-Object DriveLetter, FileSystem, Size, SizeRemaining
+        $vols | ConvertTo-Json -Compress -Depth 3
+    "#;
+    let raw = match powershell::run_cim(script) {
+        Some(s) => s,
+        None => return Vec::new(),
+    };
+    let trimmed = raw.trim();
+    if trimmed.is_empty() || trimmed == "null" {
+        return Vec::new();
+    }
+    let value: serde_json::Value = match serde_json::from_str(trimmed) {
+        Ok(v) => v,
+        Err(_) => return Vec::new(),
+    };
+    let items: Vec<serde_json::Value> = match value {
+        serde_json::Value::Array(arr) => arr,
+        obj @ serde_json::Value::Object(_) => vec![obj],
+        _ => return Vec::new(),
+    };
+    items
+        .into_iter()
+        .filter_map(|v| serde_json::from_value::<PsVolume>(v).ok())
+        .filter_map(|v| {
+            let letter = v.drive_letter.filter(|s| !s.is_empty())?.to_uppercase();
+            let is_system = letter.chars().next() == Some(system_letter);
+            Some(IntegrityVolume {
+                drive_letter: letter,
+                file_system: v.file_system.unwrap_or_else(|| "NTFS".into()),
+                size_bytes: v.size.unwrap_or(0),
+                free_bytes: v.size_remaining.unwrap_or(0),
+                is_system,
+            })
+        })
         .collect()
 }
 

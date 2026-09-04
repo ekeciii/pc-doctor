@@ -4,7 +4,7 @@
 use crate::models::{ChkdskVolume, Finding, FindingAction, MetricCode, Severity};
 use serde_json::json;
 
-const CATEGORY: &str = "Disk bütünlüğü";
+pub const CATEGORY: &str = "Disk bütünlüğü";
 
 pub fn evaluate(volumes: &[ChkdskVolume]) -> Vec<Finding> {
     let mut out = Vec::new();

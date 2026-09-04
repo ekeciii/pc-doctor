@@ -2,10 +2,10 @@
 //! PII guard: top.source path içerebilir → normalize edilir.
 
 use crate::diagnostics::util::{normalize_user_path, short_date, truncate_safe};
-use crate::models::{CrashHistory, Finding, MetricCode, Severity};
+use crate::models::{CrashHistory, Finding, FindingAction, MetricCode, Severity};
 use serde_json::json;
 
-const CATEGORY: &str = "Çökme geçmişi";
+pub const CATEGORY: &str = "Çökme geçmişi";
 
 pub fn evaluate(history: &CrashHistory) -> Vec<Finding> {
     let mut out = Vec::new();
@@ -21,9 +21,10 @@ pub fn evaluate(history: &CrashHistory) -> Vec<Finding> {
         )
         .with_metric(wer.to_string())
         .with_metric_code(MetricCode::Count { value: wer as u64 })
+        .with_action(FindingAction::RunSystemFileCheck)
         .with_params(json!({ "werCount": wer }));
         f.recommended_action = Some(
-            "Reliability Monitor'da (Güvenilirlik Geçmişi) hangi uygulamaların çöktüğüne bak."
+            "Sistem dosyalarını sfc/DISM ile onar; Güvenilirlik İzleyici'de hangi uygulamaların çöktüğüne bak."
                 .into(),
         );
         out.push(f);
@@ -37,9 +38,10 @@ pub fn evaluate(history: &CrashHistory) -> Vec<Finding> {
         )
         .with_metric(wer.to_string())
         .with_metric_code(MetricCode::Count { value: wer as u64 })
+        .with_action(FindingAction::RunSystemFileCheck)
         .with_params(json!({ "werCount": wer }));
         f.recommended_action =
-            Some("Reliability Monitor üzerinden patternleri incele.".into());
+            Some("Sistem dosyalarını sfc/DISM ile onar; Güvenilirlik İzleyici'den pattern'leri incele.".into());
         out.push(f);
     }
 
@@ -62,13 +64,14 @@ pub fn evaluate(history: &CrashHistory) -> Vec<Finding> {
             )
             .with_metric(top.count.to_string())
             .with_metric_code(MetricCode::Count { value: top.count as u64 })
+            .with_action(FindingAction::RunSystemFileCheck)
             .with_params(json!({
                 "source": safe_source,
                 "signatureCount": top.count,
                 "lastOccurred": safe_last,
             }));
             f.recommended_action = Some(
-                "Bu uygulamayı/servisi güncelle veya kaldır; sürücüye bağlıysa OEM sayfasını ziyaret et."
+                "Sistem dosyalarını sfc/DISM ile onar; sorun süren bir uygulama/sürücüyse güncelle, kaldır veya OEM sayfasını ziyaret et."
                     .into(),
             );
             out.push(f);

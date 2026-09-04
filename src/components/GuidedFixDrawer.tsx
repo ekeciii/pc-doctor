@@ -48,8 +48,14 @@ export function GuidedFixDrawer({ finding, onOpenTarget, onClose }: Props) {
             {resolved?.recommendedAction && (
               <Step n={1}>{resolved.recommendedAction}</Step>
             )}
-            <Step n={resolved?.recommendedAction ? 2 : 1}>{t("guidedStepOpen")}</Step>
-            <Step n={resolved?.recommendedAction ? 3 : 2}>{t("guidedStepApply")}</Step>
+            {hasTarget ? (
+              <>
+                <Step n={resolved?.recommendedAction ? 2 : 1}>{t("guidedStepOpen")}</Step>
+                <Step n={resolved?.recommendedAction ? 3 : 2}>{t("guidedStepApply")}</Step>
+              </>
+            ) : (
+              <Step n={resolved?.recommendedAction ? 2 : 1}>{t("guidedStepManual")}</Step>
+            )}
           </ol>
         </DialogBody>
 

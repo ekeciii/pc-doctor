@@ -46,6 +46,26 @@ fn run(args: &[&str]) -> Result<(i32, String), String> {
     let mut child = cmd
         .spawn()
         .map_err(|e| format!("chkntfs başlatılamadı: {e}"))?;
+
+    // stdout + stderr'i ayrı thread'lerde drain et (powershell.rs ile aynı
+    // pipe-buffer kilitlenmesi riskini önler — bkz. util/powershell.rs).
+    use std::io::Read;
+    let stdout_pipe = child.stdout.take();
+    let stderr_pipe = child.stderr.take();
+    let out_reader = std::thread::spawn(move || {
+        let mut buf = Vec::new();
+        if let Some(mut s) = stdout_pipe {
+            let _ = s.read_to_end(&mut buf);
+        }
+        buf
+    });
+    let err_reader = std::thread::spawn(move || {
+        if let Some(mut s) = stderr_pipe {
+            let mut sink = Vec::new();
+            let _ = s.read_to_end(&mut sink);
+        }
+    });
+
     let status = child
         .wait_timeout(TIMEOUT)
         .map_err(|e| format!("chkntfs wait_timeout: {e}"))?;
@@ -54,14 +74,13 @@ fn run(args: &[&str]) -> Result<(i32, String), String> {
         None => {
             let _ = child.kill();
             let _ = child.wait();
+            let _ = out_reader.join();
+            let _ = err_reader.join();
             return Err("chkntfs zaman aşımına uğradı".into());
         }
     };
-    let mut stdout = Vec::new();
-    if let Some(mut s) = child.stdout {
-        use std::io::Read;
-        let _ = s.read_to_end(&mut stdout);
-    }
+    let stdout = out_reader.join().unwrap_or_default();
+    let _ = err_reader.join();
     let text = String::from_utf8_lossy(&stdout).into_owned();
     Ok((status.code().unwrap_or(-1), text))
 }

@@ -4,7 +4,7 @@
 use crate::models::{Finding, FindingAction, MetricCode, PagefileSnapshot, Severity};
 use serde_json::json;
 
-const CATEGORY: &str = "Sanal bellek";
+pub const CATEGORY: &str = "Sanal bellek";
 
 /// Sprint 9 D fix: 16 GiB sistem ölçümünde Win32_PhysicalMemory ile 16384 MiB üst sınırda
 /// karışıklık yaşanmasını engelle. 256 MB tolerance — 16128 MB üstü "16 GB RAM" sayılır.

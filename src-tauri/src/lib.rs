@@ -1,4 +1,5 @@
 mod admin;
+mod ai;
 mod collectors;
 mod commands;
 mod diagnostics;
@@ -47,6 +48,24 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::scan,
             commands::list_cleanup_targets,
+            commands::list_volumes,
+            commands::list_smart_disks,
+            commands::list_integrity_volumes,
+            commands::list_flagged_drivers,
+            commands::defender_overview,
+            commands::thermal_snapshot,
+            commands::security_overview,
+            commands::update_snapshot,
+            commands::startup_info,
+            commands::crash_history,
+            commands::open_reliability_monitor,
+            commands::pagefile_info,
+            commands::ai_list_models,
+            commands::ai_chat,
+            commands::recent_event_summaries,
+            commands::open_event_viewer,
+            commands::scan_large_files,
+            commands::delete_user_files,
             commands::create_restore_point,
             commands::is_system_restore_enabled,
             commands::execute_cleanup,

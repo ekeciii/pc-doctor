@@ -1,4 +1,4 @@
-import { ListChecks, ShieldCheck } from "lucide-react";
+import { LayoutGrid } from "lucide-react";
 import type { ScanReport } from "@/lib/types";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -10,12 +10,14 @@ import {
 } from "./categoryDefs";
 
 interface Props {
-  report: ScanReport;
+  /** `null` → henüz taranmadı; kartlar 'bekliyor' (idle) görünür ama yine tıklanabilir. */
+  report: ScanReport | null;
   /** Bir kategoriye tıklanınca yandan detay paneline geç. */
   onSelect: (cat: CategoryDef) => void;
 }
 
 const STATUS_TINT: Record<CategoryStatus, string> = {
+  idle: "bg-muted text-muted-foreground",
   ok: "bg-success-soft/70 text-success-strong",
   info: "bg-info-soft/70 text-info-strong",
   warning: "bg-warning-soft/70 text-warning-strong",
@@ -23,43 +25,37 @@ const STATUS_TINT: Record<CategoryStatus, string> = {
 };
 
 const STATUS_GLOW: Record<CategoryStatus, string> = {
+  idle: "var(--color-border)",
   ok: "var(--color-success)",
   info: "var(--color-info)",
   warning: "var(--color-warning)",
   critical: "var(--color-destructive)",
 };
 
+/** Tüm tanı kategorileri kart ızgarası. Tarama öncesi de görünür (idle), sonrası durum renkli. */
 export function CategoryGrid({ report, onSelect }: Props) {
   const t = useT();
-
-  // "hata olanlar kalsın sadece" — yalnız sorunlu (status != ok) kategoriler.
-  const problems = CATEGORIES.map((cat) => ({ cat, stat: categoryStat(cat, report) })).filter(
-    (x) => x.stat.status !== "ok"
-  );
-
-  if (problems.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-3 py-12 text-center animate-fade-in">
-        <span className="w-14 h-14 rounded-full bg-success-soft text-success-strong flex items-center justify-center">
-          <ShieldCheck className="w-7 h-7" />
-        </span>
-        <p className="font-display text-lg font-semibold text-foreground">{t("scanHealthyTitle")}</p>
-        <p className="text-sm text-muted-foreground max-w-sm">{t("scanHealthyBody")}</p>
-      </div>
-    );
-  }
+  const cats = CATEGORIES.map((cat) => ({ cat, stat: categoryStat(cat, report) }));
+  const problemCount = cats.filter(
+    (x) => x.stat.status === "warning" || x.stat.status === "critical"
+  ).length;
 
   return (
-    <section>
+    <section className="animate-fade-in">
       <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground mb-3 flex items-center gap-1.5 font-mono">
-        <ListChecks className="w-3.5 h-3.5 text-primary" />
-        {t("categoryProblemsTitle", { count: problems.length })}
+        <LayoutGrid className="w-3.5 h-3.5 text-primary" />
+        {report
+          ? problemCount > 0
+            ? t("categoryProblemsTitle", { count: problemCount })
+            : t("categoryAllOk")
+          : t("categoryIdleTitle")}
         <span className="flex-1 h-px ml-2 bg-gradient-to-r from-primary/40 to-transparent" />
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-        {problems.map(({ cat, stat }, i) => {
+        {cats.map(({ cat, stat }, i) => {
           const Icon = cat.icon;
           const glow = STATUS_GLOW[stat.status];
+          const isProblem = stat.status === "warning" || stat.status === "critical";
           return (
             <button
               key={cat.key}
@@ -70,8 +66,11 @@ export function CategoryGrid({ report, onSelect }: Props) {
                 "transition-[transform,box-shadow,border-color] duration-200 cursor-pointer hover:-translate-y-0.5 hover:shadow-md"
               )}
               style={{
-                borderColor: `color-mix(in oklch, ${glow} 38%, transparent)`,
-                animationDelay: `${i * 40}ms`,
+                borderColor:
+                  stat.status === "idle"
+                    ? "var(--color-border)"
+                    : `color-mix(in oklch, ${glow} 38%, transparent)`,
+                animationDelay: `${i * 35}ms`,
               }}
             >
               <span
@@ -80,7 +79,7 @@ export function CategoryGrid({ report, onSelect }: Props) {
                   "absolute top-2 right-2 w-1.5 h-1.5 rounded-full",
                   stat.status === "critical" && "animate-pulse-glow"
                 )}
-                style={{ background: glow, boxShadow: `0 0 7px ${glow}` }}
+                style={{ background: glow, boxShadow: stat.status === "idle" ? "none" : `0 0 7px ${glow}` }}
               />
               <span
                 aria-hidden
@@ -100,7 +99,11 @@ export function CategoryGrid({ report, onSelect }: Props) {
               <span className="relative min-w-0 flex-1">
                 <span className="block text-sm font-medium text-foreground truncate">{cat.label}</span>
                 <span className="block text-[11px] font-mono tabular-nums text-foreground/70">
-                  {t("categoryCount", { count: stat.count })}
+                  {stat.status === "idle"
+                    ? t("categoryIdle")
+                    : isProblem
+                      ? t("categoryCount", { count: stat.count })
+                      : t("categoryOk")}
                 </span>
               </span>
               <span

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { HealthScore, ScoreBand } from "@/lib/types";
 import { useT } from "@/lib/i18n";
 import type { TKey } from "@/lib/i18n";
+import { usePrefersReducedMotion } from "@/lib/duration";
 import { cn } from "@/lib/utils";
 
 const BAND_COLOR: Record<ScoreBand, string> = {
@@ -17,19 +18,6 @@ const BAND_VERDICT: Record<ScoreBand, TKey> = {
   warning: "scoreVerdictWarning",
   critical: "scoreVerdictCritical",
 };
-
-function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) return;
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
-    mq.addEventListener?.("change", handler);
-    return () => mq.removeEventListener?.("change", handler);
-  }, []);
-  return reduced;
-}
 
 function useCountUp(target: number, reduced: boolean, durationMs = 1300): number {
   const [val, setVal] = useState(0);

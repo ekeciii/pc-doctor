@@ -21,6 +21,7 @@ import {
 import type { DefenderScanResult } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
+import { useDuration } from "@/lib/duration";
 
 interface Props {
   open: boolean;
@@ -30,6 +31,7 @@ interface Props {
 
 export function DefenderScanDialog({ open, onClose, onNeedsElevation }: Props) {
   const t = useT();
+  const formatDuration = useDuration();
   const [running, setRunning] = useState(true);
   const [result, setResult] = useState<DefenderScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -124,8 +126,7 @@ export function DefenderScanDialog({ open, onClose, onNeedsElevation }: Props) {
             )}
             {(status === "clean" || status === "threats") && result && (
               <DialogDescription className="mt-1">
-                {t("defenderDuration")}: {Math.floor(result.durationSeconds / 60)} dk{" "}
-                {result.durationSeconds % 60} sn
+                {t("defenderDuration")}: {formatDuration(result.durationSeconds)}
               </DialogDescription>
             )}
           </div>

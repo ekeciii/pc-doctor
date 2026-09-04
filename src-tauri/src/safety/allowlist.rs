@@ -51,3 +51,41 @@ fn normalize(path: &Path) -> PathBuf {
     }
     out
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn allows_real_path_inside_temp_root() {
+        // TEMP altında GERÇEK bir alt klasör → izinli (canonicalize başarılı).
+        let sub = std::env::temp_dir().join("pcdoctor_allowlist_ok");
+        std::fs::create_dir_all(&sub).unwrap();
+        let res = ensure_within_allowlist(&sub);
+        let _ = std::fs::remove_dir_all(&sub);
+        assert!(res.is_ok(), "TEMP altı izinli olmalı, oldu: {res:?}");
+    }
+
+    #[test]
+    fn rejects_parent_dir_traversal_escaping_allowlist() {
+        // '..' ile allowlist kökünden kaçış → normalize `..` pop'lar, sonuç
+        // allowlist dışına çıkar → ForbiddenPath. Traversal savunması.
+        let escaped = std::env::temp_dir()
+            .join("..")
+            .join("..")
+            .join("Windows")
+            .join("System32")
+            .join("pcdoctor_evil.dll");
+        let res = ensure_within_allowlist(&escaped);
+        assert!(
+            matches!(res, Err(AppError::ForbiddenPath(_))),
+            "traversal reddedilmeli, sonuç: {res:?}"
+        );
+    }
+
+    #[test]
+    fn rejects_arbitrary_outside_path() {
+        let res = ensure_within_allowlist(Path::new(r"C:\Program Files\Foo\bar.exe"));
+        assert!(res.is_err(), "allowlist dışı yol reddedilmeli");
+    }
+}

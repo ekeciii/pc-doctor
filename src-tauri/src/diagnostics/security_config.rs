@@ -3,7 +3,7 @@
 use crate::models::{Finding, FindingAction, MetricCode, SecurityConfig, Severity};
 use serde_json::json;
 
-const CATEGORY: &str = "Güvenlik";
+pub const CATEGORY: &str = "Güvenlik";
 
 /// Bilinen güvenilir public DNS sunucuları. RFC1918 + loopback'i ayrı kontrol ediyoruz.
 const KNOWN_PUBLIC_DNS: &[&str] = &[

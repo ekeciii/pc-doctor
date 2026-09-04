@@ -5,6 +5,7 @@ import {
   Compass,
   Info,
   ShieldCheck,
+  Sparkles,
   Wrench,
 } from "lucide-react";
 import { Card } from "./ui/Card";
@@ -74,6 +75,8 @@ interface Props {
   onGuided?: (finding: Finding) => void;
   /** Faz 2 — tek tık otomatik sistem fix'i (firewall/UAC/pagefile) → onay + run_fix_all. */
   onApplyFix?: (finding: Finding) => void;
+  /** Sprint 14 — disk doluluk bulgusundan tek tık "Yer aç" → temizlik akışı. */
+  onCleanupDisk?: (finding: Finding) => void;
   index?: number;
 }
 
@@ -91,6 +94,7 @@ export function FindingCard({
   onChkdskFix,
   onGuided,
   onApplyFix,
+  onCleanupDisk,
   index = 0,
 }: Props) {
   const t = useT();
@@ -184,10 +188,11 @@ export function FindingCard({
               </Button>
             )}
             {(action.type === "openSystemPropertiesPerformance" ||
-              action.type === "openUrl") && (
+              action.type === "openUrl" ||
+              action.type === "guided") && (
               <Button size="sm" variant="outline" onClick={() => onGuided?.(finding)}>
                 <Compass className="w-4 h-4" />
-                {t("guidedCta")}
+                {resolved.actionLabel ?? t("guidedCta")}
               </Button>
             )}
             {(action.type === "enableFirewall" ||
@@ -196,6 +201,12 @@ export function FindingCard({
               <Button size="sm" onClick={() => onApplyFix?.(finding)}>
                 <Wrench className="w-4 h-4" />
                 {resolved.actionLabel ?? t("fix")}
+              </Button>
+            )}
+            {action.type === "runCleanup" && (
+              <Button size="sm" onClick={() => onCleanupDisk?.(finding)}>
+                <Sparkles className="w-4 h-4" />
+                {t("freeSpaceCta")}
               </Button>
             )}
           </div>

@@ -6,7 +6,8 @@
  *  1. `node scripts/check-i18n.mjs` — TS dict + t() çağrı uyumu
  *  2. `cargo test --test security_invariants` — Backend invariant 1-22
  *  3. `cargo test --lib` — Backend unit tests
- *  4. `npm run build` — Frontend TS compile + Vite bundle
+ *  4. `npm test` (vitest) — Frontend saf-mantık testleri (toError vb.)
+ *  5. `npm run build` — Frontend TS compile + Vite bundle
  *
  * Exit 0 hepsi geçtiyse; ilk fail'de stop.
  * Çalıştırma: `npm run check:all`
@@ -37,6 +38,12 @@ const STEPS = [
     cmd: "cargo",
     args: ["test", "--lib", "--message-format=short"],
     cwd: TAURI_DIR,
+  },
+  {
+    name: "Frontend unit tests (vitest)",
+    cmd: process.platform === "win32" ? "npm.cmd" : "npm",
+    args: ["test"],
+    cwd: ROOT,
   },
   {
     name: "Frontend TS compile + Vite build",

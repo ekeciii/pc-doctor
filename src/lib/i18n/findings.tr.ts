@@ -70,6 +70,7 @@ export const findingsTr = {
   "finding.defender.av_off.title": "Antivirüs devre dışı",
   "finding.defender.av_off.description":
     "Defender antivirüs motoru kapalı. Başka bir AV kuruluysa onun durumunu kontrol et.",
+  "finding.defender.av_off.action": "Windows Güvenlik'i Aç",
   "finding.defender.tamper_off.title": "Defender tamper koruması KAPALI",
   "finding.defender.tamper_off.description":
     "Tamper Protection devre dışı. Kötü amaçlı yazılım Defender ayarlarını değiştirebilir.",
@@ -87,23 +88,29 @@ export const findingsTr = {
   "finding.smart.health.title": "{diskName} sağlık uyarısı: {healthStatus}",
   "finding.smart.health.description":
     "Operasyonel durum: {operationalStatus}. Yedek al, üretici tanı aracını çalıştır.",
+  "finding.smart.health.action": "Nasıl yedek alırım?",
   "finding.smart.wear.title": "{diskName} SSD aşınma %{wearPercent}",
   "finding.smart.wear.description":
     "SSD'lerin yazılabilir ömrü sınırlıdır. %80 üstü değer SSD'nin son dönemine girdiğini gösterir.",
+  "finding.smart.wear.action": "Yedek + değişim adımları",
   "finding.smart.temperature.title": "{diskName} sıcaklığı yüksek: {temperatureC}°C",
   "finding.smart.temperature.description":
     "Disk sıcaklığı uzun süre 70°C üstünde olursa ömrü kısalır ve veri kaybı riski artar.",
+  "finding.smart.temperature.action": "Soğutma adımları",
   "finding.smart.io_errors.title": "{diskName} I/O hatası birikti",
   "finding.smart.io_errors.description":
     "Okuma hatası toplam: {readErrors}. Yazma hatası toplam: {writeErrors}. Disk bozulmaya başlıyor olabilir.",
+  "finding.smart.io_errors.action": "Yedek + chkdsk adımları",
 
   // === Sprint 7: thermal ===
   "finding.thermal.critical.title": "Donanım kritik düzeyde sıcak: {maxTemp}°C",
   "finding.thermal.critical.description":
     "ACPI termal sensörü ({zoneCount} zone) {maxTempPrecise}°C ölçtü. Bu seviyede CPU/GPU thermal throttling ve ömür kaybı kaçınılmaz. Not: sensör adı/yeri OEM'e göre değişir.",
+  "finding.thermal.critical.action": "Soğutma adımları",
   "finding.thermal.warning.title": "Donanım sıcaklığı yüksek: {maxTemp}°C",
   "finding.thermal.warning.description":
     "ACPI termal sensörü ({zoneCount} zone) {maxTempPrecise}°C ölçtü. Yük altında daha da artarsa throttling başlar.",
+  "finding.thermal.warning.action": "Soğutma adımları",
   "finding.thermal.throttling_critical.title":
     "CPU ağır throttling: nominal hızın %{perfPercent}'ı",
   "finding.thermal.throttling_critical.description":
@@ -163,6 +170,7 @@ export const findingsTr = {
   "finding.updates.winget.title": "{count} uygulama güncellenebilir (winget)",
   "finding.updates.winget.description":
     "Kurulu uygulamaların yeni sürümleri mevcut.",
+  "finding.updates.winget.action": "Tek komutla güncelle",
 
   // === Sprint 7: startup ===
   "finding.startup.slow_critical.title": "Son açılış çok uzun: {seconds} saniye",

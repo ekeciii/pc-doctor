@@ -70,15 +70,11 @@ pub fn short_date(iso: &str) -> String {
 ///      Kategori bilinmiyorsa muhafazakar: yalnız allow-list union'ı geçer.
 ///
 /// Backend disiplini bir yerde bozulsa bile DB'de PII kalmaz.
-pub fn sanitize_params(category: &str, params: &Value) -> Value {
-    // `source` DENY listesinde DEĞİL — "Çökme geçmişi" kategorisinde whitelist'te ve
-    // aşağıda normalize+truncate ile geçer. Diğer kategorilerde allow list zaten yutuyor.
-    const DENY: &[&str] = &[
-        "sample", "path", "hostname", "userName", "email", "message",
-        "threatName", "filePath", "url", "ip", "domain", "fqdn",
-    ];
-    // Allow whitelist — kategori başına. Bilinmeyen kategoride yalnızca union döner.
-    let allow: &[&str] = match category {
+/// Kategori başına izinli (PII-güvenli) param anahtarları. Bilinmeyen kategori →
+/// boş dilim (tüm params düşer). `sanitize_params` + `category_coverage` testi bunu
+/// kullanır; lokalize kategori etiketi tek SSoT burada.
+fn category_allow_list(category: &str) -> &'static [&'static str] {
+    match category {
         "Disk" => &["mount", "freePercent", "freeFormatted"],
         "Sürücü" => &["count", "deviceName", "manufacturer", "driverClass", "years"],
         "Temizlik" => &["sizeGb"],
@@ -93,12 +89,7 @@ pub fn sanitize_params(category: &str, params: &Value) -> Value {
             "writeErrors",
         ],
         "Donanım" => &["maxTemp", "maxTempPrecise", "zoneCount", "perfPercent", "loadPercent"],
-        "Güvenlik" => &[
-            "profiles",
-            "vendor",
-            "unknownCount",
-            "suspiciousCount",
-        ],
+        "Güvenlik" => &["profiles", "vendor", "unknownCount", "suspiciousCount"],
         "Güncelleme" => &["count"],
         "Başlangıç" => &["seconds", "milliseconds", "count"],
         "Çökme geçmişi" => &["werCount", "signatureCount", "lastOccurred", "source"],
@@ -123,7 +114,21 @@ pub fn sanitize_params(category: &str, params: &Value) -> Value {
         ],
         "Disk bütünlüğü" => &["errorCount", "volume"],
         _ => &[],
-    };
+    }
+}
+
+pub fn sanitize_params(category: &str, params: &Value) -> Value {
+    // `source` DENY listesinde DEĞİL — "Çökme geçmişi" kategorisinde whitelist'te ve
+    // aşağıda normalize+truncate ile geçer. Diğer kategorilerde allow list zaten yutuyor.
+    const DENY: &[&str] = &[
+        "sample", "path", "hostname", "userName", "email", "message",
+        "threatName", "filePath", "url", "ip", "domain", "fqdn",
+    ];
+    // Bilinmeyen kategori → boş allow-list → tüm params düşer. Bu KASITLI fail-safe
+    // (deny-by-default; bkz. sanitize_unknown_category_drops_all testi). Bir KNOWN
+    // diagnostic kategorisinin drift'i (rename) ise `category_coverage_*` testiyle
+    // CI'da yakalanır — bu yüzden burada runtime panic'e gerek yok.
+    let allow = category_allow_list(category);
 
     let obj = match params {
         Value::Object(m) => m,
@@ -155,6 +160,40 @@ pub fn sanitize_params(category: &str, params: &Value) -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Her diagnostic'in CATEGORY sabiti `category_allow_list`'te boş-olmayan bir
+    /// branch'e sahip olmalı. Bir kategori yeniden adlandırılıp util.rs
+    /// güncellenmezse, o kategorinin TÜM params'ı sessizce history'den düşerdi
+    /// (veri kaybı). Bu test o drift'i CI'da yüksek sesle yakalar — lokalize
+    /// kategori etiketi ile allow-list'i birbirine bağlar.
+    ///
+    /// Kapsam: 11 diagnostic modülü + 2 inline kategori (disk_full, cleanup).
+    #[test]
+    fn category_coverage_every_emitted_category_has_allowlist() {
+        use crate::diagnostics;
+        let categories: &[(&str, &str)] = &[
+            ("chkdsk", diagnostics::chkdsk::CATEGORY),
+            ("crash_history", diagnostics::crash_history::CATEGORY),
+            ("defender", diagnostics::defender::CATEGORY),
+            ("drivers", diagnostics::drivers::CATEGORY),
+            ("event_log", diagnostics::event_log::CATEGORY),
+            ("pagefile", diagnostics::pagefile::CATEGORY),
+            ("security_config", diagnostics::security_config::CATEGORY),
+            ("smart", diagnostics::smart::CATEGORY),
+            ("startup", diagnostics::startup::CATEGORY),
+            ("thermal", diagnostics::thermal::CATEGORY),
+            ("updates", diagnostics::updates::CATEGORY),
+            ("disk_full", diagnostics::disk_full::CATEGORY),
+            ("cleanup", crate::commands::CLEANUP_CATEGORY),
+        ];
+        for (module, cat) in categories {
+            assert!(
+                !category_allow_list(cat).is_empty(),
+                "'{module}' kategorisi ('{cat}') category_allow_list'te branch'siz — \
+                 params sessizce düşüyor. diagnostics/util.rs'e branch ekle."
+            );
+        }
+    }
 
     #[test]
     fn truncate_handles_utf8_safely() {

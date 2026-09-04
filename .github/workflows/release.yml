@@ -42,6 +42,10 @@ jobs:
       - name: Install npm deps
         run: npm ci --no-audit --no-fund
 
+      # Kırmızı invariant/test ile release YAYINLANMASIN — build'den önce doğrula.
+      - name: Verify (i18n + invariants + lib tests + frontend build)
+        run: npm run check:all
+
       - name: Build + bundle MSI/NSIS
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}

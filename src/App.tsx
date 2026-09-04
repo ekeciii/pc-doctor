@@ -15,14 +15,17 @@ import { DefenderScanDialog } from "./components/DefenderScanDialog";
 import { ChkdskProgressDialog } from "./components/ChkdskProgressDialog";
 import { ChkdskFixConfirmDialog } from "./components/ChkdskFixConfirmDialog";
 import { ChkdskRebootCountdownDialog } from "./components/ChkdskRebootCountdownDialog";
+import { ChkdskFixResultDialog } from "./components/ChkdskFixResultDialog";
 import { ChkdskPendingBanner } from "./components/ChkdskPendingBanner";
 import { ChkdskBootResultBanner } from "./components/ChkdskBootResultBanner";
 import { CategoryGrid } from "./components/CategoryGrid";
 import { GuidedFixDrawer } from "./components/GuidedFixDrawer";
 import { FixAllConfirmDialog } from "./components/FixAllConfirmDialog";
+import { FixAllProgressDialog } from "./components/FixAllProgressDialog";
 import { FixAllSummaryDialog } from "./components/FixAllSummaryDialog";
 import { SettingsDialog, applyTheme } from "./components/SettingsDialog";
 import { HistoryDialog } from "./components/HistoryDialog";
+import { AiChatDrawer } from "./components/AiChatDrawer";
 import { Alert, AlertDescription, AlertTitle } from "./components/ui/Alert";
 import { Button } from "./components/ui/Button";
 import {
@@ -39,7 +42,14 @@ import {
   VolumeLockedError,
 } from "./lib/api";
 import { getSettings } from "./lib/settings";
-import type { CleanupResult, FixAllOutcome, FixSpec, Finding, ScanReport } from "./lib/types";
+import type {
+  ChkdskFixResult,
+  CleanupResult,
+  FixAllOutcome,
+  FixSpec,
+  Finding,
+  ScanReport,
+} from "./lib/types";
 import { resolveFinding, useByteFmt, useI18n, useT } from "./lib/i18n";
 
 export default function App() {
@@ -64,6 +74,8 @@ export default function App() {
     isSystem: boolean;
   } | null>(null);
   const [chkdskRebootVolume, setChkdskRebootVolume] = useState<string | null>(null);
+  // Canlı (sistem-dışı) chkdsk /f sonucu — tamamlanınca kullanıcıya gösterilir.
+  const [chkdskFixLiveResult, setChkdskFixLiveResult] = useState<ChkdskFixResult | null>(null);
   // Sprint 9 review H5: chkdsk /f Restore Point fail recovery banner
   const [restoreErrorChkdsk, setRestoreErrorChkdsk] = useState<{
     volume: string;
@@ -96,7 +108,7 @@ export default function App() {
     }
   }, [chkdskScheduleError]);
   const [lastResult, setLastResult] = useState<CleanupResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; detail?: string } | null>(null);
   const [elevated, setElevated] = useState<boolean | null>(null);
   const [forceElevationBanner, setForceElevationBanner] = useState<string | null>(null);
   const [restoreErrorIds, setRestoreErrorIds] = useState<string[] | null>(null);
@@ -110,6 +122,7 @@ export default function App() {
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const [historyEnabled, setHistoryEnabled] = useState(true);
   // Faz 1 M4 — Guided (Rehberli) bulgu için açık drawer.
   const [guidedFinding, setGuidedFinding] = useState<Finding | null>(null);
@@ -165,6 +178,18 @@ export default function App() {
     }
   };
 
+  // Ham hata metnini kullanıcıya doğrudan göstermek yerine dostça bir mesaj +
+  // (isteğe bağlı) açılır teknik detay olarak sunar. Teknik olmayan kullanıcı
+  // anlamsız Rust/IPC string'i yerine ne yapacağını anlar.
+  const showError = useCallback(
+    (e: unknown, friendly?: string) => {
+      const raw = e instanceof Error ? e.message : String(e);
+      const message = friendly ?? t("errorGeneric");
+      setError({ message, detail: raw && raw !== message ? raw : undefined });
+    },
+    [t]
+  );
+
   const runScan = async () => {
     setScanning(true);
     setError(null);
@@ -181,7 +206,7 @@ export default function App() {
         recordScan(r).catch((err) => console.warn("[history] record failed:", err));
       }
     } catch (e) {
-      setError(`${t("scanFailed")}: ${String(e)}`);
+      showError(e, t("scanFailed"));
     } finally {
       setScanning(false);
     }
@@ -208,7 +233,7 @@ export default function App() {
         setRestoreErrorIds(ids);
         setRestoreErrorMessage(e.message);
       } else {
-        setError(String(e));
+        showError(e, t("cleanupFailed"));
       }
       setPendingCleanupIds(null);
     } finally {
@@ -245,7 +270,7 @@ export default function App() {
     try {
       await openOemLink(url);
     } catch (e) {
-      setError(`${t("openOemFailed")}: ${String(e)}`);
+      showError(e, t("openOemFailed"));
     }
   };
 
@@ -271,6 +296,10 @@ export default function App() {
         return { type: "enableUac" };
       case "setPagefileManaged":
         return { type: "setPagefileManaged" };
+      case "runDefenderQuickScan":
+        return { type: "runDefenderQuickScan" };
+      case "runSystemFileCheck":
+        return { type: "runSystemFileCheck" };
       default:
         return null;
     }
@@ -296,6 +325,14 @@ export default function App() {
     if (specs.length === 0) return;
     setPendingFixSpecs(specs);
   }, [report, requireElevated, t, actionToFixSpec]);
+
+  // Disk doluluk bulgusunda "Yer aç": tüm temizlik hedeflerini onaya sun → runCleanup
+  // (restore point + rescan + lastResult). Çözüm bandı CategoryDetail'de gösterilir.
+  const handleCleanupDisk = useCallback(() => {
+    if (!report || report.cleanupTargets.length === 0) return;
+    if (!requireElevated(t("elevationRequired"))) return;
+    setPendingCleanupIds(report.cleanupTargets.map((x) => x.id));
+  }, [report, requireElevated, t]);
 
   // Tek bulguda "Düzelt": yalnız o fix.
   const handleApplyFix = useCallback(
@@ -329,7 +366,7 @@ export default function App() {
         } else if (e instanceof RestoreFailedError) {
           setFixAllRestoreError({ specs, message: e.message });
         } else {
-          setError(String(e));
+          showError(e);
         }
       } finally {
         setFixingAll(false);
@@ -354,6 +391,10 @@ export default function App() {
           return t("fixLineEnableUac");
         case "setPagefileManaged":
           return t("fixLineSetPagefileManaged");
+        case "runDefenderQuickScan":
+          return t("fixLineDefenderScan");
+        case "runSystemFileCheck":
+          return t("fixLineSystemFileCheck");
       }
     });
   }, [pendingFixSpecs, report, t, fmtBytes]);
@@ -406,8 +447,19 @@ export default function App() {
           // System drive — open reboot countdown
           setChkdskRebootVolume(volume);
         } else {
-          // Non-system live result already streamed
-          console.info("[chkdsk] /f live complete:", result);
+          // Sistem-dışı (canlı) sonuç: kullanıcıya sonucu göster + raporu tazele.
+          setChkdskFixLiveResult(result);
+          try {
+            const fresh = await scan();
+            setReport(fresh);
+            if (historyEnabled) {
+              recordScan(fresh).catch((err) =>
+                console.warn("[history] record failed:", err)
+              );
+            }
+          } catch (err) {
+            console.warn("[chkdsk] rescan after live fix failed:", err);
+          }
         }
       } catch (e) {
         if (e instanceof NeedsElevationError) {
@@ -417,13 +469,14 @@ export default function App() {
           // Kullanıcı "Yine de devam et" (force=true) ile retry edebilir.
           setRestoreErrorChkdsk({ volume, isSystem, message: e.message });
         } else if (e instanceof VolumeLockedError) {
-          setError(e.message);
+          // VolumeLocked mesajı backend'den anlamlı gelir — doğrudan göster.
+          setError({ message: e.message });
         } else {
-          setError(String(e));
+          showError(e, t("chkdskFixLiveFailed"));
         }
       }
     },
-    [pendingChkdskFix, requireElevated, t]
+    [pendingChkdskFix, requireElevated, t, historyEnabled, showError]
   );
 
   // Sprint 9 review H5 — chkdsk /f RestoreFailed retry handler
@@ -446,9 +499,9 @@ export default function App() {
     try {
       await openSystemPropertiesPerformance();
     } catch (e) {
-      setError(String(e));
+      showError(e);
     }
-  }, []);
+  }, [showError]);
 
   // M4 — GuidedFixDrawer "Ayarı aç": bulgunun action'ına göre doğru hedefi açar.
   const handleGuidedOpenTarget = useCallback(
@@ -503,6 +556,7 @@ export default function App() {
           elevated={elevated}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenHistory={() => setHistoryOpen(true)}
+          onOpenChat={() => setChatOpen(true)}
         />
 
         {availableUpdate && !updateDismissed && (
@@ -683,7 +737,29 @@ export default function App() {
 
         {error && (
           <Alert variant="destructive" className="mb-4">
-            <AlertDescription>{error}</AlertDescription>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <AlertDescription>{error.message}</AlertDescription>
+                {error.detail && (
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-xs text-destructive-strong/80 hover:text-destructive-strong">
+                      {t("errorShowDetails")}
+                    </summary>
+                    <pre className="mt-1.5 whitespace-pre-wrap break-words text-[11px] font-mono opacity-80">
+                      {error.detail}
+                    </pre>
+                  </details>
+                )}
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="shrink-0"
+                onClick={() => setError(null)}
+              >
+                {t("errorDismiss")}
+              </Button>
+            </div>
           </Alert>
         )}
 
@@ -705,7 +781,7 @@ export default function App() {
                 onScan={runScan}
                 onFixAll={handleFixAll}
               />
-              {report && <CategoryGrid report={report} onSelect={setSelectedCat} />}
+              <CategoryGrid report={report} onSelect={setSelectedCat} />
             </div>
 
             {/* DETAY panel (yandan kayar) */}
@@ -730,6 +806,10 @@ export default function App() {
                   onChkdskFix={handleChkdskFix}
                   onGuided={setGuidedFinding}
                   onApplyFix={handleApplyFix}
+                  onCleanupDisk={handleCleanupDisk}
+                  volumes={report?.volumes}
+                  reclaimableBytes={report?.totalReclaimableBytes ?? 0}
+                  cleanupResult={lastResult}
                 />
               )}
             </div>
@@ -807,6 +887,11 @@ export default function App() {
           onClose={() => setChkdskRebootVolume(null)}
         />
 
+        <ChkdskFixResultDialog
+          result={chkdskFixLiveResult}
+          onClose={() => setChkdskFixLiveResult(null)}
+        />
+
         <SfcDismProgressDialog
           open={sfcOpen}
           onClose={() => setSfcOpen(false)}
@@ -827,6 +912,8 @@ export default function App() {
 
         <HistoryDialog open={historyOpen} onClose={() => setHistoryOpen(false)} />
 
+        <AiChatDrawer open={chatOpen} onClose={() => setChatOpen(false)} report={report} />
+
         <GuidedFixDrawer
           finding={guidedFinding}
           onOpenTarget={handleGuidedOpenTarget}
@@ -842,6 +929,8 @@ export default function App() {
           }}
           onCancel={() => setPendingFixSpecs(null)}
         />
+
+        <FixAllProgressDialog open={fixingAll} />
 
         <FixAllSummaryDialog
           outcome={fixAllOutcome}

@@ -218,4 +218,18 @@
     font-family: var(--font-display);
     letter-spacing: -0.02em;
   }
+
+  /* Erişilebilirlik: hareket azaltma tercihinde tüm dekoratif animasyon/
+     geçişleri sustur (scan-sweep, pulse-glow, ping-ring, flicker, radar…).
+     Tek global kural; her bileşeni ayrı gate'lemekten daha güvenilir.
+     SVG değer-animasyonları (HealthScoreRing) ayrıca JS tarafında
+     usePrefersReducedMotion ile zaten ele alınıyor. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }

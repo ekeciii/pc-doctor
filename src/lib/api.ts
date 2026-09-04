@@ -6,17 +6,33 @@ import type {
   ChkdskFixResult,
   ChkdskProgress,
   ChkdskResult,
+  ChatMessage,
   CleanupResult,
   CleanupTarget,
+  CrashHistory,
   DateCount,
+  DefenderOverview,
   DefenderScanResult,
+  DriverInfo,
+  DriveFileScan,
+  EventSummary,
+  FileDeleteResult,
+  IntegrityVolume,
   FixAllOutcome,
+  FixAllProgress,
   FixSpec,
+  PagefileSnapshot,
+  VolumeInfo,
   PendingChkdsk,
   ProgressLine,
   ScanFindingDetail,
   ScanReport,
+  SecurityConfig,
   SfcDismSummary,
+  SmartDisk,
+  StartupInfo,
+  ThermalSnapshot,
+  UpdateSnapshot,
 } from "./types";
 
 export interface ScanRecord {
@@ -69,7 +85,8 @@ export class VolumeLockedError extends Error {
   }
 }
 
-function toError(e: unknown): Error {
+// Test edilebilir olması için export edildi (src/lib/__tests__/toError.test.ts).
+export function toError(e: unknown): Error {
   const msg = typeof e === "string" ? e : e instanceof Error ? e.message : String(e);
   if (msg.startsWith(NEEDS_ELEVATION_SENTINEL)) {
     return new NeedsElevationError(msg.slice(NEEDS_ELEVATION_SENTINEL.length + 2));
@@ -94,6 +111,154 @@ export function scan(): Promise<ScanReport> {
 
 export function listCleanupTargets(): Promise<CleanupTarget[]> {
   return invoke<CleanupTarget[]>("list_cleanup_targets").catch((e) => { throw toError(e); });
+}
+
+/** Sprint 14 — sürücü listesi (tam tarama olmadan disk kategorisi için). */
+export function listVolumes(): Promise<VolumeInfo[]> {
+  return invoke<VolumeInfo[]>("list_volumes").catch((e) => {
+    throw toError(e);
+  });
+}
+
+// === Sprint 15 — yerel AI sohbeti (Ollama) ===
+
+/** Yüklü Ollama modelleri. Ollama çalışmıyorsa hata fırlatır. */
+export function aiListModels(): Promise<string[]> {
+  return invoke<string[]>("ai_list_models").catch((e) => {
+    throw toError(e);
+  });
+}
+
+/** Sohbeti başlatır; yanıt `ai-chat-token`/`ai-chat-done` event'leriyle akar. */
+export function aiChat(model: string, messages: ChatMessage[]): Promise<void> {
+  return invoke<void>("ai_chat", { model, messages }).catch((e) => {
+    throw toError(e);
+  });
+}
+
+export function onAiToken(handler: (chunk: string) => void): Promise<UnlistenFn> {
+  return listen<string>("ai-chat-token", (e) => handler(e.payload));
+}
+
+export function onAiDone(handler: () => void): Promise<UnlistenFn> {
+  return listen<unknown>("ai-chat-done", () => handler());
+}
+
+export function onAiError(handler: (msg: string) => void): Promise<UnlistenFn> {
+  return listen<string>("ai-chat-error", (e) => handler(e.payload));
+}
+
+/** Sprint 14 — sanal bellek bilgisi (RAM/pagefile/hibernation). */
+export function pagefileInfo(): Promise<PagefileSnapshot | null> {
+  return invoke<PagefileSnapshot | null>("pagefile_info").catch((e) => {
+    throw toError(e);
+  });
+}
+
+/** Sprint 14 — çökme geçmişi (WER sayısı + en çok çöken kaynaklar). */
+export function crashHistory(): Promise<CrashHistory> {
+  return invoke<CrashHistory>("crash_history").catch((e) => {
+    throw toError(e);
+  });
+}
+
+/** Sprint 14 — Windows Güvenilirlik İzleyici'yi aç. */
+export function openReliabilityMonitor(): Promise<void> {
+  return invoke<void>("open_reliability_monitor").catch((e) => {
+    throw toError(e);
+  });
+}
+
+/** Sprint 14 — başlangıç bilgisi (boot süresi + başlangıç öğeleri). */
+export function startupInfo(): Promise<StartupInfo> {
+  return invoke<StartupInfo>("startup_info").catch((e) => {
+    throw toError(e);
+  });
+}
+
+/** Sprint 14 — bekleyen güncellemeler (Windows Update + winget). Yavaş (~30-50 sn). */
+export function updateSnapshot(): Promise<UpdateSnapshot> {
+  return invoke<UpdateSnapshot>("update_snapshot").catch((e) => {
+    throw toError(e);
+  });
+}
+
+/** Sprint 14 — güvenlik konfigi panosu (firewall/UAC/BitLocker/DNS/hosts). */
+export function securityOverview(): Promise<SecurityConfig> {
+  return invoke<SecurityConfig>("security_overview").catch((e) => {
+    throw toError(e);
+  });
+}
+
+/** Sprint 14 — termal anlık görüntü (sıcaklık bölgeleri + CPU perf/yük, ~3 sn). */
+export function thermalSnapshot(): Promise<ThermalSnapshot> {
+  return invoke<ThermalSnapshot>("thermal_snapshot").catch((e) => {
+    throw toError(e);
+  });
+}
+
+/** Sprint 14 — Defender durum panosu (koruma + son tehditler). */
+export function defenderOverview(): Promise<DefenderOverview> {
+  return invoke<DefenderOverview>("defender_overview").catch((e) => {
+    throw toError(e);
+  });
+}
+
+/** Sprint 14 — dikkat gerektiren sürücüler (imzasız veya ≥2 yıl eski). */
+export function listFlaggedDrivers(): Promise<DriverInfo[]> {
+  return invoke<DriverInfo[]>("list_flagged_drivers").catch((e) => {
+    throw toError(e);
+  });
+}
+
+/** Sprint 14 — son N gündeki Kritik/Hata olay özetleri (PII-güvenli). */
+export function recentEventSummaries(days = 7): Promise<EventSummary[]> {
+  return invoke<EventSummary[]>("recent_event_summaries", { days }).catch((e) => {
+    throw toError(e);
+  });
+}
+
+/** Sprint 14 — Windows Olay Görüntüleyici'yi aç. */
+export function openEventViewer(): Promise<void> {
+  return invoke<void>("open_event_viewer").catch((e) => {
+    throw toError(e);
+  });
+}
+
+/** Sprint 14 — disk bütünlüğü paneli için sabit NTFS sürücüler. */
+export function listIntegrityVolumes(): Promise<IntegrityVolume[]> {
+  return invoke<IntegrityVolume[]>("list_integrity_volumes").catch((e) => {
+    throw toError(e);
+  });
+}
+
+/** Sprint 14 — fiziksel disklerin SMART telemetrisi (disk sağlığı paneli). */
+export function listSmartDisks(): Promise<SmartDisk[]> {
+  return invoke<SmartDisk[]>("list_smart_disks").catch((e) => {
+    throw toError(e);
+  });
+}
+
+/** Sprint 14 — bir sürücüde büyük + kullanılmayan dosyaları tara. */
+export function scanLargeFiles(
+  drive: string,
+  minSizeMb: number,
+  unusedDays: number
+): Promise<DriveFileScan> {
+  return invoke<DriveFileScan>("scan_large_files", {
+    drive,
+    minSizeMb,
+    unusedDays,
+  }).catch((e) => {
+    throw toError(e);
+  });
+}
+
+/** Sprint 14 — kullanıcı-seçimli dosyaları kalıcı sil. */
+export function deleteUserFiles(paths: string[]): Promise<FileDeleteResult> {
+  return invoke<FileDeleteResult>("delete_user_files", { paths }).catch((e) => {
+    throw toError(e);
+  });
 }
 
 export function isSystemRestoreEnabled(): Promise<boolean> {
@@ -145,6 +310,12 @@ export function openOemLink(url: string): Promise<void> {
 
 export function onSfcDismProgress(handler: (line: ProgressLine) => void): Promise<UnlistenFn> {
   return listen<ProgressLine>("sfc-dism-progress", (e) => handler(e.payload));
+}
+
+export function onFixAllProgress(
+  handler: (p: FixAllProgress) => void
+): Promise<UnlistenFn> {
+  return listen<FixAllProgress>("fix-all-progress", (e) => handler(e.payload));
 }
 
 export function onSfcDismComplete(handler: (summary: SfcDismSummary) => void): Promise<UnlistenFn> {
