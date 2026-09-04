@@ -40,7 +40,7 @@ PC Doctor'ın landing page + marketing uzmanısın.
 - `pcdoctor.app` — modern TLD
 - `pcdoktoru.com` — TR pazar
 - `getpcdoctor.com` — fallback
-- Şimdilik: `ekeciii.github.io/pc-doctor/` (GitHub Pages default — repo `ekeciii/pc-doctor`, "egeyu" yalnız yayıncı/görüntü adı)
+- Şimdilik: `ekeciii.github.io/pc-doctor/` (GitHub Pages default — repo `ekeciii/pc-doctor`, "egeyu" yalnız GitHub kullanıcı adı; yayıncı/görüntü adı "Ege Yücel")
 
 **SEO checklist**:
 - [x] `<meta description>` 150-160 karakter
