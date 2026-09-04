@@ -19,7 +19,7 @@ PC Doctor'ın landing page + marketing uzmanısın.
 **Sections (mevcut)**:
 1. Topbar — brand + nav + indir CTA
 2. Hero — eyebrow + h1 + lede + 2 CTA + mock window
-3. Features grid — 11 kategori card
+3. Features grid — 13 kategori card (mevcut landing hâlâ "11" diyor — bkz. lansman planı Faz 7, düzeltilecek)
 4. How it works — 4 adımlı işlem
 5. Security manifesto — 5 madde "verin senin kalır"
 6. Download — büyük CTA, SmartScreen disclaimer
@@ -40,7 +40,7 @@ PC Doctor'ın landing page + marketing uzmanısın.
 - `pcdoctor.app` — modern TLD
 - `pcdoktoru.com` — TR pazar
 - `getpcdoctor.com` — fallback
-- Şimdilik: `egeyu.github.io/pc-doctor/` (GitHub Pages default)
+- Şimdilik: `ekeciii.github.io/pc-doctor/` (GitHub Pages default — repo `ekeciii/pc-doctor`, "egeyu" yalnız yayıncı/görüntü adı)
 
 **SEO checklist**:
 - [x] `<meta description>` 150-160 karakter
@@ -83,7 +83,7 @@ PC Doctor'ın landing page + marketing uzmanısın.
 
 ### Lede (1-2 cümle)
 - Ne yapar + kimin için + farklılaşma noktası
-- "11 kategori, dosya silmeden tanı koyar" — şeffaflık ve güvenlik vurgusu
+- "13 kategori, dosya silmeden tanı koyar" — şeffaflık ve güvenlik vurgusu (mevcut landing "11" diyor, güncel değil)
 
 ### Feature card (3-4 kelime title + 1 cümle açıklama)
 - Emoji opsiyonel (ikon olarak)

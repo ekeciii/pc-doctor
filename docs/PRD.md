@@ -14,10 +14,13 @@ otomatik düzelten bir Windows masaüstü uygulaması.
 ## Teknoloji yığını
 - Frontend: Tauri 2 + React + TypeScript + TailwindCSS + shadcn/ui
 - Backend: Rust (sistem çağrıları için) + PowerShell/WMI sarmalayıcıları
-- AI motoru: Anthropic Claude API (Sprint 2'den itibaren)
-- Local DB: SQLite (Sprint 2'den itibaren)
+- AI motoru: **yerel [Ollama](https://ollama.com)** (`127.0.0.1:11434`, opsiyonel —
+  kurulu değilse özellik pasif). Bulut tabanlı bir sağlayıcı (örn. Anthropic Claude
+  API) hiç kullanılmadı — kullanıcı "AI istemiyorum" dedi, sonradan yalnızca yerel/
+  gizli bir asistan olarak eklendi.
+- Local DB: SQLite (rusqlite bundled)
 - Paket yöneticisi: npm (pnpm planlandı, mevcut sistemde corepack admin gerektirdiği için npm'e dönüldü)
-- Build: Tauri bundler → tek .msi installer
+- Build: Tauri bundler → `.msi` + NSIS `.exe` installer
 
 ## Mimari katmanlar
 1. **Collector katmanı** (Rust): WMI, Registry, Performance Counters, Event Log,
@@ -31,9 +34,13 @@ otomatik düzelten bir Windows masaüstü uygulaması.
 ## Olmazsa olmaz özellikler (MVP)
 
 ### Tanı kategorileri
-1. Disk sağlığı, 2. RAM, 3. CPU/GPU, 4. Driver durumu, 5. Sistem dosyası bütünlüğü,
-6. Bekleyen güncellemeler, 7. Başlangıç performansı, 8. Disk doluluğu temizliği,
-9. Pagefile/hibernation, 10. Malware ön taraması, 11. Event log analizi, 12. Donma/çökme tespiti.
+
+MVP'de planlanan 12 kategoriden başlandı; şu an **13 kategori** üretimde
+(bkz. [README.md](../README.md#mevcut-özellikler) — güncel liste): disk
+doluluğu, disk sağlığı (SMART), disk bütünlüğü (chkdsk), olay günlüğü,
+sürücüler, virüs/Defender, donanım sıcaklığı, güvenlik konfigürasyonu,
+bekleyen güncellemeler, başlangıç performansı, çökme/donma geçmişi, sanal
+bellek (pagefile), temizlik fırsatları.
 
 ### UX prensipleri
 - Tek "TARA" butonu; bulgular KRİTİK/UYARI/İYİ renkli kartlarda.
@@ -47,12 +54,19 @@ otomatik düzelten bir Windows masaüstü uygulaması.
 - ASLA system32 altında dosya silme.
 - ASLA driver kurma (sadece link).
 - ASLA kişisel veri okuma.
-- Telemetri OPT-IN, varsayılan KAPALI.
-- AI'ya gönderilen veri anonimleştirilmiş.
+- **Telemetri yok** (opt-in bayrağı bile eklenmedi — hiçbir kullanım verisi toplanmıyor/gönderilmiyor).
+- AI'ya giden veri zaten PII içermez (yalnız sağlık skoru + bulgu başlıkları/kategori/şiddet + sürücü kullanım oranları — dosya yolu/olay mesajı yok) ve yalnız yerel Ollama sürecine (127.0.0.1) gider.
 - Her sistem değiştirici eylem için System Restore noktası zorunlu.
 
-## Yol haritası
+## Yol haritası (tarihsel — gerçek gidişat için [CHANGELOG.md](../CHANGELOG.md))
+
+Aşağıdaki ilk taslak yol haritasıydı; gerçek uygulama farklı ilerledi (Claude
+API hiç entegre edilmedi, code-signing henüz yapılmadı — bkz.
+[CODESIGN.md](./CODESIGN.md), kategori sayısı 13'e çıktı). Sprint 2 sonrası
+ayrıntılı gidişat için `docs/sprints/` (Sprint 12'ye kadar) ve
+`CHANGELOG.md` (sonrası) bakın.
+
 - **Sprint 1**: Tauri iskeleti + Disk sağlığı + Disk doluluğu + Temp temizleme + System Restore.
-- **Sprint 2**: Event Log + sfc/DISM + Driver inventory + Claude API (Haiku).
+- **Sprint 2**: Event Log + sfc/DISM + Driver inventory. (Planlanan Claude API entegrasyonu iptal edildi — kullanıcı "AI istemiyorum" dedi; yerine Sprint 15'te yerel/opsiyonel bir Ollama asistanı eklendi.)
 - **Sprint 3**: Başlangıç öğeleri + Pagefile + Defender + Geri al paneli + TR yerelleştirme.
-- **Sprint 4**: Code-signed MSI + Auto-update + Landing page.
+- **Sprint 4**: Auto-update + Landing page. (Code-signing bu sprintte değil, lansman hazırlığında SignPath.io OSS ile planlandı.)

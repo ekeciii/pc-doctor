@@ -1,0 +1,43 @@
+name: Feature request
+description: Suggest a new diagnostic, fix, or improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        PC Doctor's whole point is "safe, one-click fixes," not just
+        reporting problems — if your idea is a new *diagnostic*, think
+        about whether it could also ship as an automatic or guided fix.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: What can't you do today, or what's annoying about the current behavior?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tier
+    attributes:
+      label: If this is a new fix, what tier should it be?
+      description: See CLAUDE.md's FixTier explanation if unsure.
+      options:
+        - "Auto — app applies it with one click + confirmation (needs to be safely reversible or covered by a Restore Point)"
+        - "Guided — app opens the right Windows setting and explains the steps"
+        - "Advisory — just information, no automatic action makes sense"
+        - Not applicable / not a fix
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

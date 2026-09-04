@@ -67,8 +67,8 @@ npm run tauri build
 - `src-tauri/target/release/bundle/msi/PC Doctor_0.1.0_x64_en-US.msi` — installer.
 - `src-tauri/target/release/bundle/nsis/PC Doctor_0.1.0_x64-setup.exe` — alternatif.
 
-Sprint 4'te EV code-sign sertifikası alındığında signtool entegrasyonu
-eklenecek (mevcut bundle imzasız).
+Kod imzalama henüz yok (bkz. [docs/CODESIGN.md](./docs/CODESIGN.md) —
+SignPath.io OSS ile planlandı, lansman hazırlığının bir parçası).
 
 ## Tipik hata mesajları ve çözümleri
 
@@ -90,17 +90,15 @@ Disk doluluk uyarıları için referans rakam.
 
 - Tauri 2: https://v2.tauri.app/
 - windows-rs (Win32 binding): https://github.com/microsoft/windows-rs
-- WMI crate: https://github.com/ohadravid/wmi-rs (Sprint 2'de eklenecek)
+- WMI crate: https://github.com/ohadravid/wmi-rs
 - shadcn/ui (referans): https://ui.shadcn.com/
 - Tauri 2 capabilities: `src-tauri/capabilities/default.json` — yeni plugin
   permission'ları buraya eklenir.
 
-## Sprint 2 başlamadan önce
+## Oturum bağlamı
 
-- `feedback_stack_choices` ve `project_pc_doctor` memory dosyaları güncel — yeni
-  bir oturumda Claude bu bağlamı otomatik yükler.
-- Claude API entegrasyonu Sprint 2'de açılacak. API key kullanıcıdan UI'da
-  alınıp SQLite'da DPAPI ile şifrelenecek. Bunun için `tauri-plugin-sql`
-  eklenmeli.
-- Event Log analizi için `windows-rs Win32_System_EventLog` feature flag'i
-  Cargo.toml'a eklenmeli.
+`feedback_stack_choices` ve `project_pc_doctor` memory dosyaları güncel
+tutuluyor — yeni bir Claude Code oturumunda bu bağlam otomatik yüklenir.
+Bulut tabanlı bir AI sağlayıcısı (örn. Claude API) hiç entegre edilmedi —
+kullanıcı bunu istemedi; yerine yalnızca yerel/opsiyonel bir Ollama asistanı
+eklendi (`src-tauri/src/ai.rs`, `127.0.0.1:11434`).
