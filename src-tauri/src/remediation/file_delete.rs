@@ -1,12 +1,61 @@
-//! Sprint 14 — kullanıcı-seçimli dosya kalıcı silme.
+//! Sprint 14 — kullanıcı-seçimli dosya silme.
 //!
-//! Büyük/kullanılmayan dosya tarayıcısında işaretlenen dosyaları kalıcı siler. Her yol
-//! silmeden önce `safety::protected` ile yeniden denetlenir (UI'ı atlayan/elle gelen yollar
-//! için çift güvenlik). Sadece DOSYA siler — dizin asla.
+//! Büyük/kullanılmayan dosya tarayıcısında işaretlenen dosyaları **Geri Dönüşüm Kutusu'na**
+//! taşır (kalıcı silmez — yanlışlıkla seçilen dosyalar kurtarılabilir kalsın). Her yol
+//! taşımadan önce `safety::protected` ile yeniden denetlenir (UI'ı atlayan/elle gelen yollar
+//! için çift güvenlik). Sadece DOSYA taşır — dizin asla.
 
 use crate::models::{FileDeleteError, FileDeleteResult};
 use crate::safety::protected;
 use std::path::Path;
+
+/// Bir dosyayı Geri Dönüşüm Kutusu'na taşır (`shell32!SHFileOperationW`, `FOF_ALLOWUNDO`).
+/// Kalıcı silme YAPMAZ — kullanıcı Geri Dönüşüm Kutusu'ndan geri alabilir.
+#[cfg(windows)]
+fn send_to_recycle_bin(path: &Path) -> std::io::Result<()> {
+    use std::os::windows::ffi::OsStrExt;
+    use windows::Win32::Foundation::HWND;
+    use windows::Win32::UI::Shell::{
+        SHFileOperationW, FOF_ALLOWUNDO, FOF_NOCONFIRMATION, FOF_NOERRORUI, FOF_SILENT, FO_DELETE,
+        SHFILEOPSTRUCTW,
+    };
+    use windows::core::PCWSTR;
+
+    // pFrom, bir veya daha fazla yolun çift-null-sonlandırılmış listesidir (tek dosya için
+    // de aynı kural geçerli: yolun sonuna bir null, listenin sonuna ikinci bir null).
+    let mut wide: Vec<u16> = path.as_os_str().encode_wide().collect();
+    wide.push(0);
+    wide.push(0);
+
+    let mut op = SHFILEOPSTRUCTW {
+        hwnd: HWND::default(),
+        wFunc: FO_DELETE,
+        pFrom: PCWSTR(wide.as_ptr()),
+        pTo: PCWSTR::null(),
+        fFlags: (FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT).0 as u16,
+        ..Default::default()
+    };
+
+    // SAFETY: `op` yaşadığı sürece `wide` yaşıyor (aynı fonksiyon gövdesinde, `op`'tan önce
+    // drop edilmiyor); SHFileOperationW senkron çalışır, pointer çağrı bitene kadar geçerli.
+    let code = unsafe { SHFileOperationW(&mut op) };
+    if code != 0 {
+        return Err(std::io::Error::other(format!(
+            "SHFileOperationW başarısız (kod={code})"
+        )));
+    }
+    if op.fAnyOperationsAborted.as_bool() {
+        return Err(std::io::Error::other(
+            "Geri Dönüşüm Kutusu'na taşıma iptal edildi",
+        ));
+    }
+    Ok(())
+}
+
+#[cfg(not(windows))]
+fn send_to_recycle_bin(path: &Path) -> std::io::Result<()> {
+    std::fs::remove_file(path)
+}
 
 pub fn delete_files(paths: &[String]) -> FileDeleteResult {
     let mut deleted: u64 = 0;
@@ -57,7 +106,7 @@ pub fn delete_files(paths: &[String]) -> FileDeleteResult {
         }
 
         let size = meta.len();
-        match std::fs::remove_file(path) {
+        match send_to_recycle_bin(path) {
             Ok(_) => {
                 deleted += 1;
                 reclaimed = reclaimed.saturating_add(size);
@@ -92,7 +141,10 @@ mod tests {
     }
 
     #[test]
-    fn deletes_real_temp_file_and_reports_reclaimed_bytes() {
+    fn moves_real_temp_file_to_recycle_bin_and_reports_size() {
+        // `send_to_recycle_bin` gerçekten Geri Dönüşüm Kutusu'na taşıdıysa orijinal yolda
+        // dosya kalmaz (bu test SHFileOperationW'nin gerçekten başarılı döndüğünü — kalıcı
+        // silme değil, taşıma yaptığını — CI makinesinde doğrular).
         let dir = temp_subdir("pcdoctor_fd_ok");
         let f = dir.join("junk.bin");
         std::fs::write(&f, b"0123456789").unwrap(); // 10 byte
@@ -100,7 +152,7 @@ mod tests {
         assert_eq!(res.deleted, 1);
         assert_eq!(res.failed, 0);
         assert_eq!(res.reclaimed_bytes, 10);
-        assert!(!f.exists(), "dosya silinmiş olmalı");
+        assert!(!f.exists(), "dosya orijinal konumdan kalkmış olmalı (Geri Dönüşüm Kutusu'na taşındı)");
         let _ = std::fs::remove_dir_all(&dir);
     }
 

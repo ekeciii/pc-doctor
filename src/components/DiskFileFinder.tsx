@@ -318,7 +318,7 @@ function DrivePanel({ volume }: { volume: VolumeInfo }) {
         </div>
       )}
 
-      {/* kalıcı silme onayı */}
+      {/* Geri Dönüşüm Kutusu'na taşıma onayı */}
       <Dialog open={confirmOpen} onOpenChange={(o) => !o && setConfirmOpen(false)}>
         <DialogContent>
           <DialogHeader>

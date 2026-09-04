@@ -357,7 +357,7 @@ pub async fn scan_large_files(
     .map_err(|e| format!("Dosya taraması başarısız: {e}"))
 }
 
-/// Sprint 14 — kullanıcı-seçimli dosyaları kalıcı sil (her yol korumalı-konum denetiminden geçer).
+/// Sprint 14 — kullanıcı-seçimli dosyaları Geri Dönüşüm Kutusu'na taşı (her yol korumalı-konum denetiminden geçer).
 #[tauri::command]
 pub async fn delete_user_files(paths: Vec<String>) -> Result<FileDeleteResult, String> {
     tauri::async_runtime::spawn_blocking(move || file_delete::delete_files(&paths))

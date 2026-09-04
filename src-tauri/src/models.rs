@@ -589,7 +589,7 @@ pub struct FileDeleteError {
     pub message: String,
 }
 
-/// Kullanıcı seçimli dosya silme sonucu (kalıcı silme).
+/// Kullanıcı seçimli dosya silme sonucu (Geri Dönüşüm Kutusu'na taşıma).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FileDeleteResult {
