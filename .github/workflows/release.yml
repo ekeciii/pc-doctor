@@ -58,16 +58,19 @@ jobs:
         working-directory: src-tauri
         run: cargo audit --ignore RUSTSEC-2026-0194 --ignore RUSTSEC-2026-0195
 
+      # Faz 4b kararı: Authenticode imzalama SignPath.io OSS ile yapılacak (bkz.
+      # docs/CODESIGN.md) — SignPath, bu adımın ürettiği İMZASIZ MSI/NSIS'i
+      # sonradan submit-signing-request action'ıyla imzalıyor; yerel bir .pfx
+      # sertifikası hiç kullanılmıyor. SignPath onayı tamamlanınca buraya (ve
+      # "Locate artifacts"/"Build latest.json"/"Create Release" adımlarına)
+      # SignPath submit + minisign .sig'i imzalı NSIS üzerinden yeniden üretme
+      # adımları eklenecek — sıralama şart, bkz. CODESIGN.md "Önemli sıralama
+      # notu". O güne kadar MSI/NSIS imzasız üretilir (SmartScreen "bilinmeyen
+      # yayıncı" uyarısı çıkar, kurulum yine de çalışır).
       - name: Build + bundle MSI/NSIS
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          # === Code-signing (opsiyonel, sertifika alındığında doldur) ===
-          # WINDOWS_CERTIFICATE: base64-encoded .pfx içeriği
-          # WINDOWS_CERTIFICATE_PASSWORD: pfx parolası
-          # Sertifika yoksa imzasız MSI/NSIS üretilir (SmartScreen uyarısı çıkar).
-          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
-          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
         run: npm run tauri build
 
       - name: Locate artifacts (fail-fast if missing)
