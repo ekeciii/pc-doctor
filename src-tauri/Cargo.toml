@@ -28,7 +28,7 @@ thiserror = "2"
 sysinfo = "0.39"
 walkdir = "2.5"
 chrono = { version = "0.4", features = ["serde"] }
-wmi = "0.13"
+wmi = "0.18"
 urlencoding = "2"
 wait-timeout = "0.2"
 once_cell = "1"
