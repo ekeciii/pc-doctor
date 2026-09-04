@@ -3,14 +3,15 @@
  * Faz 3 — composite CI guard. Tüm doğrulama adımlarını sıralı koştur.
  *
  * Adımlar:
- *  1. `node scripts/check-i18n.mjs` — TS dict + t() çağrı uyumu
- *  2. `cargo fmt --check` — Backend format (hızlı fail)
- *  3. `cargo clippy --all-targets -- -D warnings` — Backend lint
- *  4. `prettier --check` — Frontend format
- *  5. `cargo test --test security_invariants` — Backend invariant 1-22
- *  6. `cargo test --lib` — Backend unit tests
- *  7. `npm test` (vitest) — Frontend saf-mantık testleri (toError vb.)
- *  8. `npm run build` — Frontend TS compile + Vite bundle
+ *  1. `node scripts/check-version.mjs` — 4 dosyadaki sürüm tutarlı mı (en hızlı fail)
+ *  2. `node scripts/check-i18n.mjs` — TS dict + t() çağrı uyumu
+ *  3. `cargo fmt --check` — Backend format (hızlı fail)
+ *  4. `cargo clippy --all-targets -- -D warnings` — Backend lint
+ *  5. `prettier --check` — Frontend format
+ *  6. `cargo test --test security_invariants` — Backend invariant 1-22
+ *  7. `cargo test --lib` — Backend unit tests
+ *  8. `npm test` (vitest) — Frontend saf-mantık testleri (toError vb.)
+ *  9. `npm run build` — Frontend TS compile + Vite bundle
  *
  * `cargo audit` BİLEREK burada değil — release.yml'nin kendi audit adımı var
  * (bkz. o dosya); check:all'a eklemek her local `npm run check:all` çalıştıran
@@ -29,6 +30,12 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const TAURI_DIR = resolve(ROOT, "src-tauri");
 
 const STEPS = [
+  {
+    name: "Version consistency",
+    cmd: "node",
+    args: ["scripts/check-version.mjs"],
+    cwd: ROOT,
+  },
   {
     name: "i18n integrity",
     cmd: "node",

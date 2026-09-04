@@ -38,11 +38,15 @@ Tüm dosyayı kopyala (header satırları dahil), GitHub'da secret olarak yapı�
 
 ### Lokal hazırlık
 
-1. `src-tauri/Cargo.toml` ve `src-tauri/tauri.conf.json` içindeki `version`'u güncelle (örn. `0.1.1`).
-2. `package.json` içindeki `version`'u da senkronize et.
-3. Commit + push.
+Sürüm 4 dosyada tutulur: `package.json`, `src-tauri/Cargo.toml`,
+`src-tauri/tauri.conf.json`, `src-tauri/manifest.xml` (+ `src-tauri/Cargo.lock`
+kendi paket girdisi). Bunları elle düzenleme — `bump-version.mjs` hepsini tek
+seferde senkronize eder, `check-version.mjs` de `check:all`'ın ilk adımı
+olarak tutarlılığı zaten doğrular:
 
 ```powershell
+node scripts/bump-version.mjs 0.1.1
+node scripts/check-version.mjs   # ✓ doğrulama (isteğe bağlı — check:all zaten çalıştırır)
 git add .
 git commit -m "Release v0.1.1"
 git push
