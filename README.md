@@ -129,10 +129,8 @@ npx @tauri-apps/cli icon path\to\source-1024.png
 
 ## Lisans
 
-**Tescilli — Tüm hakları saklıdır.** Telif Hakkı © 2026 Ege Yücel (@ekeciii).
+**MIT Lisansı.** Telif Hakkı © 2026 Ege Yücel ([@ekeciii](https://github.com/ekeciii)).
 
-Bu depodaki kaynak kod yalnızca görüntüleme/referans amacıyla herkese açıktır;
-açık kaynak **değildir**. Telif hakkı sahibinin yazılı izni olmadan kopyalanması,
-değiştirilmesi, dağıtılması veya derlenip kullanılması yasaktır. Tek resmî dağıtım
-kanalı [GitHub Releases](https://github.com/ekeciii/pc-doctor/releases)'tır.
-Tam koşullar: [LICENSE](./LICENSE).
+Kaynak kod açık kaynaktır; MIT koşulları altında kopyalanabilir, değiştirilebilir
+ve dağıtılabilir. Tam metin: [LICENSE](./LICENSE). Kullanılan üçüncü parti
+bağımlılıkların lisansları için [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md).
