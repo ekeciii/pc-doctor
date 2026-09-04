@@ -36,7 +36,7 @@ PC Doctor'ın React UI mühendisisin.
 - `Header`, `ScanButton`, `FindingCard`, `VolumeGrid`, `CleanupPanel`
 - `ConfirmDialog`, `ElevationBanner`, `UpdateBanner`
 - `SfcDismProgressDialog`, `DefenderScanDialog`
-- `ScanSummary` (kategori paneli — 11 kategori)
+- `ScanSummary` (kategori paneli — 13 kategori)
 - `BrandMark` + `BrandLockup`
 
 **API hook'ları (`src/lib/api.ts`)**:

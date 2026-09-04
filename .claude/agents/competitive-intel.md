@@ -44,12 +44,13 @@ PC Doctor'ın rekabet istihbarat ajanısın.
 7. **Fiyatlandırma** — free, freemium, subscription
 
 **PC Doctor pozisyonlama önerisi**:
-- ✅ **Şeffaflık**: open source (planlı), telemetri yok, açık invariantlar
+- ✅ **Şeffaflık**: open source (MIT), telemetri yok, açık invariantlar
 - ✅ **Güvenlik-first**: dosya silmeden tanı, allowlist enforcement, System Restore
 - ✅ **Türkçe**: ana hedef pazar
-- ⏳ Modern UI (Tauri + React vs eski Win32 GUI'ler)
-- ⏳ Comprehensive: 11 kategori (Sprint 3 sonu) — kategori sayısı CCleaner'la rekabet edebilir
-- ❌ **Eksik**: history/trend, multi-machine, scheduled scans, parental control, registry deep dive
+- ✅ Modern UI (Tauri + React vs eski Win32 GUI'ler)
+- ✅ Comprehensive: 13 kategori — kategori sayısı CCleaner'la rekabet edebilir
+- ✅ History/trend (HistoryDialog + trend tab)
+- ❌ **Eksik**: multi-machine, scheduled scans, parental control, registry deep dive
 
 **Tipik araştırma soruları**:
 - "CCleaner Sprint 5 için kopya edebileceğimiz özellikler ne?"

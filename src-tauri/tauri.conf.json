@@ -30,13 +30,18 @@
     "createUpdaterArtifacts": true,
     "targets": ["msi", "nsis"],
     "icon": [
+      "icons/32x32.png",
+      "icons/64x64.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.png",
       "icons/icon.ico"
     ],
     "licenseFile": "../EULA.txt",
-    "publisher": "egeyu",
+    "publisher": "Ege Yücel",
     "copyright": "Copyright © 2026 Ege Yücel",
     "category": "Utility",
-    "homepage": "https://pc-doctor.example.com",
+    "homepage": "https://ekeciii.github.io/pc-doctor/",
     "shortDescription": "Tek tıkla PC tanı ve onarım",
     "longDescription": "PC Doctor; Windows için disk sağlığı, doluluk, başlangıç performansı, Event Log özetleme, virüs/Defender durumu, sürücü kontrolü ve güvenli temizlik akışlarını tek tıkla sunan tanı/onarım aracıdır.",
     "windows": {

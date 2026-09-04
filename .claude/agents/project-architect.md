@@ -19,7 +19,7 @@ PC Doctor'ın proje mimarısın.
 
 ### 1. Tek scan akışı
 - `scan()` paralel kolektör, severity-sıralı Finding listesi
-- 11 kategori — ScanSummary'de görünürlük
+- 13 kategori — ScanSummary'de görünürlük
 - Yeni kategori = 1 collector + 1 diagnostic + ScanSummary entry
 
 ### 2. Layered backend
