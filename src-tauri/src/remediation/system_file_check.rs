@@ -88,6 +88,20 @@ fn run_phase_with_inspect<F: FnMut(&str)>(
         .spawn()
         .map_err(|e| format!("{} başlatılamadı: {}", program, e))?;
 
+    // stderr'i AYRI bir thread'de drain et — okumazsak DISM/SFC (özellikle
+    // DISM /RestoreHealth, gerçek bir bozuk sistemde epey stderr yazabilir)
+    // OS pipe buffer'ı dolduğunda write()'da bloke olur, biz de aşağıdaki
+    // stdout döngüsünden sonra child.wait()'te sonsuza dek bekleriz — klasik
+    // pipe deadlock (chkntfs.rs/util/powershell.rs'deki aynı düzeltme).
+    use std::io::Read as _;
+    let stderr_pipe = child.stderr.take();
+    let stderr_reader = std::thread::spawn(move || {
+        if let Some(mut s) = stderr_pipe {
+            let mut sink = Vec::new();
+            let _ = s.read_to_end(&mut sink);
+        }
+    });
+
     let stdout = child
         .stdout
         .take()
@@ -126,6 +140,7 @@ fn run_phase_with_inspect<F: FnMut(&str)>(
     let status = child
         .wait()
         .map_err(|e| format!("{} bekleme hatası: {}", program, e))?;
+    let _ = stderr_reader.join();
     Ok(status.success())
 }
 
