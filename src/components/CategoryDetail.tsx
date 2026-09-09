@@ -15,6 +15,7 @@ import { UpdatesPanel } from "./UpdatesPanel";
 import { StartupPanel } from "./StartupPanel";
 import { CrashPanel } from "./CrashPanel";
 import { PagefilePanel } from "./PagefilePanel";
+import { AiMascotBubble } from "./AiMascotBubble";
 import { Alert, AlertDescription, AlertTitle } from "./ui/Alert";
 import { cn } from "@/lib/utils";
 import type { CategoryDef } from "./categoryDefs";
@@ -36,6 +37,10 @@ interface Props {
   reclaimableBytes?: number;
   /** Son temizlik sonucu — çözüm bandı ("ne açıldı, çözüldü mü") için. */
   cleanupResult?: CleanupResult | null;
+  /** Bu kategori için maskotun gösterdiği soru — varsa panelin üstünde
+   *  gömülü şerit olarak render edilir (bkz. AiMascotBubble variant="inline"). */
+  mascotPrompt?: string | null;
+  onMascotOpenChat?: () => void;
 }
 
 /** Yandan kayan kategori detay paneli — o kategorinin bulguları + düzeltmeleri. */
@@ -53,6 +58,8 @@ export function CategoryDetail({
   volumes,
   reclaimableBytes = 0,
   cleanupResult,
+  mascotPrompt,
+  onMascotOpenChat,
 }: Props) {
   const t = useT();
   const fmtBytes = useByteFmt();
@@ -148,6 +155,10 @@ export function CategoryDetail({
           </p>
         </div>
       </div>
+
+      {mascotPrompt && onMascotOpenChat && (
+        <AiMascotBubble text={mascotPrompt} variant="inline" onOpenChat={onMascotOpenChat} />
+      )}
 
       {/* bulgular (panel içi scroll) */}
       <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-2.5">
