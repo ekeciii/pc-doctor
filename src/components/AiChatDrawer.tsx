@@ -12,7 +12,7 @@ interface Props {
   onClose: () => void;
   report: ScanReport | null;
   /** Maskottan gelen, sohbete asistan mesajı olarak eklenecek bekleyen soru.
-   *  Eklendikten sonra App.tsx `onPendingMessageConsumed` ile null'a çeker —
+   *  Eklendikten sonra App.tsx `onPendingMascotMessageConsumed` ile null'a çeker —
    *  aynı mesajın tekrar tekrar eklenmesini önler. */
   pendingMascotMessage?: string | null;
   onPendingMascotMessageConsumed?: () => void;
@@ -50,6 +50,7 @@ export function AiChatDrawer({
   // Faz 2 — "verileriniz yerel Ollama'ya gider" bildirimi ilk açılışta bir kez.
   const [showAiConsent, setShowAiConsent] = useState(false);
   const aiSettingsRef = useRef<AppSettings | null>(null);
+  const lastConsumedMascotMessage = useRef<string | null>(null);
 
   // Ollama durumunu kontrol et (drawer açılınca).
   useEffect(() => {
@@ -75,8 +76,11 @@ export function AiChatDrawer({
 
   // Maskottan bekleyen bir soru varsa ve sohbet hazırsa, asistan mesajı
   // olarak ekle ve App state'inden temizlenmesini iste (tek seferlik).
+  // Ref-based dedupe garantisi: aynı mesaj iki kez eklenmez.
   useEffect(() => {
     if (!open || !pendingMascotMessage || status !== "ready") return;
+    if (pendingMascotMessage === lastConsumedMascotMessage.current) return;
+    lastConsumedMascotMessage.current = pendingMascotMessage;
     setMessages((prev) => [...prev, { role: "assistant", content: pendingMascotMessage }]);
     onPendingMascotMessageConsumed?.();
   }, [open, pendingMascotMessage, status, onPendingMascotMessageConsumed]);
