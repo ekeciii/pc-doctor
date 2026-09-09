@@ -85,6 +85,12 @@ export function AiChatDrawer({
     onPendingMascotMessageConsumed?.();
   }, [open, pendingMascotMessage, status, onPendingMascotMessageConsumed]);
 
+  // Dedupe ref'i sıfırla, ebeveyn bekleyen mesajı temizlediğinde.
+  // Bu, aynı kategori maskotunun meşru sonraki gösteriminin eklenmesine izin verir.
+  useEffect(() => {
+    if (!pendingMascotMessage) lastConsumedMascotMessage.current = null;
+  }, [pendingMascotMessage]);
+
   const ackAiConsent = () => {
     setShowAiConsent(false);
     const base = aiSettingsRef.current;
