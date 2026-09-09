@@ -21,12 +21,13 @@ PC Doctor'ın CI/CD mühendisisin.
   6. npm ci
   7. **Verify (`npm run check:all`)** — version parity + i18n + fmt + clippy + prettier + security invariants + lib tests + vitest + frontend build; kırmızıysa release DURUR
   8. Install cargo-audit + **Dependency audit** (kendi kopyası — ci.yml'deki audit job'ından bağımsız, tag'in audit'siz asla geçmemesi için)
-  9. `npm run tauri build` — env: yalnız TAURI_SIGNING_PRIVATE_KEY(+PASSWORD). Faz 4b/SignPath tamamlanana kadar MSI/NSIS **imzasız** üretilir (bkz. CODESIGN.md)
+  9. `npm run tauri build` — env: yalnız TAURI_SIGNING_PRIVATE_KEY(+PASSWORD). MSI/NSIS **imzasız** üretilir ve v0.2.0 böyle yayınlanıyor (bkz. CODESIGN.md "Durum" — SignPath.io OSS başvurusu reddedildi)
   10. **Locate artifacts** (fail-fast if MSI/NSIS/sig missing)
   11. **Build latest.json** (regex tag validation, hard fail on missing sig)
   12. Create GitHub Release with MSI + NSIS + latest.json
 
-  Faz 4b tamamlanınca 9-11 arası yeniden sıralanacak: imzasız build → SignPath
+  İleride bir sağlayıcı (SignPath yeniden başvuru veya Azure Trusted Signing)
+  bağlanırsa 9-11 arası yeniden sıralanacak: imzasız build → sağlayıcı
   submit+sign → minisign `.sig`'i **imzalı** NSIS üzerinden yeniden üret →
   latest.json imzalı NSIS'i referans alsın. Sıralama şart, bkz. CODESIGN.md
   "Önemli sıralama notu".
@@ -34,7 +35,9 @@ PC Doctor'ın CI/CD mühendisisin.
 ### Secrets (repo Settings → Secrets and variables → Actions)
 - `TAURI_SIGNING_PRIVATE_KEY` — `~/.tauri/pc-doctor.key` dosya içeriği (ed25519 minisign formatı)
 - `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` — (boş, parolasız üretildi)
-- `SIGNPATH_API_TOKEN` / `SIGNPATH_ORGANIZATION_ID` — Faz 4b tamamlanınca eklenecek (henüz yok — SignPath.io OSS başvurusu kullanıcı tarafından bekleniyor). `WINDOWS_CERTIFICATE`/`WINDOWS_CERTIFICATE_PASSWORD` KULLANILMIYOR — SignPath yerel bir .pfx değil, kendi Action'ı üzerinden imzalıyor.
+- Kod imzalama secret'ı **yok**. SignPath.io OSS başvurusu reddedildi (proje
+  çok yeni/reputation yetersiz) — bkz. CODESIGN.md "Durum". `WINDOWS_CERTIFICATE`/
+  `WINDOWS_CERTIFICATE_PASSWORD` de KULLANILMIYOR (yerel .pfx yok).
 
 ### Updater
 - `~/.tauri/pc-doctor.key.pub` → public key (base64)
@@ -45,7 +48,7 @@ PC Doctor'ın CI/CD mühendisisin.
 
 | Seçenek | Yıllık | SmartScreen | Notlar |
 |---|---|---|---|
-| **SignPath.io OSS** | **Ücretsiz** | ✅ Anında | Public repo zorunlu — PC Doctor için ideal |
+| **SignPath.io OSS** | **Ücretsiz** | ✅ Anında | ❌ **Reddedildi** (proje çok yeni/reputation yetersiz) — gerçek kullanım birikince yeniden başvurulabilir |
 | DigiCert EV | ~$400 | ✅ Anında | USB token, CI ile sorunlu |
 | SSL.com EV | ~$300 | ✅ Anında | USB token |
 | Sectigo OV | ~$70-180 | ⚠️ Reputation | Bütçe, sabırlı |

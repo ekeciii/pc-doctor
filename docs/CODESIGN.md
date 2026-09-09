@@ -2,23 +2,36 @@
 
 Windows kullanıcısı imzasız bir MSI/EXE açtığında **SmartScreen** "bilinmeyen yayıncı" uyarısı verir. Bunu kaldırmak için **code-signing certificate** lazım. PC Doctor'ı dağıtıyorsan bu adım kritik.
 
-## Karar: SignPath.io OSS (lansman planı, Faz 4b)
+## Durum: SignPath.io OSS reddedildi — v0.2.0 imzasız yayınlanıyor
 
-Proje MIT lisansına geçtiğinden (bkz. [LICENSE](../LICENSE)) **SignPath.io OSS**
-kesin karar — ücretsiz, en az kurulum, en hızlı SmartScreen kabulü. Aşağıdaki
-"SignPath.io" bölümündeki adımları GitHub hesabınla sen yapman gerekiyor
-(başvuru + onay); geri kalan diğer seçenekler (DigiCert/Sectigo/Azure) bu
-karar geçersiz kalırsa yedek olarak aşağıda referans için duruyor.
+**Güncelleme (v0.2.0 lansmanı):** SignPath.io OSS'e (Faz 4b) başvuruldu, **reddedildi**
+— gerekçe: proje çok yeni, yeterli reputation/kullanım kanıtı yok (SignPath
+Foundation'ın ücretsiz sertifika şartı, gerçek bir kullanıcı kitlesi/indirme
+geçmişi bekliyor; 0 star/0 indirmeyle bu şartı karşılamıyorduk). Karar:
+**v0.2.0'ı imzasız yayınla**, gerçek kullanım/indirme birikince (ya da
+bütçe ayrılırsa) v0.2.1+ için imzalamaya dön.
 
-**Önemli sıralama notu** (release.yml'e bağlanırken unutma): SignPath, `tauri
-build`'in ürettiği MSI/NSIS'i **sonradan** Authenticode ile imzalıyor —
-imza byte'ları değiştiriyor. Tauri'nin kendi minisign updater imzası
-(`.sig`) ise `tauri build` sırasında **imzasız** haldeki dosya üzerinden
-üretiliyor. Bu yüzden SignPath'ten imzalı dosya geri geldikten SONRA
-`npx @tauri-apps/cli signer sign` ile `.sig`'i **imzalı** dosya üzerinden
-yeniden üretmek şart — aksi halde updater, indirdiği (imzalı) dosyanın
-imzasını (imzasız dosya için üretilmiş) `.sig` ile doğrulayamaz ve
-güncellemeyi reddeder.
+**Sonraki imzalama denemesi için öneri sırası:**
+1. **Yeniden SignPath'e başvur** — birkaç hafta/ay sonra gerçek indirme
+   sayısı + GitHub yıldızı/topluluk aktivitesi birikince Reputation alanı
+   artık gerçek veriyle doldurulabilir.
+2. **Azure Trusted Signing** (~$10/ay) — bütçe ayrılırsa en pratik ücretli
+   seçenek: anında SmartScreen kabulü, donanım token yok, CI'ya SignPath'e
+   benzer şekilde bağlanır.
+
+Aşağıdaki "SignPath.io" bölümü ileride tekrar başvurulursa geçerli adımları
+belgelemeye devam ediyor; diğer seçenekler (DigiCert/Sectigo/Azure) referans
+için aşağıda duruyor.
+
+**Önemli sıralama notu** (ileride herhangi bir sağlayıcıyla release.yml'e
+bağlanırken unutma): SignPath/benzeri servisler, `tauri build`'in ürettiği
+MSI/NSIS'i **sonradan** Authenticode ile imzalar — imza byte'larını
+değiştirir. Tauri'nin kendi minisign updater imzası (`.sig`) ise `tauri
+build` sırasında **imzasız** haldeki dosya üzerinden üretiliyor. Bu yüzden
+imzalı dosya geri geldikten SONRA `npx @tauri-apps/cli signer sign` ile
+`.sig`'i **imzalı** dosya üzerinden yeniden üretmek şart — aksi halde
+updater, indirdiği (imzalı) dosyanın imzasını (imzasız dosya için
+üretilmiş) `.sig` ile doğrulayamaz ve güncellemeyi reddeder.
 
 ## Seçenekler — karşılaştırma (referans; karar yukarıda)
 
@@ -138,7 +151,9 @@ Get-ChildItem Cert:\CurrentUser\My | Select-Object Thumbprint, Subject
 
 ## Sonraki adım
 
-Şu an PC Doctor imzasız. Sürüm yayınlarken kullanıcılar "bilinmeyen yayıncı"
-uyarısı görür ama yine de kurabilir. Faz 4b: SignPath.io OSS başvurusunu
-yap (GitHub hesabınla — bu adımı otomasyon yapamaz), onay gelince
-`release.yml`'i yukarıdaki sıralamayla güncelle.
+`v0.2.0` imzasız yayınlanıyor — kullanıcılar kurulumda "bilinmeyen yayıncı"
+SmartScreen uyarısı görür ama yine de kurabilir ("Daha fazla bilgi → Yine de
+çalıştır"). SignPath.io OSS başvurusu reddedildi (yukarıda "Durum" bölümüne
+bkz.); gerçek indirme/kullanım birikince yeniden başvurmayı veya bütçe
+ayrılırsa Azure Trusted Signing'e geçmeyi değerlendir, `release.yml`'i o
+zaman yukarıdaki sıralamayla güncelle.
