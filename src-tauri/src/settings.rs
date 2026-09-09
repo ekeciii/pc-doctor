@@ -36,6 +36,10 @@ pub struct Settings {
     /// Faz 2 — AI çekmecesindeki "veriniz yerel Ollama'ya gider" notu onaylandı mı.
     #[serde(default)]
     pub ai_disclosure_ack: bool,
+    /// Faz: AI maskotu — kategori key → o kategoriye en son gösterilen
+    /// maskot bulgu imzası. Aynı imza tekrar görülürse maskot sessiz kalır.
+    #[serde(default)]
+    pub mascot_seen_signatures: std::collections::HashMap<String, String>,
 }
 
 fn default_schema_version() -> u32 {
@@ -64,6 +68,7 @@ impl Default for Settings {
             history_retention_days: default_retention_days(),
             disclosure_ack_version: 0,
             ai_disclosure_ack: false,
+            mascot_seen_signatures: std::collections::HashMap::new(),
         }
     }
 }
