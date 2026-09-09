@@ -145,6 +145,13 @@ export default function App() {
     null
   );
   const [pendingMascotMessage, setPendingMascotMessage] = useState<string | null>(null);
+  // Maskot: seçili kategori her ne sebeple kapanırsa kapansın (Geri, yeni
+  // tarama, ileride eklenecek başka bir setSelectedCat(null) çağrısı), maskot
+  // balonu/şeridi de kendiliğinden temizlensin — tek tek çağrı noktalarını
+  // yamamak yerine invariant'ı state'in kendisine bağlıyoruz.
+  useEffect(() => {
+    if (!selectedCat) setMascotPrompt(null);
+  }, [selectedCat]);
   // Faz 1 M5 + Faz 2 — "Hepsini Düzelt" / tek-fix (run_fix_all) akışı.
   // pendingFixSpecs: onay bekleyen fix listesi (null = kapalı).
   const [pendingFixSpecs, setPendingFixSpecs] = useState<FixSpec[] | null>(null);
@@ -852,19 +859,13 @@ export default function App() {
                   busy={cleaning}
                   lastResult={lastResult}
                   onFix={(ids) => setPendingCleanupIds(ids)}
-                  onBack={() => {
-                    setSelectedCat(null);
-                    setMascotPrompt(null);
-                  }}
+                  onBack={() => setSelectedCat(null)}
                 />
               ) : (
                 <CategoryDetail
                   category={selectedCat}
                   findings={findingsForSelectedCat}
-                  onBack={() => {
-                    setSelectedCat(null);
-                    setMascotPrompt(null);
-                  }}
+                  onBack={() => setSelectedCat(null)}
                   onSystemFileCheck={handleSystemFileCheck}
                   onDefenderQuickScan={handleDefenderQuickScan}
                   onChkdskScan={handleChkdskScan}
