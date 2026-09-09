@@ -11,6 +11,11 @@ interface Props {
   open: boolean;
   onClose: () => void;
   report: ScanReport | null;
+  /** Maskottan gelen, sohbete asistan mesajı olarak eklenecek bekleyen soru.
+   *  Eklendikten sonra App.tsx `onPendingMessageConsumed` ile null'a çeker —
+   *  aynı mesajın tekrar tekrar eklenmesini önler. */
+  pendingMascotMessage?: string | null;
+  onPendingMascotMessageConsumed?: () => void;
 }
 
 type Status = "checking" | "ready" | "noOllama";
@@ -20,7 +25,13 @@ interface DisplayMsg {
   content: string;
 }
 
-export function AiChatDrawer({ open, onClose, report }: Props) {
+export function AiChatDrawer({
+  open,
+  onClose,
+  report,
+  pendingMascotMessage,
+  onPendingMascotMessageConsumed,
+}: Props) {
   const t = useT();
   const { locale } = useI18n();
   const fmtBytes = useByteFmt();
@@ -61,6 +72,14 @@ export function AiChatDrawer({ open, onClose, report }: Props) {
         /* ayarlar okunamazsa bildirimi zorlamıyoruz — akışı bloklamaz */
       });
   }, [open]);
+
+  // Maskottan bekleyen bir soru varsa ve sohbet hazırsa, asistan mesajı
+  // olarak ekle ve App state'inden temizlenmesini iste (tek seferlik).
+  useEffect(() => {
+    if (!open || !pendingMascotMessage || status !== "ready") return;
+    setMessages((prev) => [...prev, { role: "assistant", content: pendingMascotMessage }]);
+    onPendingMascotMessageConsumed?.();
+  }, [open, pendingMascotMessage, status, onPendingMascotMessageConsumed]);
 
   const ackAiConsent = () => {
     setShowAiConsent(false);
