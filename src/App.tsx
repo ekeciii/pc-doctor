@@ -852,13 +852,19 @@ export default function App() {
                   busy={cleaning}
                   lastResult={lastResult}
                   onFix={(ids) => setPendingCleanupIds(ids)}
-                  onBack={() => setSelectedCat(null)}
+                  onBack={() => {
+                    setSelectedCat(null);
+                    setMascotPrompt(null);
+                  }}
                 />
               ) : (
                 <CategoryDetail
                   category={selectedCat}
                   findings={findingsForSelectedCat}
-                  onBack={() => setSelectedCat(null)}
+                  onBack={() => {
+                    setSelectedCat(null);
+                    setMascotPrompt(null);
+                  }}
                   onSystemFileCheck={handleSystemFileCheck}
                   onDefenderQuickScan={handleDefenderQuickScan}
                   onChkdskScan={handleChkdskScan}
