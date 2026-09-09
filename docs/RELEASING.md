@@ -23,14 +23,12 @@ Repo Settings → Secrets and variables → Actions → New repository secret:
 |---|---|---|
 | `TAURI_SIGNING_PRIVATE_KEY` | `~/.tauri/pc-doctor.key` dosyasının **içeriği** (cat ile aç, base64 değil) | Evet — updater için şart |
 | `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Üretirken parola koymuşsan; yoksa boş string | Opsiyonel |
-| `SIGNPATH_API_TOKEN` | SignPath.io proje ayarlarından | Faz 4b tamamlanınca zorunlu — Authenticode imza (SmartScreen) için. Bkz. [CODESIGN.md](./CODESIGN.md) |
-| `SIGNPATH_ORGANIZATION_ID` | SignPath.io organizasyon ID'si | Faz 4b tamamlanınca zorunlu, yukarıdakiyle birlikte |
 
-Karar: kod imzalama **SignPath.io OSS** ile yapılıyor (Faz 4b) — yerel bir
-`.pfx` sertifikası/`WINDOWS_CERTIFICATE` secret'ı kullanılmıyor, detay için
-[CODESIGN.md](./CODESIGN.md). SignPath onayı tamamlanana kadar MSI/NSIS
-imzasız üretilir (SmartScreen "bilinmeyen yayıncı" uyarısı çıkar, kurulum
-yine de çalışır).
+**Kod imzalama secret'ı yok — v0.2.0 bilinçli olarak imzasız yayınlanıyor.**
+SignPath.io OSS başvurusu reddedildi (proje çok yeni/reputation yetersiz),
+detay ve sonraki adımlar için [CODESIGN.md](./CODESIGN.md) → "Durum" bölümü.
+MSI/NSIS imzasız üretilir (SmartScreen "bilinmeyen yayıncı" uyarısı çıkar,
+kurulum yine de "Daha fazla bilgi → Yine de çalıştır" ile çalışır).
 
 Private key dosyası içeriğini çıkarmak için:
 

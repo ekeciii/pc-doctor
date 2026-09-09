@@ -29,3 +29,6 @@ yarn-debug.log*
 # Env
 .env
 .env.local
+
+# Claude brainstorming visual-companion scratch (local-only mockups)
+.superpowers/
