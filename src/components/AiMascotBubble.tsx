@@ -27,20 +27,21 @@ export function AiMascotBubble({ text, variant, onOpenChat }: Props) {
   }, [variant, text]);
 
   if (variant === "floating") {
-    if (!visible) return null;
-
     return (
       <div
         className={cn(
           "fixed bottom-5 right-5 z-30 flex items-end gap-2.5 max-w-xs",
-          "animate-bounce-in"
+          "transition-opacity duration-500",
+          visible ? "opacity-100 animate-bounce-in" : "opacity-0 pointer-events-none"
         )}
         role="status"
+        aria-hidden={!visible}
       >
         <button
           type="button"
           onClick={onOpenChat}
           aria-label={text}
+          tabIndex={visible ? 0 : -1}
           className="shrink-0 w-11 h-11 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shadow-lg animate-pulse-glow"
         >
           <BrandMark size="sm" />
@@ -48,6 +49,7 @@ export function AiMascotBubble({ text, variant, onOpenChat }: Props) {
         <button
           type="button"
           onClick={onOpenChat}
+          tabIndex={visible ? 0 : -1}
           className="text-left rounded-lg border border-primary/40 bg-card px-3 py-2.5 text-xs leading-relaxed text-foreground shadow-md hover:border-primary/70 transition-colors"
         >
           {text}
