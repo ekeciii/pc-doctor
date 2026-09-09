@@ -14,6 +14,7 @@ describe("mascotPrompts kapsama", () => {
   it("her CATEGORIES key'i için EN sorusu var", () => {
     for (const cat of CATEGORIES) {
       expect(mascotPromptsEn, `EN eksik: ${cat.key}`).toHaveProperty(cat.key);
+      expect(mascotPromptsEn[cat.key as keyof typeof mascotPromptsEn].length).toBeGreaterThan(0);
     }
   });
 });
