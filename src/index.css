@@ -95,6 +95,7 @@
   --animate-spin-slow: spin-slow 26s linear infinite;
   --animate-spin-rev: spin-rev 34s linear infinite;
   --animate-pulse-glow: pulse-glow 2.4s ease-in-out infinite;
+  --animate-bounce-in: bounce-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   --animate-flicker: flicker 4s steps(1) infinite;
   --animate-radar: radar 2.6s linear infinite;
   --animate-ping-ring: ping-ring 2.6s ease-out infinite;
@@ -161,6 +162,20 @@
     }
     50% {
       opacity: 1;
+    }
+  }
+  @keyframes bounce-in {
+    0% {
+      opacity: 0;
+      transform: translateY(14px) scale(0.9);
+    }
+    60% {
+      opacity: 1;
+      transform: translateY(-3px) scale(1.03);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
     }
   }
   @keyframes flicker {

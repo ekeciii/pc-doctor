@@ -26,6 +26,7 @@ import { FixAllSummaryDialog } from "./components/FixAllSummaryDialog";
 import { SettingsDialog, applyTheme } from "./components/SettingsDialog";
 import { HistoryDialog } from "./components/HistoryDialog";
 import { AiChatDrawer } from "./components/AiChatDrawer";
+import { AiMascotBubble } from "./components/AiMascotBubble";
 import { FirstRunDisclosure } from "./components/FirstRunDisclosure";
 import { Alert, AlertDescription, AlertTitle } from "./components/ui/Alert";
 import { Button } from "./components/ui/Button";
@@ -58,6 +59,9 @@ import type {
   ScanReport,
 } from "./lib/types";
 import { resolveFinding, useByteFmt, useI18n, useT } from "./lib/i18n";
+import { computeFindingSignature, shouldShowMascot } from "./lib/mascotSignature";
+import { mascotPromptsTr } from "./lib/i18n/mascotPrompts.tr";
+import { mascotPromptsEn } from "./lib/i18n/mascotPrompts.en";
 
 export default function App() {
   const t = useT();
@@ -137,6 +141,17 @@ export default function App() {
   const [guidedFinding, setGuidedFinding] = useState<Finding | null>(null);
   // Yandan-kayan detay: seçili kategori (null = ana ekran).
   const [selectedCat, setSelectedCat] = useState<CategoryDef | null>(null);
+  const [mascotPrompt, setMascotPrompt] = useState<{ categoryKey: string; text: string } | null>(
+    null
+  );
+  const [pendingMascotMessage, setPendingMascotMessage] = useState<string | null>(null);
+  // Maskot: seçili kategori her ne sebeple kapanırsa kapansın (Geri, yeni
+  // tarama, ileride eklenecek başka bir setSelectedCat(null) çağrısı), maskot
+  // balonu/şeridi de kendiliğinden temizlensin — tek tek çağrı noktalarını
+  // yamamak yerine invariant'ı state'in kendisine bağlıyoruz.
+  useEffect(() => {
+    if (!selectedCat) setMascotPrompt(null);
+  }, [selectedCat]);
   // Faz 1 M5 + Faz 2 — "Hepsini Düzelt" / tek-fix (run_fix_all) akışı.
   // pendingFixSpecs: onay bekleyen fix listesi (null = kapalı).
   const [pendingFixSpecs, setPendingFixSpecs] = useState<FixSpec[] | null>(null);
@@ -415,6 +430,47 @@ export default function App() {
     if (!report || !selectedCat || selectedCat.key === "cleanup") return [];
     return report.findings.filter((f) => selectedCat.matches.includes(f.category));
   }, [report, selectedCat]);
+
+  // Maskot: bir kategoriye tıklanınca, o kategori için bulgular değiştiyse
+  // (veya ilk kez görülüyorsa) bağlamsal bir soru göster.
+  const handleCategorySelect = useCallback(
+    (cat: CategoryDef) => {
+      setSelectedCat(cat);
+      if (cat.key === "cleanup" || !report) {
+        setMascotPrompt(null);
+        return;
+      }
+      const related = report.findings.filter((f) => cat.matches.includes(f.category));
+      if (related.length === 0) {
+        setMascotPrompt(null);
+        return;
+      }
+      const signature = computeFindingSignature(related);
+      const seen = settingsSnapshot?.mascotSeenSignatures ?? {};
+      if (!shouldShowMascot(cat.key, signature, seen)) {
+        setMascotPrompt(null);
+        return;
+      }
+      const dict = locale === "en" ? mascotPromptsEn : mascotPromptsTr;
+      const text = dict[cat.key as keyof typeof mascotPromptsTr] ?? dict.cleanup;
+      setMascotPrompt({ categoryKey: cat.key, text });
+      if (settingsSnapshot) {
+        const next = {
+          ...settingsSnapshot,
+          mascotSeenSignatures: { ...settingsSnapshot.mascotSeenSignatures, [cat.key]: signature },
+        };
+        saveSettings(next)
+          .then(setSettingsSnapshot)
+          .catch((e) => console.warn("[mascot] seen-signature save failed:", e));
+      }
+    },
+    [report, settingsSnapshot, locale]
+  );
+
+  const handleMascotOpenChat = useCallback(() => {
+    if (mascotPrompt) setPendingMascotMessage(mascotPrompt.text);
+    setChatOpen(true);
+  }, [mascotPrompt]);
 
   const handleSystemFileCheck = useCallback((finding: Finding) => setPendingSfc(finding), []);
   const confirmSfc = useCallback(() => {
@@ -783,7 +839,15 @@ export default function App() {
                 onScan={runScan}
                 onFixAll={handleFixAll}
               />
-              <CategoryGrid report={report} onSelect={setSelectedCat} />
+              <CategoryGrid report={report} onSelect={handleCategorySelect} />
+              {mascotPrompt && (
+                <AiMascotBubble
+                  key={`${mascotPrompt.categoryKey}:${mascotPrompt.text}`}
+                  text={mascotPrompt.text}
+                  variant="floating"
+                  onOpenChat={handleMascotOpenChat}
+                />
+              )}
             </div>
 
             {/* DETAY panel (yandan kayar) */}
@@ -812,6 +876,12 @@ export default function App() {
                   volumes={report?.volumes}
                   reclaimableBytes={report?.totalReclaimableBytes ?? 0}
                   cleanupResult={lastResult}
+                  mascotPrompt={
+                    selectedCat && mascotPrompt?.categoryKey === selectedCat.key
+                      ? mascotPrompt.text
+                      : null
+                  }
+                  onMascotOpenChat={handleMascotOpenChat}
                 />
               )}
             </div>
@@ -914,7 +984,13 @@ export default function App() {
 
         <HistoryDialog open={historyOpen} onClose={() => setHistoryOpen(false)} />
 
-        <AiChatDrawer open={chatOpen} onClose={() => setChatOpen(false)} report={report} />
+        <AiChatDrawer
+          open={chatOpen}
+          onClose={() => setChatOpen(false)}
+          report={report}
+          pendingMascotMessage={pendingMascotMessage}
+          onPendingMascotMessageConsumed={() => setPendingMascotMessage(null)}
+        />
 
         <GuidedFixDrawer
           finding={guidedFinding}

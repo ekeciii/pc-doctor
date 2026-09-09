@@ -10,6 +10,8 @@ export interface AppSettings {
   disclosureAckVersion: number;
   /** AI çekmecesindeki "veriniz yerel Ollama'ya gider" notu onaylandı mı. */
   aiDisclosureAck: boolean;
+  /** Kategori key -> o kategoriye en son gösterilen maskot bulgu imzası. */
+  mascotSeenSignatures: Record<string, string>;
 }
 
 /** Backend `settings::CURRENT_DISCLOSURE_VERSION` ile senkron tutulmalı. */
@@ -23,6 +25,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   historyRetentionDays: 90,
   disclosureAckVersion: 0,
   aiDisclosureAck: false,
+  mascotSeenSignatures: {},
 };
 
 export async function getSettings(): Promise<AppSettings> {
