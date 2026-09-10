@@ -158,11 +158,19 @@ export default function App() {
   }, [selectedCat]);
   // Karşılama maskotu: standby ekranında (tarama yok + sonuç yok + ilk-açılış
   // modalı kapalı + ayarlar yüklenmiş) kendini ve uygulamayı tanıtır. Kalıcı
-  // kaydedilmez — her açılışta yeniden çıkar, TARA'ya basılınca kaybolur.
+  // kaydedilmez — standby'a her dönüldüğünde (açılış, başarısız tarama, ayar
+  // dialogu kapanışı vb.) yeniden belirebilir, TARA'ya basılınca kaybolur.
+  // `getSettings()` başarısız olursa `settingsSnapshot` null kalır ve karşılama
+  // hiç gösterilmez (bilinçli — o durumda daha büyük sorunlar var).
   useEffect(() => {
     const standby = report === null && !scanning && !disclosureOpen && settingsSnapshot !== null;
     if (standby) {
-      setMascotPrompt((p) => p ?? { categoryKey: "__welcome__", text: t("mascotWelcome") });
+      setMascotPrompt((p) => {
+        if (p && p.categoryKey !== "__welcome__") return p; // kategori maskotu — dokunma
+        const text = t("mascotWelcome");
+        if (p && p.text === text) return p; // zaten güncel — referansı sabit tut
+        return { categoryKey: "__welcome__", text };
+      });
     } else {
       // Tarama başladı/bitti ya da modal açıldı → karşılamayı düşür (kategori
       // maskotuna dokunma).
