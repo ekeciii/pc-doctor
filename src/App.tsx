@@ -150,8 +150,25 @@ export default function App() {
   // balonu/şeridi de kendiliğinden temizlensin — tek tek çağrı noktalarını
   // yamamak yerine invariant'ı state'in kendisine bağlıyoruz.
   useEffect(() => {
-    if (!selectedCat) setMascotPrompt(null);
+    if (!selectedCat) {
+      // Karşılama maskotu (`__welcome__`) `selectedCat` null iken yaşar —
+      // yalnız kategori maskotunu temizle.
+      setMascotPrompt((p) => (p?.categoryKey === "__welcome__" ? p : null));
+    }
   }, [selectedCat]);
+  // Karşılama maskotu: standby ekranında (tarama yok + sonuç yok + ilk-açılış
+  // modalı kapalı + ayarlar yüklenmiş) kendini ve uygulamayı tanıtır. Kalıcı
+  // kaydedilmez — her açılışta yeniden çıkar, TARA'ya basılınca kaybolur.
+  useEffect(() => {
+    const standby = report === null && !scanning && !disclosureOpen && settingsSnapshot !== null;
+    if (standby) {
+      setMascotPrompt((p) => p ?? { categoryKey: "__welcome__", text: t("mascotWelcome") });
+    } else {
+      // Tarama başladı/bitti ya da modal açıldı → karşılamayı düşür (kategori
+      // maskotuna dokunma).
+      setMascotPrompt((p) => (p?.categoryKey === "__welcome__" ? null : p));
+    }
+  }, [report, scanning, disclosureOpen, settingsSnapshot, t]);
   // Faz 1 M5 + Faz 2 — "Hepsini Düzelt" / tek-fix (run_fix_all) akışı.
   // pendingFixSpecs: onay bekleyen fix listesi (null = kapalı).
   const [pendingFixSpecs, setPendingFixSpecs] = useState<FixSpec[] | null>(null);
