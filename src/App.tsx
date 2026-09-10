@@ -655,6 +655,17 @@ export default function App() {
   return (
     <div className="h-screen overflow-hidden flex flex-col">
       <HudBackdrop band={report?.health.band} />
+      {/* Yüzen maskot — köke render edilir (transform'lu kayan panelin İÇİNDE
+          değil), yoksa `position: fixed` o konteynere göre konumlanıp
+          ekran dışına taşınır ve `overflow-hidden` kırpar. */}
+      {mascotPrompt && (
+        <AiMascotBubble
+          key={`${mascotPrompt.categoryKey}:${mascotPrompt.text}`}
+          text={mascotPrompt.text}
+          variant="floating"
+          onOpenChat={handleMascotOpenChat}
+        />
+      )}
       <div className="relative z-10 flex flex-col h-full w-full px-6 py-5 max-w-5xl mx-auto min-h-0">
         <Header
           elevated={elevated}
@@ -865,14 +876,6 @@ export default function App() {
                 onFixAll={handleFixAll}
               />
               <CategoryGrid report={report} onSelect={handleCategorySelect} />
-              {mascotPrompt && (
-                <AiMascotBubble
-                  key={`${mascotPrompt.categoryKey}:${mascotPrompt.text}`}
-                  text={mascotPrompt.text}
-                  variant="floating"
-                  onOpenChat={handleMascotOpenChat}
-                />
-              )}
             </div>
 
             {/* DETAY panel (yandan kayar) */}
