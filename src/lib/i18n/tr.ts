@@ -546,6 +546,9 @@ export const tr = {
   cleaningInProgress: "Temizleniyor",
   cleanedLocationsTitle: "Temizlenen yerler",
   cleanedNothing: "Silinecek bir şey bulunamadı",
+  // Karşılama maskotu (ana sayfa tanıtımı)
+  mascotWelcome:
+    "Merhaba! PC Doctor asistanıyım. Bu uygulama Windows'unun 13 kategoride sağlığını kontrol edip güvenle düzeltir — dosya silmeden. Başlamak için TARA'ya bas, ya da bana bir şey sor.",
 } as const;
 
 export type TKey = keyof typeof tr;

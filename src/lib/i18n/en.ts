@@ -544,4 +544,7 @@ export const en: Record<TKey, string> = {
   cleaningInProgress: "Cleaning",
   cleanedLocationsTitle: "Cleaned locations",
   cleanedNothing: "Nothing to remove",
+  // Welcome mascot (home-screen intro)
+  mascotWelcome:
+    "Hi! I'm the PC Doctor assistant. This app checks your Windows health across 13 categories and fixes issues safely — without deleting files. Press SCAN to start, or ask me anything.",
 };
