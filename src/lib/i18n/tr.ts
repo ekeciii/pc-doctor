@@ -548,7 +548,7 @@ export const tr = {
   cleanedNothing: "Silinecek bir şey bulunamadı",
   // Karşılama maskotu (ana sayfa tanıtımı)
   mascotWelcome:
-    "Merhaba! PC Doctor asistanıyım. Bu uygulama Windows'unun 13 kategoride sağlığını kontrol edip güvenle düzeltir — dosya silmeden. Başlamak için TARA'ya bas, ya da bana bir şey sor.",
+    "Merhaba! PC Doctor asistanıyım. Bu uygulama Windows'unun sağlığını 13 kategoride kontrol eder ve sorunları güvenle düzeltir — dosya silmeden. Başlamak için TARA'ya bas, ya da ne istersen sor.",
 } as const;
 
 export type TKey = keyof typeof tr;
